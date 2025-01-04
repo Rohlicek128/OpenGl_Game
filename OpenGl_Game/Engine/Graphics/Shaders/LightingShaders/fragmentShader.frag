@@ -29,6 +29,7 @@ struct PointLight {
 in vec2 vTexCoord;
 in vec3 vNormal;
 in vec3 vFragPos;
+in vec4 vFragPosLightSpace;
 
 out vec4 pixelColor;
 
@@ -40,9 +41,11 @@ uniform Material material;
 
 uniform vec3 viewPos;
 uniform samplerCube skybox;
+uniform sampler2D shadowMap;
 
 vec3 CalcDirectionLight(DirLight light, vec3 norm, vec3 viewDir, vec3 materialColor, vec3 specMap);
 vec3 CalcPointLight(PointLight light, vec3 norm, vec3 viewDir, vec3 fragPos, vec3 materialColor, vec3 specMap);
+float CalcShadow(vec4 fragPosLight);
 
 void main(){
     vec3 norm = normalize(vNormal);
@@ -68,8 +71,11 @@ vec3 CalcDirectionLight(DirLight light, vec3 norm, vec3 viewDir, vec3 materialCo
     //Specular
     float spec = pow(max(dot(norm, normalize(lightDir + viewDir)), 0.0), material.shininess);
     vec3 specular = (spec * specMap * material.specular) * light.specular;
+    
+    //Shadows
+    float shadow = CalcShadow(vFragPosLightSpace);
 
-    return (ambient + diffuse + specular);
+    return (ambient + (diffuse + specular) * (1.0 - shadow));
 }
 
 vec3 CalcPointLight(PointLight light, vec3 norm, vec3 viewDir, vec3 fragPos, vec3 materialColor, vec3 specMap){
@@ -92,4 +98,25 @@ vec3 CalcPointLight(PointLight light, vec3 norm, vec3 viewDir, vec3 fragPos, vec
     specular *= attenuation;
 
     return (ambient + diffuse + specular);
+}
+
+float CalcShadow(vec4 fragPosLight){
+    vec3 projectedCoords = fragPosLight.xyz / fragPosLight.w;
+    projectedCoords = projectedCoords * 0.5 + 0.5;
+    
+    //float closestDepth = texture(shadowMap, projectedCoords.xy).r;
+    float bias = max(0.003 * (1.0 - dot(vNormal, dirLight.direction)), 0.0003);
+    
+    float shadow;
+    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+    for (int x = -1; x <= 1; ++x){
+        for (int y = -1; y <= 1; ++y){
+            float pcfDepth = texture(shadowMap, projectedCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += projectedCoords.z - bias > pcfDepth ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 9.0;
+    
+    if (projectedCoords.z > 1.0) shadow = 0.0;
+    return shadow;
 }

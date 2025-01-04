@@ -64,9 +64,8 @@ public class EngineObject
         return model;
     }
 
-    public void DrawObject(ShaderProgram program, Matrix4 worldMat, Camera camera, int offset)
+    public void DrawObject(ShaderProgram program, Camera camera, int offset)
     {
-        program.SetUniform("world", worldMat);
         var model = GetModelMatrix();
         program.SetUniform("model", model);
         program.SetUniform("inverseModel", model.Inverted().Transposed());

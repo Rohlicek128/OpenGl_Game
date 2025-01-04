@@ -40,9 +40,9 @@ public class Camera
         _lastMouse = new Vector2(0f, 0f);
     }
 
-    public void UpdateSensitivityByAspect(Vector2 viewport)
+    public void UpdateSensitivityByAspect(Vector2i viewport)
     {
-        Sensitivity = OriginalSensitivity / (viewport.X / viewport.Y);
+        Sensitivity = OriginalSensitivity / ((float)viewport.X / viewport.Y);
     }
     
     public void UpdateSensitivityByFov()

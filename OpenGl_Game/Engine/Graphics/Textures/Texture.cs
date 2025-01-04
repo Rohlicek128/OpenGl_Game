@@ -1,4 +1,5 @@
 using OpenTK.Graphics.OpenGL;
+using OpenTK.Mathematics;
 using OpenTK.Platform;
 using StbImageSharp;
 
@@ -9,10 +10,29 @@ public class Texture
     public readonly int Handle;
     public uint Index;
 
+    public unsafe Texture(uint index, Vector2i size, void* data)
+    {
+        Handle = GL.GenTexture();
+        Index = index;
+        GL.ActiveTexture(TextureUnit.Texture0 + Index);
+        Bind();
+
+        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureWrapS, (int) TextureWrapMode.Repeat);
+        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureWrapT, (int) TextureWrapMode.Repeat);
+        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMinFilter, (int) TextureMinFilter.Nearest);
+        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Nearest);
+
+        GL.GenerateMipmap(TextureTarget.Texture2d);
+        
+        GL.TexImage2D(TextureTarget.Texture2d, 0, InternalFormat.Rgba, 
+            size.X, size.Y, 0, PixelFormat.Rgba, PixelType.UnsignedByte, data);
+
+        Unbind();
+    }
+    
     public Texture(string path, uint index)
     {
-        StbImage.stbi_set_flip_vertically_on_load(1);
-        var image = ImageResult.FromStream(File.OpenRead(@"C:\Files\Code\.NET\OpenGl_Game\OpenGl_Game\Assets\" + path), ColorComponents.RedGreenBlueAlpha);
+        var image = LoadImage(path);
         
         Handle = GL.GenTexture();
         Index = index;
@@ -30,6 +50,12 @@ public class Texture
             image.Width, image.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, image.Data);
 
         Unbind();
+    }
+    
+    public ImageResult LoadImage(string path)
+    {
+        StbImage.stbi_set_flip_vertically_on_load(1);
+        return ImageResult.FromStream(File.OpenRead(@"C:\Files\Code\.NET\OpenGl_Game\OpenGl_Game\Assets\" + path), ColorComponents.RedGreenBlueAlpha);
     }
 
     public void Bind()

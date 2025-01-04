@@ -1,5 +1,6 @@
 using OpenGl_Game.Buffers;
 using OpenGl_Game.Engine;
+using OpenGl_Game.Engine.Graphics.Shadows;
 using OpenGl_Game.Engine.Objects;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
@@ -41,8 +42,30 @@ public class ShaderProgram
         Attributes = CreateAttributeList();
         Uniforms = CreateUniformList();
     }
+    
+    public ShaderProgram(Shader[] shaders, ShaderProgram otherProgram)
+    {
+        Objects = otherProgram.Objects;
+        VertexBuffer = otherProgram.VertexBuffer;
+        IndexBuffer = otherProgram.IndexBuffer;
+        ArrayBuffer = otherProgram.ArrayBuffer;
+        
+        Handle = GL.CreateProgram();
 
-    public void DrawMesh(Matrix4 worldMat, Dictionary<LightTypes, List<Light>> lights, Camera camera, int skyboxHandle)
+        foreach (var shader in shaders) GL.AttachShader(Handle, shader.Handle);
+        GL.LinkProgram(Handle);
+
+        foreach (var shader in shaders)
+        {
+            GL.DetachShader(Handle, shader.Handle);
+            GL.DeleteShader(shader.Handle);
+        }
+
+        Attributes = CreateAttributeList();
+        Uniforms = CreateUniformList();
+    }
+
+    public void DrawMesh(Matrix4 worldMat, Dictionary<LightTypes, List<Light>> lights, Camera camera, int skyboxHandle, ShadowMap shadowMap)
     {
         Use();
         ArrayBuffer.Bind();
@@ -51,6 +74,13 @@ public class ShaderProgram
         SetUniform("skybox", 5);
         GL.ActiveTexture(TextureUnit.Texture5);
         GL.BindTexture(TextureTarget.TextureCubeMap, skyboxHandle);
+        
+        SetUniform("shadowMap", 4);
+        GL.ActiveTexture(TextureUnit.Texture4);
+        GL.BindTexture(TextureTarget.Texture2d, shadowMap.TextureHandle);
+        
+        SetUniform("world", worldMat);
+        SetUniform("lightSpace", shadowMap.LightSpace);
         
         foreach (var lightList in lights)
         {
@@ -64,7 +94,7 @@ public class ShaderProgram
         var offset = 0;
         foreach (var engineObject in Objects)
         {
-            if (engineObject.IsVisible) engineObject.DrawObject(this, worldMat, camera, offset);
+            if (engineObject.IsVisible) engineObject.DrawObject(this, camera, offset);
             offset += engineObject.IndicesData.Length * sizeof(uint);
         }
     }

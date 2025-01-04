@@ -7,10 +7,12 @@ layout (location = 2) in vec3 aNormal;
 out vec2 vTexCoord;
 out vec3 vNormal;
 out vec3 vFragPos;
+out vec4 vFragPosLightSpace;
 
 uniform mat4 world;
 uniform mat4 model;
 uniform mat4 inverseModel;
+uniform mat4 lightSpace;
 
 void main(){
     gl_Position = vec4(aPosition, 1.0) * model * world;
@@ -18,4 +20,5 @@ void main(){
     vTexCoord = aTexCoord * vec2(length(vec3(model[0])), length(vec3(model[1])));
     vNormal = aNormal * mat3(inverseModel);
     vFragPos = vec3(vec4(aPosition, 1.0) * model);
+    vFragPosLightSpace = vec4(vFragPos, 1.0) * lightSpace;
 }

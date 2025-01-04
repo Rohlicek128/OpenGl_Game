@@ -45,8 +45,8 @@ public class FontMap
 
                 GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureWrapS, (int) TextureWrapMode.ClampToEdge);
                 GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureWrapT, (int) TextureWrapMode.ClampToEdge);
-                GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMinFilter, (int) TextureMinFilter.Nearest);
-                GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Nearest);
+                GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMinFilter, (int) TextureMinFilter.Linear);
+                GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Linear);
 
                 var data = face->glyph->bitmap.buffer;
                 var w = face->glyph->bitmap.width;
@@ -110,6 +110,11 @@ public class FontMap
         }
         program.ArrayBuffer.Unbind();
         GL.BindTexture(TextureTarget.Texture2d, 0);
+    }
+
+    public void Delete()
+    {
+        foreach (var c in Characters) GL.DeleteTexture(c.Value.Handle);
     }
     
 }
