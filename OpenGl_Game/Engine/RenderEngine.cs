@@ -12,6 +12,7 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using StbImageSharp;
 using Attribute = OpenGl_Game.Engine.Graphics.Buffers.Attribute;
+using FontMap = OpenGl_Game.Engine.Graphics.Text.FontMap;
 using FramebufferAttachment = OpenTK.Graphics.OpenGL.Compatibility.FramebufferAttachment;
 using InternalFormat = OpenTK.Graphics.OpenGL.Compatibility.InternalFormat;
 using TextureTarget = OpenTK.Graphics.OpenGL.Compatibility.TextureTarget;
@@ -20,6 +21,8 @@ namespace OpenGl_Game;
 
 public class RenderEngine : GameWindow
 {
+    public static string DirectoryPath = @"C:\Users\adam\RiderProjects\OpenGl_Game\OpenGl_Game\";
+    
     private Camera _camera;
     private float _anim, _fpsTimer;
     private int _fpsCount, _fpsDisplay;
@@ -46,6 +49,9 @@ public class RenderEngine : GameWindow
 
     private EngineObject[] _objects;
     private Dictionary<LightTypes, List<Light>> _lights;
+    private HeightMap _terrain;
+
+    private TimerManager _timerManager;
     
     public RenderEngine(int width, int height, string title) : base(
             GameWindowSettings.Default, 
@@ -69,6 +75,7 @@ public class RenderEngine : GameWindow
         _programs = [];
 
         _fonts = new Dictionary<string, FontMap>();
+        _timerManager = new TimerManager(200);
         
         _camera = new Camera(new Vector3(0f, 0f, -3f), 3f, 0.14f, 90f);
         _camera.UpdateSensitivityByAspect(_viewport);
@@ -144,12 +151,14 @@ public class RenderEngine : GameWindow
         floor.Material.Specular = new Vector3(0.5f);
         floor.Transform.Scale *= 20f;
         
-        var teapot = ObjFileLoader.LoadFromFile(@"teapot\teapot.obj", verticesAttribs);
+        /*var teapot = ObjFileLoader.LoadFromFile(@"teapot\teapot.obj", verticesAttribs);
         teapot.Transform.Scale /= 80f;
         teapot.Transform.Position *= teapot.Transform.Scale;
         teapot.Transform.Position.Z += 3f;
         teapot.Material.Color = new Vector3(0.8f, 0.05f, 0.2f);
-        teapot.Material.Shininess = 600f;
+        teapot.Material.Shininess = 600f;*/
+
+        _terrain = new HeightMap("new-zealand-height-map.jpg", verticesAttribs);
         
         //lights
         var dirLight = new Light(
@@ -189,7 +198,7 @@ public class RenderEngine : GameWindow
         );
         pointLight2.Transform.Scale *= 0.25f;
         
-        _objects = [rollingCube, teapot, rotatingCube, anotherCube, floor];
+        _objects = [rollingCube, rotatingCube, anotherCube, _terrain.TerrainObject];
         
         _lights = new Dictionary<LightTypes, List<Light>>
         {
@@ -366,9 +375,18 @@ public class RenderEngine : GameWindow
         if (KeyboardState.IsKeyDown(Keys.LeftShift)) _camera.SpeedBoost = true;
         if (KeyboardState.IsKeyReleased(Keys.LeftShift)) _camera.SpeedBoost = false;
 
-        if (KeyboardState.IsKeyDown(Keys.Escape)) _isMouseGrabbed = !_isMouseGrabbed;
-        if (KeyboardState.IsKeyDown(Keys.M)) _isRotation = !_isRotation;
-        if (KeyboardState.IsKeyDown(Keys.V)) _wireframeMode = !_wireframeMode;
+        if (_timerManager.CheckTimer("Esc", (float)args.Time, KeyboardState.IsKeyDown(Keys.Escape)))
+        {
+            _isMouseGrabbed = !_isMouseGrabbed;
+        }
+        if (_timerManager.CheckTimer("M", (float)args.Time, KeyboardState.IsKeyDown(Keys.M)))
+        {
+            _isRotation = !_isRotation;
+        }
+        if (_timerManager.CheckTimer("V", (float)args.Time, KeyboardState.IsKeyDown(Keys.V)))
+        {
+            _wireframeMode = !_wireframeMode;
+        }
         
         const float sens = 2f;
         if (KeyboardState.IsKeyDown(Keys.Insert)) _lights[LightTypes.Directional][0].Transform.Position.X += (float)args.Time * sens;

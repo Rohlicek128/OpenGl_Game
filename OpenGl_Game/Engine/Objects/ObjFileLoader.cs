@@ -15,7 +15,7 @@ public class ObjFileLoader
         var normals = new List<Vector3>();
         var indices = new List<List<Vector3i>>();
         
-        using var sr = new StreamReader(File.OpenRead(@"C:\Files\Code\.NET\OpenGl_Game\OpenGl_Game\Assets\" + path));
+        using var sr = new StreamReader(File.OpenRead(RenderEngine.DirectoryPath + @"Assets\" + path));
         string? line;
         while ((line = sr.ReadLine()) != null)
         {
@@ -106,7 +106,7 @@ public class ObjFileLoader
         );
     }
 
-    private static float[] CombineVerticesData(Attribute[] attributes, List<Vector3> vertices, List<Vector3> texCoords, List<Vector3> normals, List<List<Vector3i>> indices)
+    public static float[] CombineVerticesData(Attribute[] attributes, List<Vector3> vertices, List<Vector3> texCoords, List<Vector3> normals, List<List<Vector3i>> indices)
     {
         var stride = attributes.Sum(a => a.Size);
         var result = new float[vertices.Count * stride];
@@ -151,7 +151,7 @@ public class ObjFileLoader
         return result;
     }
 
-    private static uint[] FormatIndicesData(List<List<Vector3i>> indices)
+    public static uint[] FormatIndicesData(List<List<Vector3i>> indices)
     {
         var stride = 3;
         var result = new uint[indices.Count * stride];

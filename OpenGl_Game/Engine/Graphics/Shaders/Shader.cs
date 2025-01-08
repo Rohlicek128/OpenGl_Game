@@ -9,7 +9,7 @@ public class Shader
     public Shader(string path, ShaderType type)
     {
         Handle = GL.CreateShader(type);
-        GL.ShaderSource(Handle, File.ReadAllText(@"C:\Files\Code\.NET\OpenGl_Game\OpenGl_Game\Engine\Graphics\Shaders\" + path));
+        GL.ShaderSource(Handle, File.ReadAllText(RenderEngine.DirectoryPath + @"Engine\Graphics\Shaders\" + path));
         GL.CompileShader(Handle);
     }
 }

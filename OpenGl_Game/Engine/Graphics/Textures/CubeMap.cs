@@ -71,7 +71,7 @@ public class CubeMap
         
         for (uint i = 0; i < 6; i++)
         {
-            var image = ImageResult.FromStream(File.OpenRead(@"C:\Files\Code\.NET\OpenGl_Game\OpenGl_Game\Assets\" + dirPath + @"\" + i + ".jpg"), ColorComponents.RedGreenBlue);
+            var image = ImageResult.FromStream(File.OpenRead(RenderEngine.DirectoryPath + @"Assets\" + dirPath + @"\" + i + ".jpg"), ColorComponents.RedGreenBlue);
             GL.TexImage2D(TextureTarget.TextureCubeMapPositiveX + i, 0, InternalFormat.Rgb, 
                 image.Width, image.Height, 0, PixelFormat.Rgb, PixelType.UnsignedByte, image.Data);
         }

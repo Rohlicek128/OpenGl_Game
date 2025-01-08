@@ -20,7 +20,7 @@ public class FontMap
 
         FT.FT_Init_FreeType(&ft);
 
-        var path = (byte*)Marshal.StringToHGlobalAnsi(@"C:\Files\Code\.NET\OpenGl_Game\OpenGl_Game\Assets\Fonts\" + fontPath);
+        var path = (byte*)Marshal.StringToHGlobalAnsi(RenderEngine.DirectoryPath + @"Assets\Fonts\" + fontPath);
         if (FT.FT_New_Face(ft, path, 0, &face) != FT_Error.FT_Err_Ok)
         {
             Console.WriteLine("Failed to load font!");

@@ -55,7 +55,7 @@ public class Texture
     public ImageResult LoadImage(string path)
     {
         StbImage.stbi_set_flip_vertically_on_load(1);
-        return ImageResult.FromStream(File.OpenRead(@"C:\Files\Code\.NET\OpenGl_Game\OpenGl_Game\Assets\" + path), ColorComponents.RedGreenBlueAlpha);
+        return ImageResult.FromStream(File.OpenRead(RenderEngine.DirectoryPath + @"Assets\" + path), ColorComponents.RedGreenBlueAlpha);
     }
 
     public void Bind()

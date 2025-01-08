@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "nKlbND1pQa0=",
+  "dgSpecHash": "g9qRwbTh0RE=",
   "success": true,
-  "projectFilePath": "C:\\Files\\Code\\.NET\\OpenGl_Game\\OpenGl_Game\\OpenGl_Game.csproj",
+  "projectFilePath": "C:\\Users\\adam\\RiderProjects\\OpenGl_Game\\OpenGl_Game\\OpenGl_Game.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\adam\\.nuget\\packages\\freetypesharp\\3.0.0\\freetypesharp.3.0.0.nupkg.sha512",
     "C:\\Users\\adam\\.nuget\\packages\\opentk\\5.0.0-pre.13\\opentk.5.0.0-pre.13.nupkg.sha512",
