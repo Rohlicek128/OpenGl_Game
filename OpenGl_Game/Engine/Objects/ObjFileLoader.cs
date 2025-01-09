@@ -1,5 +1,6 @@
 using OpenTK.Mathematics;
 using OpenGl_Game.Engine.Graphics.Buffers;
+using OpenTK.Graphics.OpenGL;
 using Attribute = OpenGl_Game.Engine.Graphics.Buffers.Attribute;
 
 namespace OpenGl_Game.Engine.Objects;
@@ -100,7 +101,7 @@ public class ObjFileLoader
         return new EngineObject(
             name ?? "N/A",
             origin,
-            CombineVerticesData(vertexAttribs, vertices, texCoords, normals, indices),
+            new VerticesData(CombineVerticesData(vertexAttribs, vertices, texCoords, normals, indices), PrimitiveType.Triangles),
             FormatIndicesData(indices),
             new Material(new Vector3(1f))
         );

@@ -24,7 +24,7 @@ public class ShaderProgram
     public ShaderProgram(Shader[] shaders, List<EngineObject> objects, Attribute[] attributes, BufferUsage hint = BufferUsage.StaticDraw)
     {
         Objects = objects;
-        VertexBuffer = new VertexBuffer(VertexBuffer.CombineBufferData(Objects.Select(o => o.VerticesData).ToArray()), attributes, hint);
+        VertexBuffer = new VertexBuffer(VertexBuffer.CombineBufferData(Objects.Select(o => o.VerticesData.Data).ToArray()), attributes, hint);
         IndexBuffer = new IndexBuffer(IndexBuffer.CombineIndexBuffers(Objects.Select(o => o.IndicesData).ToArray()));
         ArrayBuffer = new VertexArrayBuffer(VertexBuffer);
         

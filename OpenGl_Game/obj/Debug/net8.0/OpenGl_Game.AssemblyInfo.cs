@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("OpenGl_Game")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ef178a901f163845bc10bc13c2e03225f170c079")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+243eb243313a1a5d380b376e751ffc26257c0755")]
 [assembly: System.Reflection.AssemblyProductAttribute("OpenGl_Game")]
 [assembly: System.Reflection.AssemblyTitleAttribute("OpenGl_Game")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

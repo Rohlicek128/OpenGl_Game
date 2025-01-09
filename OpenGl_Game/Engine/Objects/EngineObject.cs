@@ -1,4 +1,5 @@
 using OpenGl_Game.Engine.Graphics;
+using OpenGl_Game.Engine.Graphics.Buffers;
 using OpenGl_Game.Engine.Graphics.Textures;
 using OpenGl_Game.Shaders;
 using OpenTK.Graphics.OpenGL;
@@ -13,14 +14,14 @@ public class EngineObject
     public Transform Transform;
     public Material Material;
     
-    public float[] VerticesData;
+    public VerticesData VerticesData;
     public uint[] IndicesData;
     
     public TexturesPbr Textures;
 
     public bool IsVisible = true;
 
-    public EngineObject(string name, Vector3 position, float[] verticesData, uint[] indicesData, TexturesPbr textures)
+    public EngineObject(string name, Vector3 position, VerticesData verticesData, uint[] indicesData, TexturesPbr textures)
     {
         Name = name;
         Transform = new Transform(position);
@@ -35,7 +36,7 @@ public class EngineObject
         Textures = textures;
     }
     
-    public EngineObject(string name, Vector3 position, float[] verticesData, uint[] indicesData, Material material)
+    public EngineObject(string name, Vector3 position, VerticesData verticesData, uint[] indicesData, Material material)
     {
         Name = name;
         Transform = new Transform(position);
@@ -51,7 +52,7 @@ public class EngineObject
         return new EngineObject(
             "N/A",
             new Vector3(0f),
-            [],
+            new VerticesData([], PrimitiveType.Triangles),
             [],
             new Material(new Vector3(1f))
         );
@@ -81,7 +82,7 @@ public class EngineObject
         program.SetUniform("material.specularMap", 1);
         Textures.ActiveAndBindAll();
         
-        GL.DrawElements(PrimitiveType.Triangles, IndicesData.Length, DrawElementsType.UnsignedInt, offset);
+        GL.DrawElements(VerticesData.Type, IndicesData.Length, DrawElementsType.UnsignedInt, offset);
     }
 
 }

@@ -99,4 +99,11 @@ public class ShadowMap
         );
         return lightView * lightProjection;
     }
+
+    public void Delete()
+    {
+        ShadowProgram.Delete();
+        foreach (var texture in DepthMapFramebuffer.AttachedTextures) texture.Delete();
+        DepthMapFramebuffer.Delete();
+    }
 }

@@ -1,5 +1,6 @@
 using OpenGl_Game.Engine.Graphics.Buffers;
 using OpenGl_Game.Engine.Objects;
+using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using StbImageSharp;
 using Attribute = OpenGl_Game.Engine.Graphics.Buffers.Attribute;
@@ -18,7 +19,7 @@ public class HeightMap
         TerrainObject = new EngineObject(
             "Terrain",
             new Vector3(0f),
-            verts,
+            new VerticesData(verts, PrimitiveType.TriangleStrip),
             inds,
             new Material(new Vector3(1f))
         );
@@ -29,15 +30,15 @@ public class HeightMap
         var yScale = 0.25f;
         var yShift = 16f;
 
+        //Vertices
         List<Vector3> verts = [];
         List<Vector2> texCoords = [];
-        indices = new uint[hm.Width * hm.Width * 2];
+        
         for (int x = 0; x < hm.Width; x++)
         {
             for (int y = 0; y < hm.Height; y++)
             {
-                var hmY = hm.Data[x * hm.Width + y];
-                
+                var hmY = hm.Data[(x * hm.Width + y)] * (int)hm.SourceComp;
                 verts.Add(new Vector3(
                     -hm.Height/2f + y,
                     hmY * yScale - yShift,
@@ -45,10 +46,24 @@ public class HeightMap
                 ));
                 
                 texCoords.Add(new Vector2(x / (float)hm.Width, y / (float)hm.Height));
-
+            }
+        }
+        
+        //Indices
+        indices = new uint[(hm.Height) * hm.Width * 2];
+        var indCount = 0;
+        for (int y = 0; y < hm.Height; y++)
+        {
+            for (int x = 0; x < hm.Width; x++)
+            {
                 for (int k = 0; k < 2; k++)
                 {
-                    indices[(x * hm.Width) + (y * k)] = (uint)(hm.Width * (y * k) + x);
+                    if (x >= hm.Width - 1)
+                    {
+                        indices[indCount] = uint.MaxValue;
+                    }
+                    else indices[indCount] = (uint)(x + hm.Width * (y + k));
+                    indCount++;
                 }
             }
         }
