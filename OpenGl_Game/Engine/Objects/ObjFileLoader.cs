@@ -100,7 +100,7 @@ public class ObjFileLoader
 
         return new EngineObject(
             name ?? "N/A",
-            origin,
+            new Transform(origin),
             new VerticesData(CombineVerticesData(vertexAttribs, vertices, texCoords, normals, indices), PrimitiveType.Triangles),
             FormatIndicesData(indices),
             new Material(new Vector3(1f))
@@ -255,7 +255,7 @@ public class ObjFileLoader
         return indices;
     }
     
-    public static float[] CreateQuadVertices(float texScaling)
+    public static float[] CreatePlaneVertices(float texScaling)
     {
         float[] vertices =
         [
@@ -268,7 +268,7 @@ public class ObjFileLoader
         return vertices;
     }
 
-    public static uint[] CreateQuadIndices()
+    public static uint[] CreatePlaneIndices()
     {
         uint[] indices =
         [
@@ -277,6 +277,30 @@ public class ObjFileLoader
         ];
 
         return indices;
+    }
+    
+    public static float[] CreateQuadVertices(float texScaling)
+    {
+        /*float[] vertices =
+        [
+            1f,  1f,  0.0f, 0.0f,
+            1f, -1f,  texScaling, 0.0f,
+            -1f, -1f,  texScaling, texScaling,
+            -1f,  1f,  0.0f, texScaling
+        ];*/
+        
+        float[] vertices =
+        [
+            1f,  1f,  0.0f, 0.0f,
+            1f, -1f,  texScaling, 0.0f,
+            -1f, -1f,  texScaling, texScaling,
+            
+            1f,  1f,  0.0f, 0.0f,
+            -1f, -1f,  texScaling, texScaling,
+            -1f,  1f,  0.0f, texScaling
+        ];
+
+        return vertices;
     }
 
 }

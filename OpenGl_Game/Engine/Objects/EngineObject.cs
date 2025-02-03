@@ -21,10 +21,10 @@ public class EngineObject
 
     public bool IsVisible = true;
 
-    public EngineObject(string name, Vector3 position, VerticesData verticesData, uint[] indicesData, TexturesPbr textures)
+    public EngineObject(string name, Transform transform, VerticesData verticesData, uint[] indicesData, TexturesPbr textures)
     {
         Name = name;
-        Transform = new Transform(position);
+        Transform = transform;
         VerticesData = verticesData;
         IndicesData = indicesData;
         Material = new Material(
@@ -36,10 +36,10 @@ public class EngineObject
         Textures = textures;
     }
     
-    public EngineObject(string name, Vector3 position, VerticesData verticesData, uint[] indicesData, Material material)
+    public EngineObject(string name, Transform transform, VerticesData verticesData, uint[] indicesData, Material material)
     {
         Name = name;
-        Transform = new Transform(position);
+        Transform = transform;
         VerticesData = verticesData;
         IndicesData = indicesData;
         Material = material;
@@ -51,7 +51,7 @@ public class EngineObject
     {
         return new EngineObject(
             "N/A",
-            new Vector3(0f),
+            new Transform(new Vector3(0f)),
             new VerticesData([], PrimitiveType.Triangles),
             [],
             new Material(new Vector3(1f))

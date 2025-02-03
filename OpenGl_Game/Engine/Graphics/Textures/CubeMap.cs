@@ -69,6 +69,7 @@ public class CubeMap
         GL.TexParameteri(TextureTarget.TextureCubeMap, TextureParameterName.TextureMinFilter, (int) TextureMinFilter.Linear);
         GL.TexParameteri(TextureTarget.TextureCubeMap, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Linear);
         
+        //StbImage.stbi_set_flip_vertically_on_load(1);
         for (uint i = 0; i < 6; i++)
         {
             var image = ImageResult.FromStream(File.OpenRead(RenderEngine.DirectoryPath + @"Assets\" + dirPath + @"\" + i + ".jpg"), ColorComponents.RedGreenBlue);

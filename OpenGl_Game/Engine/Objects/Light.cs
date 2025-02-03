@@ -11,8 +11,8 @@ public class Light : EngineObject
 
     public Vector3 PbrParams;
     
-    public Light(string name, Vector3 position, VerticesData verticesData, uint[] indicesData, Material material, Vector3 pbrParams, Vector3 attenParams, LightTypes type)
-        : base(name, position, verticesData, indicesData, material)
+    public Light(string name, Transform transform, VerticesData verticesData, uint[] indicesData, Material material, Vector3 pbrParams, Vector3 attenParams, LightTypes type)
+        : base(name, transform, verticesData, indicesData, material)
     {
         Material.Ambient = Material.Color * pbrParams.X;
         Material.Diffuse = Material.Color * pbrParams.Y;

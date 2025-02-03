@@ -1,8 +1,7 @@
-using System.Drawing;
 using System.Runtime.InteropServices;
 using FreeTypeSharp;
 using OpenGl_Game.Shaders;
-using OpenTK.Graphics.OpenGL.Compatibility;
+using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 
 namespace OpenGl_Game.Engine.Graphics.Text;
@@ -10,10 +9,13 @@ namespace OpenGl_Game.Engine.Graphics.Text;
 public class FontMap
 {
     public Dictionary<char, FontCharacter> Characters;
+
+    private ShaderProgram FontProgram; 
     
-    public unsafe FontMap(string fontPath)
+    public unsafe FontMap(string fontPath, ShaderProgram program)
     {
         Characters = new Dictionary<char, FontCharacter>();
+        FontProgram = program;
         
         FT_LibraryRec_* ft;
         FT_FaceRec_* face;
@@ -67,17 +69,25 @@ public class FontMap
         FT.FT_Done_FreeType(ft);
     }
 
-    public void DrawText(ShaderProgram program, string text, Vector2 position, float scale, Vector3 color, Vector2 viewport)
+    public void DrawText(string text, Vector2 position, float scale, Vector3 color, Vector2 viewport)
     {
-        program.Use();
-        program.ArrayBuffer.Bind();
+        FontProgram.Use();
+        FontProgram.ArrayBuffer.Bind();
         
         GL.ActiveTexture(TextureUnit.Texture0);
-        program.SetUniform("text", 0);
-        program.SetUniform("textColor", color);
+        FontProgram.SetUniform("text", 0);
+        FontProgram.SetUniform("textColor", color);
         
-        program.SetUniform("viewport", viewport);
+        FontProgram.SetUniform("viewport", viewport);
 
+        float[] vertices = [
+            0f, 0f,  0f, 0f,
+            0f, 0f,  0f, 1f,
+            0f, 0f,  1f, 1f,
+            0f, 0f,  0f, 0f,
+            0f, 0f,  1f, 1f,
+            0f, 0f,  1f, 0f
+        ];
         var chars = text.ToCharArray();
         foreach (var c in chars)
         {
@@ -88,33 +98,38 @@ public class FontMap
 
             var w = ch.Size.X * scale;
             var h = ch.Size.Y * scale;
-
-            float[] vertices = [
-                xpos, ypos + h,     0f, 0f,
-                xpos, ypos,         0f, 1f,
-                xpos + w, ypos,     1f, 1f,
-                
-                xpos, ypos + h,     0f, 0f,
-                xpos + w, ypos,     1f, 1f,
-                xpos + w, ypos + h, 1f, 0f
-            ];
+            
+            vertices[0] = xpos;
+            vertices[1] = ypos + h;
+            vertices[4] = xpos;
+            vertices[5] = ypos;
+            vertices[8] = xpos + w;
+            vertices[9] = ypos;
+            vertices[12] = xpos;
+            vertices[13] = ypos + h;
+            vertices[16] = xpos + w;
+            vertices[17] = ypos;
+            vertices[20] = xpos + w;
+            vertices[21] = ypos + h;
             
             GL.BindTexture(TextureTarget.Texture2d, ch.Handle);
             
-            program.VertexBuffer.Bind();
+            FontProgram.VertexBuffer.Bind();
             GL.BufferSubData(BufferTarget.ArrayBuffer, 0, vertices.Length * sizeof(float), vertices);
-            program.VertexBuffer.Unbind();
+            FontProgram.VertexBuffer.Unbind();
             
             GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
             position.X += (ch.Advance >> 6) * scale;
         }
-        program.ArrayBuffer.Unbind();
+        FontProgram.ArrayBuffer.Unbind();
+        FontProgram.Unbind();
         GL.BindTexture(TextureTarget.Texture2d, 0);
     }
 
     public void Delete()
     {
         foreach (var c in Characters) GL.DeleteTexture(c.Value.Handle);
+        FontProgram.Delete();
     }
     
 }

@@ -4,7 +4,6 @@ layout (location = 0) in vec4 vertex;
 
 out vec2 vTexCoord;
 
-uniform mat4 projection;
 uniform vec2 viewport;
 
 void main(){
