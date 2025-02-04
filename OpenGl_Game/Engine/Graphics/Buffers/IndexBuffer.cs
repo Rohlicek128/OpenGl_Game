@@ -45,11 +45,16 @@ public class IndexBuffer
         for (var i = 1; i < bufferData.Length; i++)
         {
             var offset = data.Max() + 1;
-            
-            for (var j = 0; j < bufferData[i].Length; j++) bufferData[i][j] += offset;
+
+            for (var j = 0; j < bufferData[i].Length; j++)
+            {
+                if (bufferData[i][j] == RenderEngine.PrimitiveIndex) continue;
+                bufferData[i][j] += offset;
+                if (bufferData[i][j] == 0) Console.WriteLine("ZERO FOUND");
+            }
             data = data.Concat(bufferData[i]).ToArray();
         }
-
+        
         return data;
     }
 }

@@ -31,8 +31,10 @@ public struct Transform
 
     public void SetRotationByPosition(Vector3 origin)
     {
-        Rotation.Z = MathF.Atan((-Position.Y - origin.Y) / (Position.X - origin.X));
-        Rotation.Y = MathF.Atan((-Position.Z - origin.Z) / (Position.X - origin.X));
-        Rotation.X = MathF.Atan((Position.Z - origin.Z) / (Position.Z - origin.Z));
+        Rotation = -Position / Position.Length;
+
+        //Rotation.Z = MathF.Atan((-Position.Y - origin.Y) / (Position.X - origin.X));
+        //Rotation.Y = MathF.Atan((-Position.Z - origin.Z) / (Position.X - origin.X));
+        //Rotation.X = MathF.Atan((Position.Z - origin.Z) / (Position.Z - origin.Z));
     }
 }

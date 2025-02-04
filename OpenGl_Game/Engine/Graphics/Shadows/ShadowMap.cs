@@ -1,7 +1,7 @@
 using OpenGl_Game.Engine.Graphics.Buffers;
 using OpenGl_Game.Engine.Objects;
 using OpenGl_Game.Shaders;
-using OpenTK.Graphics.OpenGL.Compatibility;
+using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using InternalFormat = OpenTK.Graphics.OpenGL.InternalFormat;
 using PixelFormat = OpenTK.Graphics.OpenGL.PixelFormat;
@@ -30,7 +30,7 @@ public class ShadowMap
         ShadowMaxDistance = maxDistance;
         DepthMapFramebuffer = new Framebuffer();
         TextureHandle = GenerateDepthTexture();
-        DepthMapFramebuffer.AttachTexture(TextureHandle, FramebufferAttachment.DepthAttachment, TextureTarget.Texture2d);
+        DepthMapFramebuffer.AttachTexture(TextureHandle, OpenTK.Graphics.OpenGL.Compatibility.FramebufferAttachment.DepthAttachment, OpenTK.Graphics.OpenGL.Compatibility.TextureTarget.Texture2d);
         
         DepthMapFramebuffer.Bind();
         GL.DrawBuffer(DrawBufferMode.None);
@@ -51,8 +51,8 @@ public class ShadowMap
         
         GL.TexParameterf(TextureTarget.Texture2d, TextureParameterName.TextureBorderColor, [1f, 1f, 1f, 1f]);
         
-        GL.TexImage2D(TextureTarget.Texture2d, 0, (OpenTK.Graphics.OpenGL.Compatibility.InternalFormat)InternalFormat.DepthComponent, 
-            ShadowSize.X, ShadowSize.Y, 0, (OpenTK.Graphics.OpenGL.Compatibility.PixelFormat)PixelFormat.DepthComponent, (OpenTK.Graphics.OpenGL.Compatibility.PixelType)PixelType.Float, null);
+        GL.TexImage2D(TextureTarget.Texture2d, 0, InternalFormat.DepthComponent, 
+            ShadowSize.X, ShadowSize.Y, 0, PixelFormat.DepthComponent, PixelType.Float, null);
 
         return handle;
     }
@@ -60,6 +60,7 @@ public class ShadowMap
     public void RenderDepthMap(Light light, Vector2i viewport, ShaderProgram sceneProgram, Camera camera)
     {
         GL.CullFace(TriangleFace.Front);
+        GL.Disable(EnableCap.CullFace);
         
         ShadowProgram.Use();
         sceneProgram.ArrayBuffer.Bind();
@@ -79,7 +80,7 @@ public class ShadowMap
             {
                 var model = engineObject.GetModelMatrix();
                 ShadowProgram.SetUniform("model", model);
-                GL.DrawElements(PrimitiveType.Triangles, engineObject.IndicesData.Length, DrawElementsType.UnsignedInt, offset);
+                GL.DrawElements(engineObject.VerticesData.Type, engineObject.IndicesData.Length, DrawElementsType.UnsignedInt, offset);
             }
             offset += engineObject.IndicesData.Length * sizeof(uint);
         }
@@ -87,13 +88,19 @@ public class ShadowMap
         DepthMapFramebuffer.Unbind();
         GL.Viewport(0, 0, viewport.X, viewport.Y);
         GL.CullFace(TriangleFace.Back);
+        GL.Enable(EnableCap.CullFace);
     }
 
     public Matrix4 GetLightSpaceMatrix(Light dirLight, Camera camera)
     {
-        var lightProjection = Matrix4.CreateOrthographic(-ShadowMaxDistance, ShadowMaxDistance, 0.01f, 20f);
+        //var aspect =  (float)ShadowSize.X / ShadowSize.Y;
+        //var frustumSize = 1000f;
+        //var lightProjection = Matrix4.CreateOrthographic(frustumSize / 2f,  frustumSize / 2f, 0.01f, 250f);
+        var dirPos = new Vector3();
+        
+        var lightProjection = Matrix4.CreateOrthographic(ShadowMaxDistance * 15f, ShadowMaxDistance * 15f, 0.01f, 2000f);
         var lightView = Matrix4.LookAt(
-            dirLight.Transform.Position + camera.Transform.Position,
+            new Vector3(dirLight.Transform.Position.X * 50f, dirLight.Transform.Position.Y * 50f, dirLight.Transform.Position.Z * 50f) + camera.Transform.Position,
             camera.Transform.Position,
             new Vector3(0f, 1f, 0f)
         );

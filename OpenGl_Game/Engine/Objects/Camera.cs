@@ -14,9 +14,13 @@ public class Camera
 
     public float Speed;
     public bool SpeedBoost = false;
+    public float BaseSpeed = 2f;
+    public float BoostSpeed = 5f;
+    
     public float OriginalSensitivity;
     public float Sensitivity;
     public float Fov;
+    public float NearPlane, FarPlane;
 
     public float Pitch;
     public float Yaw;
@@ -36,6 +40,8 @@ public class Camera
         Speed = speed;
         OriginalSensitivity = sensitivity;
         Fov = fov;
+        NearPlane = 0.025f;
+        FarPlane = 1000000f;
 
         _lastMouse = new Vector2(0f, 0f);
     }

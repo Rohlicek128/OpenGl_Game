@@ -97,6 +97,9 @@ public class ShaderProgram
             if (engineObject.IsVisible) engineObject.DrawObject(this, camera, offset);
             offset += engineObject.IndicesData.Length * sizeof(uint);
         }
+        
+        ArrayBuffer.Unbind();
+        IndexBuffer.Unbind();
     }
     
     private ShaderAttribute[] CreateAttributeList()

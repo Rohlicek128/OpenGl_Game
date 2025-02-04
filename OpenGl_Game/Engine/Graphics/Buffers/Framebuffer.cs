@@ -55,5 +55,4 @@ public class Framebuffer
     {
         GL.DeleteFramebuffer(Handle);
     }
-    
 }
