@@ -14,12 +14,14 @@ public class ShadowMap
     public Framebuffer DepthMapFramebuffer;
     public readonly int TextureHandle;
     public Vector2i ShadowSize;
-    public float ShadowMaxDistance;
+    public float MaxDistance;
+    public float CameraOffset;
+    public Vector2 PlaneDims;
 
     public ShaderProgram ShadowProgram;
     public Matrix4 LightSpace;
 
-    public ShadowMap(Vector2i shadowSize, float maxDistance, ShaderProgram sceneProgram)
+    public ShadowMap(Vector2i shadowSize, float maxDistance, float cameraOffset, Vector2 planeDims, ShaderProgram sceneProgram)
     {
         ShadowProgram = new ShaderProgram([
             new Shader(@"ShadowDepthShaders\shadowDepth.vert", (OpenTK.Graphics.OpenGL.ShaderType)ShaderType.VertexShader),
@@ -27,7 +29,10 @@ public class ShadowMap
         ], sceneProgram.Objects, sceneProgram.VertexBuffer.Attributes);
         
         ShadowSize = shadowSize;
-        ShadowMaxDistance = maxDistance;
+        MaxDistance = maxDistance;
+        CameraOffset = cameraOffset;
+        PlaneDims = planeDims;
+        
         DepthMapFramebuffer = new Framebuffer();
         TextureHandle = GenerateDepthTexture();
         DepthMapFramebuffer.AttachTexture(TextureHandle, OpenTK.Graphics.OpenGL.Compatibility.FramebufferAttachment.DepthAttachment, OpenTK.Graphics.OpenGL.Compatibility.TextureTarget.Texture2d);
@@ -96,11 +101,10 @@ public class ShadowMap
         //var aspect =  (float)ShadowSize.X / ShadowSize.Y;
         //var frustumSize = 1000f;
         //var lightProjection = Matrix4.CreateOrthographic(frustumSize / 2f,  frustumSize / 2f, 0.01f, 250f);
-        var dirPos = new Vector3();
         
-        var lightProjection = Matrix4.CreateOrthographic(ShadowMaxDistance * 15f, ShadowMaxDistance * 15f, 0.01f, 2000f);
+        var lightProjection = Matrix4.CreateOrthographic(MaxDistance, MaxDistance, PlaneDims.X, PlaneDims.Y);
         var lightView = Matrix4.LookAt(
-            new Vector3(dirLight.Transform.Position.X * 50f, dirLight.Transform.Position.Y * 50f, dirLight.Transform.Position.Z * 50f) + camera.Transform.Position,
+            dirLight.Transform.Position * CameraOffset + camera.Transform.Position,
             camera.Transform.Position,
             new Vector3(0f, 1f, 0f)
         );

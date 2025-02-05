@@ -5,6 +5,7 @@ in vec2 vTexCoord;
 out vec4 pixelColor;
 
 uniform sampler2D screenTexture;
+uniform int banding;
 
 void main(){
     /*vec3 color = texture(screenTexture, vTexCoord).rgb;
@@ -17,5 +18,10 @@ void main(){
     float gamma = 2.2;
     pixelColor = vec4(pow(screen.rgb, vec3(1.0/gamma)), screen.w);*/
     
-    pixelColor = texture(screenTexture, vTexCoord);
+    vec4 screen = texture(screenTexture, vTexCoord);
+    /*screen.r = floor(screen.r * banding) / banding;
+    screen.g = floor(screen.g * banding) / banding;
+    screen.b = floor(screen.b * banding) / banding;*/
+    
+    pixelColor = screen;
 }
