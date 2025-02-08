@@ -1,6 +1,6 @@
 namespace OpenGl_Game.Engine.Graphics.Buffers;
 
-public enum AttribType
+public enum VertexAttribType
 {
     Position, TextureCoords, Normal, PosAndTex
 }

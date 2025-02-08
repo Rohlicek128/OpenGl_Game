@@ -1,4 +1,4 @@
-using OpenTK.Graphics.OpenGL.Compatibility;
+using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 
 namespace OpenGl_Game.Engine.Graphics.Buffers;

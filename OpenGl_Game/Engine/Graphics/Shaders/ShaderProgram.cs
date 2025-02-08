@@ -1,10 +1,10 @@
 using OpenGl_Game.Buffers;
 using OpenGl_Game.Engine;
+using OpenGl_Game.Engine.Graphics.Buffers;
 using OpenGl_Game.Engine.Graphics.Shadows;
 using OpenGl_Game.Engine.Objects;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
-using Attribute = OpenGl_Game.Engine.Graphics.Buffers.Attribute;
 
 namespace OpenGl_Game.Shaders;
 
@@ -21,7 +21,7 @@ public class ShaderProgram
     public readonly ShaderAttribute[] Attributes;
     public readonly ShaderUniform[] Uniforms;
 
-    public ShaderProgram(Shader[] shaders, List<EngineObject> objects, Attribute[] attributes, BufferUsage hint = BufferUsage.StaticDraw)
+    public ShaderProgram(Shader[] shaders, List<EngineObject> objects, VertexAttribute[] attributes, BufferUsage hint = BufferUsage.StaticDraw)
     {
         Objects = objects;
         VertexBuffer = new VertexBuffer(VertexBuffer.CombineBufferData(Objects.Select(o => o.VerticesData.Data).ToArray()), attributes, hint);

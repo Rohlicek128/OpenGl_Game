@@ -1,4 +1,6 @@
-﻿namespace OpenGl_Game;
+﻿using OpenGl_Game.Engine;
+
+namespace OpenGl_Game;
 
 class Program
 {

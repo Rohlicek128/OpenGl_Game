@@ -1,6 +1,6 @@
+using OpenGl_Game.Engine.Graphics.Buffers;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
-using Attribute = OpenGl_Game.Engine.Graphics.Buffers.Attribute;
 using Buffer = OpenTK.Graphics.OpenGL.Buffer;
 
 namespace OpenGl_Game.Buffers;
@@ -10,10 +10,10 @@ public class VertexBuffer
     public readonly int Handle;
     
     public readonly float[] Data;
-    public readonly Attribute[] Attributes;
+    public readonly VertexAttribute[] Attributes;
     public readonly int Stride;
 
-    public VertexBuffer(float[] data, Attribute[] attributes, BufferUsage hint)
+    public VertexBuffer(float[] data, VertexAttribute[] attributes, BufferUsage hint)
     {
         Data = data;
         Attributes = attributes;

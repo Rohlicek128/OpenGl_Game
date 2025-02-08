@@ -30,7 +30,7 @@ public class Texture
         Unbind();
     }
     
-    public Texture(string path, uint index)
+    public Texture(string path, uint index, TextureMagFilter minFilter = TextureMagFilter.Nearest, TextureMagFilter magFilter = TextureMagFilter.Nearest)
     {
         var image = LoadImage(path);
         
@@ -41,8 +41,8 @@ public class Texture
 
         GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureWrapS, (int) TextureWrapMode.Repeat);
         GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureWrapT, (int) TextureWrapMode.Repeat);
-        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMinFilter, (int) TextureMinFilter.Linear);
-        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Linear);
+        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMinFilter, (int) minFilter);
+        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMagFilter, (int) magFilter);
 
         GL.GenerateMipmap(TextureTarget.Texture2d);
 

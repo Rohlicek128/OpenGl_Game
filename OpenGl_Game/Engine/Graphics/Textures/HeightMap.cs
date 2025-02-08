@@ -3,7 +3,7 @@ using OpenGl_Game.Engine.Objects;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using StbImageSharp;
-using Attribute = OpenGl_Game.Engine.Graphics.Buffers.Attribute;
+using VertexAttribType = OpenGl_Game.Engine.Graphics.Buffers.VertexAttribType;
 
 namespace OpenGl_Game.Engine.Graphics.Textures;
 
@@ -12,7 +12,7 @@ public class HeightMap
     public EngineObject TerrainObject;
     public float TerrainScale;
     
-    public HeightMap(string path, Attribute[] attributes)
+    public HeightMap(string path, VertexAttribute[] attributes)
     {
         TerrainScale = 2f;
         
@@ -28,13 +28,13 @@ public class HeightMap
             //new Material(new Vector3(74f / 255f, 149f / 255f, 207f / 255f))
             new TexturesPbr(new Dictionary<TextureTypes, Texture>
             {
-                {TextureTypes.Diffuse, new Texture(path, 0)},
+                {TextureTypes.Diffuse, new Texture(path, 0, TextureMagFilter.Linear, TextureMagFilter.Linear)},
                 {TextureTypes.Specular, new Texture("black1x1.png", 1)}
             })
         );
     }
 
-    public void GenMeshData(ImageResult hm, Attribute[] attributes, out float[] vertices, out uint[] indices)
+    public void GenMeshData(ImageResult hm, VertexAttribute[] attributes, out float[] vertices, out uint[] indices)
     {
         var yScale = 0.08f;
         var yShift = 0.5f;
@@ -100,9 +100,9 @@ public class HeightMap
                 for (int j = 0; j < attributes[i].Size; j++)
                 {
                     var index = (v * stride) + offset + j;
-                    if (attributes[i].Type == AttribType.Position) vertices[index] = verts[v][j];
-                    if (attributes[i].Type == AttribType.TextureCoords) vertices[index] = texCoords[v][j];
-                    if (attributes[i].Type == AttribType.Normal) vertices[index] = normal[j];
+                    if (attributes[i].Type == VertexAttribType.Position) vertices[index] = verts[v][j];
+                    if (attributes[i].Type == VertexAttribType.TextureCoords) vertices[index] = texCoords[v][j];
+                    if (attributes[i].Type == VertexAttribType.Normal) vertices[index] = normal[j];
                 }
 
                 offset += attributes[i].Size;

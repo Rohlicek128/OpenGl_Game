@@ -1,11 +1,11 @@
 namespace OpenGl_Game.Engine.Graphics.Buffers;
 
-public struct Attribute
+public struct VertexAttribute
 {
-    public AttribType Type;
+    public VertexAttribType Type;
     public int Size;
 
-    public Attribute(AttribType type, int size)
+    public VertexAttribute(VertexAttribType type, int size)
     {
         Type = type;
         Size = size;

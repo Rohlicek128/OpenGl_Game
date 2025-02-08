@@ -4,7 +4,7 @@ using OpenGl_Game.Engine.Objects;
 using OpenGl_Game.Shaders;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
-using Attribute = OpenGl_Game.Engine.Graphics.Buffers.Attribute;
+using VertexAttribType = OpenGl_Game.Engine.Graphics.Buffers.VertexAttribType;
 
 namespace OpenGl_Game.Engine.UI;
 
@@ -23,7 +23,7 @@ public class WindowManager
         UiProgram = new ShaderProgram([
             new Shader(@"UiShaders\uiShader.vert", ShaderType.VertexShader),
             new Shader(@"UiShaders\uiShader.frag", ShaderType.FragmentShader)
-        ], [ui], [new Attribute(AttribType.PosAndTex, 4)]);
+        ], [ui], [new VertexAttribute(VertexAttribType.PosAndTex, 4)]);
         
         Windows.Add(new UiWindow(UiProgram, "Window #1", new Vector4(0.05f, 0.05f, 0.05f, 0.95f)));
     }

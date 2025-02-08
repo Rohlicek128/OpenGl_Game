@@ -1,29 +1,24 @@
 using OpenGl_Game.Engine.Graphics.Buffers;
+using OpenGl_Game.Engine.Graphics.PostProcess;
 using OpenGl_Game.Engine.Graphics.Shadows;
 using OpenGl_Game.Engine.Graphics.Text;
 using OpenGl_Game.Engine.Graphics.Textures;
 using OpenGl_Game.Engine.Objects;
 using OpenGl_Game.Engine.UI;
 using OpenGl_Game.Shaders;
-using OpenTK;
-using OpenTK.Windowing.Common;
-using OpenTK.Windowing.Desktop;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
-using OpenTK.Windowing.Common.Input;
+using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using StbImageSharp;
-using Attribute = OpenGl_Game.Engine.Graphics.Buffers.Attribute;
 using FontMap = OpenGl_Game.Engine.Graphics.Text.FontMap;
-using FramebufferAttachment = OpenTK.Graphics.OpenGL.Compatibility.FramebufferAttachment;
-using InternalFormat = OpenTK.Graphics.OpenGL.Compatibility.InternalFormat;
-using TextureTarget = OpenTK.Graphics.OpenGL.Compatibility.TextureTarget;
+using VertexAttribType = OpenGl_Game.Engine.Graphics.Buffers.VertexAttribType;
 
-namespace OpenGl_Game;
+namespace OpenGl_Game.Engine;
 
 public class RenderEngine : GameWindow
 {
-    public static string DirectoryPath = @"C:\Files\Code\.NET\OpenGl_Game\OpenGl_Game\";
+    public static string DirectoryPath = @"C:\Users\adam\RiderProjects\OpenGl_Game\OpenGl_Game\";
     
     private Camera _camera;
     private float _anim, _fpsTimer;
@@ -39,9 +34,8 @@ public class RenderEngine : GameWindow
 
     private List<ShaderProgram> _programs;
     private ShaderProgram _skyboxProgram;
-    private ShaderProgram _postProcessShader;
-    private Framebuffer _ppFramebuffer;
-    private Renderbuffer _ppRenderbuffer;
+    
+    private PostProcess _postProcess;
     
     private Dictionary<string, FontMap> _fonts;
 
@@ -58,8 +52,6 @@ public class RenderEngine : GameWindow
 
     private TimerManager _timerManager;
     private WindowManager _windowManager;
-
-    private int _bandingTesting = 10;
     
     public RenderEngine(int width, int height, string title) : base(
             GameWindowSettings.Default, 
@@ -95,10 +87,10 @@ public class RenderEngine : GameWindow
     {
         IsVisible = true;
         
-        Attribute[] verticesAttribs = [
-            new(AttribType.Position, 3), 
-            new(AttribType.TextureCoords, 2), 
-            new(AttribType.Normal, 3)
+        VertexAttribute[] verticesAttribs = [
+            new(VertexAttribType.Position, 3), 
+            new(VertexAttribType.TextureCoords, 2), 
+            new(VertexAttribType.Normal, 3)
         ];
         
         //Texture
@@ -118,7 +110,7 @@ public class RenderEngine : GameWindow
         var fontProgram = new ShaderProgram([
             new Shader(@"TextShaders\textShader.vert", ShaderType.VertexShader),
             new Shader(@"TextShaders\textShader.frag", ShaderType.FragmentShader)
-        ], [text], [new Attribute(AttribType.PosAndTex, 4)], BufferUsage.DynamicDraw);
+        ], [text], [new VertexAttribute(VertexAttribType.PosAndTex, 4)], BufferUsage.DynamicDraw);
         
         _fonts.Add("Cascadia", new FontMap("CascadiaCode.ttf", fontProgram));
         _fonts.Add("ATName", new FontMap("ATNameSansTextTrial-ExtraBold.otf", fontProgram));
@@ -245,37 +237,23 @@ public class RenderEngine : GameWindow
         var skybox = new EngineObject(
             "Skybox", 
             new Transform(new Vector3(0f)), 
-            new VerticesData(_skybox.Vertices, PrimitiveType.Triangles),
+            new VerticesData(_skybox.Vertices),
             _skybox.Indices,
             new Material(new Vector3(1f))
         );
         _skyboxProgram = new ShaderProgram([
             new Shader(@"SkyboxShaders\skybox.vert", ShaderType.VertexShader),
             new Shader(@"SkyboxShaders\skybox.frag", ShaderType.FragmentShader)
-        ], [skybox], [new Attribute(AttribType.Position, 3)]);
+        ], [skybox], [new VertexAttribute(VertexAttribType.Position, 3)]);
         
         //Post Process
-        var screenQuad = EngineObject.CreateEmpty();
-        screenQuad.VerticesData.Data =
-        [
-            -1.0f,  1.0f,  0.0f, 1.0f,
-            -1.0f, -1.0f,  0.0f, 0.0f,
-            1.0f, -1.0f,  1.0f, 0.0f,
-            -1.0f,  1.0f,  0.0f, 1.0f,
-            1.0f, -1.0f,  1.0f, 0.0f,
-            1.0f,  1.0f,  1.0f, 1.0f
-        ];
-        _postProcessShader = new ShaderProgram([
+        _postProcess = new PostProcess([
             new Shader(@"PostProcessShaders\postProcessShader.vert", ShaderType.VertexShader),
             new Shader(@"PostProcessShaders\postProcessShader.frag", ShaderType.FragmentShader)
-        ], [screenQuad], [new Attribute(AttribType.PosAndTex, 4)]);
-        _ppFramebuffer = new Framebuffer();
-        _ppFramebuffer.AttachTexture(new Texture(0, _viewport, null), FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2d);
-        _ppRenderbuffer = new Renderbuffer(InternalFormat.Depth24Stencil8, _viewport);
-        _ppFramebuffer.AttachRenderbuffer(FramebufferAttachment.DepthStencilAttachment, _ppRenderbuffer.Handle);
+        ], _viewport);
         
         //Shadows
-        _distantShadows = new ShadowMap(new Vector2i(8192, 8192), 1200f, 50f, new Vector2(0.01f, 2000f), _programs[0]);
+        //_distantShadows = new ShadowMap(new Vector2i(8192, 8192), 1200f, 50f, new Vector2(0.01f, 2000f), _programs[0]);
         _closeShadows = new ShadowMap(new Vector2i(4096, 4096), 50f, 1f, new Vector2(0.1f, 40f), _programs[0]);
         
         //UI
@@ -301,8 +279,9 @@ public class RenderEngine : GameWindow
     {
         foreach (var program in _programs) program.Delete();
         _skyboxProgram.Delete();
-        _postProcessShader.Delete();
-        _distantShadows.Delete();
+        //foreach (var postProcess in _postProcess) postProcess.Value.Delete();
+        _postProcess.Delete();
+        //_distantShadows.Delete();
         _closeShadows.Delete();
         foreach (var textures in _textures) textures.DeleteAll();
         foreach (var font in _fonts) font.Value.Delete();
@@ -320,7 +299,7 @@ public class RenderEngine : GameWindow
         _closeShadows.RenderDepthMap(_lights[LightTypes.Directional][0], _viewport, _programs[0], _camera);
         
         //Scene
-        _ppFramebuffer.Bind();
+        _postProcess.Bind();
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
         if (_wireframeMode)
@@ -344,29 +323,20 @@ public class RenderEngine : GameWindow
         
         if (_wireframeMode) GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
         
+        //Post Process
+        _postProcess.Unbind();
+        _postProcess.DrawPostProcess();
+        GL.Disable(EnableCap.DepthTest);
+        
         //Text
         _fonts["ATName"].DrawText(_fpsDisplay + " fps", new Vector2(25f, _viewport.Y - 60f), 0.75f, new Vector3(1f), _viewport);
         _fonts["Cascadia"].DrawText(_camera.Fov + " fov", new Vector2(25f, _viewport.Y - 110f), 0.75f, new Vector3(1f), _viewport);
         _fonts["Cascadia"].DrawText("X: "+ _camera.Transform.Position.X + " Y: " + _camera.Transform.Position.Y + " Z: "+ _camera.Transform.Position.Z,
             new Vector2(25f, _viewport.Y - 160f), 0.5f, new Vector3(1f), _viewport);
         _fonts["Cascadia"].DrawText("Boost: " + _camera.BoostSpeed, new Vector2(25f, _viewport.Y - 210f), 0.5f, new Vector3(1f), _viewport);
-        _fonts["Cascadia"].DrawText("Banding: " + _bandingTesting, new Vector2(25f, _viewport.Y - 260f), 0.5f, new Vector3(1f), _viewport);
+        _fonts["Cascadia"].DrawText("Grayscale: " + _postProcess.Grayscale, new Vector2(25f, _viewport.Y - 260f), 0.5f, new Vector3(1f), _viewport);
         
         GL.DepthFunc(DepthFunction.Less);
-        
-        //Post Process
-        _ppFramebuffer.Unbind();
-        GL.Clear(ClearBufferMask.ColorBufferBit);
-        
-        _postProcessShader.Use();
-        _postProcessShader.ArrayBuffer.Bind();
-        GL.Disable(EnableCap.DepthTest);
-        GL.ActiveTexture(TextureUnit.Texture0);
-        if (_framebufferSee) _ppFramebuffer.AttachedTextures[0].Bind();
-        else GL.BindTexture(OpenTK.Graphics.OpenGL.TextureTarget.Texture2d, _closeShadows.TextureHandle);
-        _postProcessShader.SetUniform("banding", _bandingTesting);
-        GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
-        _postProcessShader.ArrayBuffer.Unbind();
         
         //UI Windows
         _windowManager.DrawWindows(_viewport, _fonts);
@@ -454,9 +424,9 @@ public class RenderEngine : GameWindow
             _camera.Fov = Math.Max(1f, _camera.Fov - 1f);
             _camera.UpdateSensitivityByFov();
         }
-        
-        if (_timerManager.CheckTimer("1", (float)args.Time, KeyboardState.IsKeyDown(Keys.KeyPad1))) _bandingTesting++;
-        if (_timerManager.CheckTimer("2", (float)args.Time, KeyboardState.IsKeyDown(Keys.KeyPad2))) _bandingTesting--;
+
+        if (_timerManager.CheckTimer("I", (float)args.Time, KeyboardState.IsKeyDown(Keys.I))) _postProcess.Grayscale += 0.1f;
+        if (_timerManager.CheckTimer("O", (float)args.Time, KeyboardState.IsKeyDown(Keys.O))) _postProcess.Grayscale -= 0.1f;
         
         _camera.UpdateCameraFront();
         _objects[3].Transform.Position = _camera.Transform.Position;
@@ -508,7 +478,7 @@ public class RenderEngine : GameWindow
         _mouse.IsDown = true;
     }
 
-    protected override unsafe void OnResize(ResizeEventArgs e)
+    protected override void OnResize(ResizeEventArgs e)
     { 
         GL.Viewport(0, 0, e.Width, e.Height);
 
@@ -518,15 +488,7 @@ public class RenderEngine : GameWindow
         _viewport.Y = viewport[3];
         
         _camera.UpdateSensitivityByAspect(_viewport);
-        
-        //Resize Post Process
-        _ppFramebuffer.AttachedTextures[0].Bind();
-        GL.TexImage2D((OpenTK.Graphics.OpenGL.TextureTarget)TextureTarget.Texture2d, 0, (OpenTK.Graphics.OpenGL.InternalFormat)InternalFormat.Rgba, 
-            _viewport.X, _viewport.Y, 0, PixelFormat.Rgba, PixelType.UnsignedByte, null);
-        _ppFramebuffer.AttachedTextures[0].Unbind();
-        
-        _ppRenderbuffer.Delete();
-        _ppRenderbuffer = new Renderbuffer(InternalFormat.Depth24Stencil8, _viewport);
-        _ppFramebuffer.AttachRenderbuffer(FramebufferAttachment.DepthStencilAttachment, _ppRenderbuffer.Handle);
+
+        _postProcess.Resize(_viewport);
     }
 }

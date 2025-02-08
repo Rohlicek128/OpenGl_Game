@@ -1,13 +1,13 @@
 using OpenTK.Mathematics;
 using OpenGl_Game.Engine.Graphics.Buffers;
 using OpenTK.Graphics.OpenGL;
-using Attribute = OpenGl_Game.Engine.Graphics.Buffers.Attribute;
+using VertexAttribType = OpenGl_Game.Engine.Graphics.Buffers.VertexAttribType;
 
 namespace OpenGl_Game.Engine.Objects;
 
 public class ObjFileLoader
 {
-    public static EngineObject LoadFromFile(string path, Attribute[] vertexAttribs)
+    public static EngineObject LoadFromFile(string path, VertexAttribute[] vertexAttribs)
     {
         string? name = null;
         
@@ -107,7 +107,7 @@ public class ObjFileLoader
         );
     }
 
-    public static float[] CombineVerticesData(Attribute[] attributes, List<Vector3> vertices, List<Vector3> texCoords, List<Vector3> normals, List<List<Vector3i>> indices)
+    public static float[] CombineVerticesData(VertexAttribute[] attributes, List<Vector3> vertices, List<Vector3> texCoords, List<Vector3> normals, List<List<Vector3i>> indices)
     {
         var stride = attributes.Sum(a => a.Size);
         var result = new float[vertices.Count * stride];
@@ -120,8 +120,8 @@ public class ObjFileLoader
                 for (int j = 0; j < attributes[i].Size; j++)
                 {
                     var index = (v * stride) + offset + j;
-                    if (attributes[i].Type == AttribType.Position) result[index] = vertices[v][j];
-                    if (attributes[i].Type == AttribType.TextureCoords) result[index] = texCoords[FindVertexInIndices(indices, v).Y][j];
+                    if (attributes[i].Type == VertexAttribType.Position) result[index] = vertices[v][j];
+                    if (attributes[i].Type == VertexAttribType.TextureCoords) result[index] = texCoords[FindVertexInIndices(indices, v).Y][j];
                     //if (attributes[i].Type == AttribType.Normal) result[index] = CalculateNormal();
                 }
 
@@ -139,7 +139,7 @@ public class ObjFileLoader
 
             var normal = CalculateNormal(triangle[0].Xyz, triangle[1].Xyz, triangle[2].Xyz);
 
-            var offset = attributes.TakeWhile(attribute => attribute.Type != AttribType.Normal).Sum(attribute => attribute.Size);
+            var offset = attributes.TakeWhile(attribute => attribute.Type != VertexAttribType.Normal).Sum(attribute => attribute.Size);
 
             for (int i = 0; i < triangle.Length; i++)
             {
