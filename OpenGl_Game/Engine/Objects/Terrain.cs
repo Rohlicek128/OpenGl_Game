@@ -1,20 +1,20 @@
 using OpenGl_Game.Engine.Graphics.Buffers;
-using OpenGl_Game.Engine.Objects;
+using OpenGl_Game.Engine.Graphics.Textures;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using StbImageSharp;
 using VertexAttribType = OpenGl_Game.Engine.Graphics.Buffers.VertexAttribType;
 
-namespace OpenGl_Game.Engine.Graphics.Textures;
+namespace OpenGl_Game.Engine.Objects;
 
-public class HeightMap
+public class Terrain
 {
     public EngineObject TerrainObject;
-    public float TerrainScale;
+    public float Scale;
     
-    public HeightMap(string path, VertexAttribute[] attributes)
+    public Terrain(string path, VertexAttribute[] attributes)
     {
-        TerrainScale = 2f;
+        Scale = 2f;
         
         StbImage.stbi_set_flip_vertically_on_load(1);
         var image = ImageResult.FromStream(File.OpenRead(RenderEngine.DirectoryPath + @"Assets\" + path), ColorComponents.RedGreenBlue);
@@ -22,9 +22,8 @@ public class HeightMap
         
         TerrainObject = new EngineObject(
             "Terrain",
-            new Transform(new Vector3(0f), new Vector3(0f), new Vector3(TerrainScale)),
-            new VerticesData(verts, PrimitiveType.TriangleStrip),
-            inds,
+            new Transform(new Vector3(0f), new Vector3(0f), new Vector3(Scale)),
+            new MeshData(verts, inds),
             //new Material(new Vector3(74f / 255f, 149f / 255f, 207f / 255f))
             new TexturesPbr(new Dictionary<TextureTypes, Texture>
             {
@@ -55,7 +54,7 @@ public class HeightMap
                     -hm.Width/2f + x
                 ));
                 
-                texCoords.Add(new Vector2(x / (float)hm.Width, y / (float)hm.Height) / TerrainScale);
+                texCoords.Add(new Vector2(x / (float)hm.Width, y / (float)hm.Height) / Scale);
             }
         }
         
@@ -87,7 +86,7 @@ public class HeightMap
             try
             {
                 if (t + 2 >= verts.Count) normal = new Vector3(0f, -1f, 0f); 
-                else normal = ObjFileLoader.CalculateNormal(verts[t], verts[t + hm.Height], verts[t + 1]);
+                else normal = MeshConstructor.CalculateNormal(verts[t], verts[t + hm.Height], verts[t + 1]);
             }
             catch (Exception e)
             {

@@ -5,6 +5,7 @@ using OpenGl_Game.Engine.Graphics.Shadows;
 using OpenGl_Game.Engine.Objects;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
+using VertexAttribType = OpenGl_Game.Engine.Graphics.Buffers.VertexAttribType;
 
 namespace OpenGl_Game.Shaders;
 
@@ -21,11 +22,15 @@ public class ShaderProgram
     public readonly ShaderAttribute[] Attributes;
     public readonly ShaderUniform[] Uniforms;
 
-    public ShaderProgram(Shader[] shaders, List<EngineObject> objects, VertexAttribute[] attributes, BufferUsage hint = BufferUsage.StaticDraw)
+    public ShaderProgram(Shader[] shaders, List<EngineObject> objects, VertexAttribute[] attributes, BufferUsage hint = BufferUsage.StaticDraw, bool addTangent = false)
     {
         Objects = objects;
-        VertexBuffer = new VertexBuffer(VertexBuffer.CombineBufferData(Objects.Select(o => o.VerticesData.Data).ToArray()), attributes, hint);
-        IndexBuffer = new IndexBuffer(IndexBuffer.CombineIndexBuffers(Objects.Select(o => o.IndicesData).ToArray()));
+        var meshData = new MeshData(VertexBuffer.CombineBufferData(Objects.Select(o => o.MeshData.Vertices).ToArray()),
+            IndexBuffer.CombineIndexBuffers(Objects.Select(o => o.MeshData.Indices).ToArray()));
+        if (addTangent) meshData = AddTangents(meshData, ref attributes);
+        
+        VertexBuffer = new VertexBuffer(meshData.Vertices, attributes, hint);
+        IndexBuffer = new IndexBuffer(meshData.Indices);
         ArrayBuffer = new VertexArrayBuffer(VertexBuffer);
         
         Handle = GL.CreateProgram();
@@ -64,23 +69,93 @@ public class ShaderProgram
         Attributes = CreateAttributeList();
         Uniforms = CreateUniformList();
     }
+    
+    public MeshData AddTangents(MeshData meshData, ref VertexAttribute[] attributes)
+    {
+        //Attributes
+        var attribs = new VertexAttribute[attributes.Length + 1];
+        for (int i = 0; i < attributes.Length; i++) attribs[i] = attributes[i];
+        attribs[attributes.Length] = new VertexAttribute(VertexAttribType.Tangent, 3);
+        attributes = attribs;
+        
+        //Vertices
+        var verts = new float[(meshData.Vertices.Length / 8) * 11];
+        
+        var triangle = new Vector3[3];
+        var uv = new Vector2[3];
+        for (int i = 0; i < meshData.Indices.Length / 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                triangle[j] = new Vector3(
+                    meshData.Vertices[meshData.Indices[i * 3 + j] * 8 + 0],
+                    meshData.Vertices[meshData.Indices[i * 3 + j] * 8 + 1],
+                    meshData.Vertices[meshData.Indices[i * 3 + j] * 8 + 2]
+                );
+                uv[j] = new Vector2(
+                    meshData.Vertices[meshData.Indices[i * 3 + j] * 8 + 3],
+                    meshData.Vertices[meshData.Indices[i * 3 + j] * 8 + 4]
+                );
+            }
 
-    public void DrawMesh(Matrix4 worldMat, Dictionary<LightTypes, List<Light>> lights, Camera camera, int skyboxHandle, ShadowMap shadowMap)
+            var tangent = MeshConstructor.CalculateTangent(triangle[0], triangle[1], triangle[2], uv[0], uv[1], uv[2]);
+            for (int j = 0; j < 3; j++)
+            {
+                for (int k = 0; k < 8; k++)
+                {
+                    verts[meshData.Indices[i * 3 + j] * 11 + k] = meshData.Vertices[meshData.Indices[i * 3 + j] * 8 + k];
+                }
+                verts[meshData.Indices[i * 3 + j] * 11 + 8] = tangent.X;
+                verts[meshData.Indices[i * 3 + j] * 11 + 9] = tangent.Y;
+                verts[meshData.Indices[i * 3 + j] * 11 + 10] = tangent.Z;
+            }
+        }
+
+        return new MeshData(verts, meshData.Indices);
+    }
+
+    public void DrawMesh(Matrix4 worldMat)
     {
         Use();
         ArrayBuffer.Bind();
-        IndexBuffer.Bind();
+        //IndexBuffer.Bind();
         
-        SetUniform("skybox", 5);
-        GL.ActiveTexture(TextureUnit.Texture5);
-        GL.BindTexture(TextureTarget.TextureCubeMap, skyboxHandle);
-        
-        SetUniform("shadowMap", 4);
-        GL.ActiveTexture(TextureUnit.Texture4);
-        GL.BindTexture(TextureTarget.Texture2d, shadowMap.TextureHandle);
+        /*SetUniform("skybox", 10);
+        GL.ActiveTexture(TextureUnit.Texture10);
+        GL.BindTexture(TextureTarget.TextureCubeMap, skyboxHandle);*/
         
         SetUniform("world", worldMat);
+        
+        var offset = 0;
+        foreach (var engineObject in Objects)
+        {
+            if (engineObject.IsVisible) engineObject.DrawObject(this, offset);
+            offset += engineObject.MeshData.Indices.Length * sizeof(uint);
+        }
+        
+        ArrayBuffer.Unbind();
+        //IndexBuffer.Unbind();
+    }
+    
+    public void DrawMeshLighting(Dictionary<LightTypes, List<Light>> lights, Camera camera, ShadowMap shadowMap)
+    {
+        GL.Clear(ClearBufferMask.ColorBufferBit);
+        
+        Use();
+        ArrayBuffer.Bind();
+        IndexBuffer.Bind();
+        GL.Disable(EnableCap.DepthTest);
+        
+        SetUniform("gPosition", 0);
+        SetUniform("gNormal", 1);
+        SetUniform("gAlbedoSpec", 2);
+        
+        SetUniform("shadowMap", 3);
+        GL.ActiveTexture(TextureUnit.Texture3);
+        GL.BindTexture(TextureTarget.Texture2d, shadowMap.TextureHandle);
+        
         SetUniform("lightSpace", shadowMap.LightSpace);
+        SetUniform("viewPos", camera.Transform.Position);
         
         foreach (var lightList in lights)
         {
@@ -91,15 +166,11 @@ public class ShaderProgram
             }
         }
         
-        var offset = 0;
-        foreach (var engineObject in Objects)
-        {
-            if (engineObject.IsVisible) engineObject.DrawObject(this, camera, offset);
-            offset += engineObject.IndicesData.Length * sizeof(uint);
-        }
+        GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
         
         ArrayBuffer.Unbind();
         IndexBuffer.Unbind();
+        GL.Enable(EnableCap.DepthTest);
     }
     
     private ShaderAttribute[] CreateAttributeList()

@@ -1,25 +1,32 @@
+using OpenGl_Game.Engine.Editor;
 using OpenGl_Game.Engine.Graphics.Buffers;
 using OpenGl_Game.Engine.Graphics.PostProcess;
 using OpenGl_Game.Engine.Graphics.Shadows;
 using OpenGl_Game.Engine.Graphics.Text;
 using OpenGl_Game.Engine.Graphics.Textures;
 using OpenGl_Game.Engine.Objects;
+using OpenGl_Game.Engine.Objects.Collisions;
 using OpenGl_Game.Engine.UI;
 using OpenGl_Game.Shaders;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Common.Input;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using StbImageSharp;
 using FontMap = OpenGl_Game.Engine.Graphics.Text.FontMap;
+using FramebufferAttachment = OpenTK.Graphics.OpenGL.Compatibility.FramebufferAttachment;
+using TextureTarget = OpenTK.Graphics.OpenGL.Compatibility.TextureTarget;
 using VertexAttribType = OpenGl_Game.Engine.Graphics.Buffers.VertexAttribType;
 
 namespace OpenGl_Game.Engine;
 
 public class RenderEngine : GameWindow
 {
-    public static string DirectoryPath = @"C:\Users\adam\RiderProjects\OpenGl_Game\OpenGl_Game\";
-    
+    public const string DirectoryPath = @"C:\Files\Code\.NET\OpenGl_Game\OpenGl_Game\";
+    //public const string DirectoryPath = @"C:\Users\adam\RiderProjects\OpenGl_Game\OpenGl_Game\";
+
     private Camera _camera;
     private float _anim, _fpsTimer;
     private int _fpsCount, _fpsDisplay;
@@ -27,13 +34,17 @@ public class RenderEngine : GameWindow
     private bool _isRotation = true;
     private bool _isMouseGrabbed = true;
     private bool _wireframeMode = false;
-    private bool _framebufferSee = true;
+    private bool _isPostProcess = true;
 
     private Mouse _mouse;
     private Vector2i _viewport;
-
-    private List<ShaderProgram> _programs;
+    private int _renderScale;
+    
+    private ShaderProgram _geometryShader;
+    private ShaderProgram _lightingShader;
+    private ShaderProgram _lightShader;
     private ShaderProgram _skyboxProgram;
+    private GBuffer _gBuffer;
     
     private PostProcess _postProcess;
     
@@ -41,17 +52,23 @@ public class RenderEngine : GameWindow
 
     private ShadowMap _distantShadows;
     private ShadowMap _closeShadows;
+    private Ssao _ssao;
 
     private List<TexturesPbr> _textures;
     private CubeMap _skybox;
 
     private EngineObject[] _objects;
     private Dictionary<LightTypes, List<Light>> _lights;
-    private HeightMap _terrain;
-    public static readonly uint PrimitiveIndex = uint.MaxValue;
+    private Earth _earth;
+    public const uint PrimitiveIndex = uint.MaxValue;
 
     private TimerManager _timerManager;
     private WindowManager _windowManager;
+    private EditorManager _editorManager;
+
+    private CollisionBox _collisionBox;
+
+    private float _testVal = 0.5f;
     
     public RenderEngine(int width, int height, string title) : base(
             GameWindowSettings.Default, 
@@ -68,22 +85,33 @@ public class RenderEngine : GameWindow
             }
         )
     {
+        Icon = CreateWindowIcon(@"Icon\logo_v0.png");
         _mouse = new Mouse();
         _viewport = new Vector2i(width, height);
+        _renderScale = 1;
         CenterWindow();
 
         _textures = [];
-        _programs = [];
 
         _fonts = new Dictionary<string, FontMap>();
         _timerManager = new TimerManager(150);
+        _editorManager = new EditorManager();
+
+        _collisionBox = new CollisionBox(new Transform(new Vector3(0f)));
         
-        _camera = new Camera(new Vector3(0f, 0f, -3f), 3f, 0.14f, 95f);
+        _camera = new Camera(new Vector3(0f, 0f, -3f), 3f, 0.12f, 95f);
         _camera.UpdateSensitivityByAspect(_viewport);
-        _camera.UpdateSensitivityByFov();
     }
 
-    protected override unsafe void OnLoad()
+    public WindowIcon CreateWindowIcon(string path)
+    {
+        //StbImage.stbi_set_flip_vertically_on_load(1);
+        var image = ImageResult.FromStream(File.OpenRead(DirectoryPath + @"Assets\" + path), ColorComponents.RedGreenBlueAlpha);
+        
+        return new WindowIcon(new OpenTK.Windowing.Common.Input.Image(image.Width, image.Height, image.Data));
+    }
+
+    protected override void OnLoad()
     {
         IsVisible = true;
         
@@ -94,11 +122,12 @@ public class RenderEngine : GameWindow
         ];
         
         //Texture
-        _skybox = new CubeMap("Skybox");
+        _skybox = new CubeMap("black1x1.png", false);
         
         _textures.Add(new TexturesPbr());
         _textures[0].AddTexture(TextureTypes.Diffuse, new Texture("container.png", 0));
-        _textures[0].AddTexture(TextureTypes.Specular, new Texture("container_s.png", 1));
+        _textures[0].AddTexture(TextureTypes.Specular, new Texture("white1x1.png", 1));
+        _textures[0].AddTexture(TextureTypes.Normal, new Texture("test_normal_map.jpg", 2));
         
         _textures.Add(new TexturesPbr());
         _textures[1].AddTexture(TextureTypes.Diffuse, new Texture("concrete_pavers_diff_2k.jpg", 0));
@@ -106,7 +135,7 @@ public class RenderEngine : GameWindow
         
         //Fonts
         var text = EngineObject.CreateEmpty();
-        text.VerticesData.Data = new float[6 * 4];
+        text.MeshData.Vertices = new float[6 * 4];
         var fontProgram = new ShaderProgram([
             new Shader(@"TextShaders\textShader.vert", ShaderType.VertexShader),
             new Shader(@"TextShaders\textShader.frag", ShaderType.FragmentShader)
@@ -114,6 +143,7 @@ public class RenderEngine : GameWindow
         
         _fonts.Add("Cascadia", new FontMap("CascadiaCode.ttf", fontProgram));
         _fonts.Add("ATName", new FontMap("ATNameSansTextTrial-ExtraBold.otf", fontProgram));
+        _fonts.Add("Pixel", new FontMap("04B_03__.TTF", fontProgram));
         
         //Materials
         var material1 = new Material(new Vector3(1f, 0f, 0f));
@@ -128,44 +158,47 @@ public class RenderEngine : GameWindow
         var playerBox = new EngineObject(
             "Player", 
             new Transform(new Vector3(0f, 0f, 0f)), 
-            new VerticesData(ObjFileLoader.CreateCubeVertices()),
-            ObjFileLoader.CreateCubeIndices(),
+            MeshConstructor.CreateCube(),
             material1
         );
-        playerBox.Transform.Scale = new Vector3(0.7f, 0.7f, 0.7f);
+        playerBox.Transform.Scale = new Vector3(0.35f);
+        var box = new EngineObject(
+            "box", 
+            new Transform(new Vector3(0f, 0f, 0f)), 
+            MeshConstructor.CreateCube(),
+            _textures[0]
+        );
+        box.Material.Color = new Vector3(1f);
         var rollingCube = new EngineObject(
             "Chill Cube", 
             new Transform(new Vector3(0f, 0f, 0f)), 
-            new VerticesData(ObjFileLoader.CreateCubeVertices()),
-            ObjFileLoader.CreateCubeIndices(),
+            MeshConstructor.CreateCube(),
             material1
         );
         rollingCube.Material.Color = new Vector3(1f, 1f, 0f);
         var rotatingCube = new EngineObject(
             "Chill Cube #2", 
             new Transform(new Vector3(0f, 0f, -5f)), 
-            new VerticesData(ObjFileLoader.CreateCubeVertices()),
-            ObjFileLoader.CreateCubeIndices(),
+            MeshConstructor.CreateCube(),
             _textures[0]
         );
         var anotherCube = new EngineObject(
             "Another Cube", 
             new Transform(new Vector3(-7f, 1f, 5f)),
-            new VerticesData(ObjFileLoader.CreateCubeVertices()),
-            ObjFileLoader.CreateCubeIndices(),
+            MeshConstructor.CreateCube(),
             material2
         );
         anotherCube.Transform.Scale = new Vector3(0.3f, 1f, 0.5f);
         var floor = new EngineObject(
             "Floor", 
             new Transform(new Vector3(0f, -0.501f, 0f)), 
-            new VerticesData(ObjFileLoader.CreatePlaneVertices(0.5f)),
-            ObjFileLoader.CreatePlaneIndices(),
+            MeshConstructor.CreatePlane(1f),
             _textures[1]
         );
         floor.Material.Shininess = 32f;
         floor.Material.Specular = new Vector3(0.5f);
         floor.Transform.Scale *= 20f;
+        floor.Textures.Scaling = 0.5f;
         
         /*var teapot = ObjFileLoader.LoadFromFile(@"teapot\teapot.obj", verticesAttribs);
         teapot.Transform.Scale /= 80f;
@@ -174,15 +207,15 @@ public class RenderEngine : GameWindow
         teapot.Material.Color = new Vector3(0.8f, 0.05f, 0.2f);
         teapot.Material.Shininess = 600f;*/
 
-        _terrain = new HeightMap("new-zealand-height-map.jpg", verticesAttribs);
+        //var terrain = new Terrain("new-zealand-height-map.jpg", verticesAttribs);
+        _earth = new Earth(new Transform(new Vector3(0f), new Vector3(0f, MathF.PI, 0f), new Vector3(637.8f)), 500, 0.03f);
         
         //lights
         var dirLight = new Light(
             "Dir light", 
             new Transform(new Vector3(-2.9260643f, 6.0104437f, -5.3240757f)), 
-            new VerticesData(ObjFileLoader.CreateCubeVertices()),
-            ObjFileLoader.CreateCubeIndices(),
-            new Material(new Vector3(1f, 1f, 1f)),
+            MeshConstructor.CreateCube(),
+            new Material(new Vector3(1f)),
             new Vector3(0.2f, 1f, 1f),
             new Vector3(1.0f, 0.045f * 10, 0.0075f * 10),
             LightTypes.Directional
@@ -194,8 +227,7 @@ public class RenderEngine : GameWindow
         var pointLight = new Light(
             "Point light", 
             new Transform(new Vector3(-2.3207285f, 5.0880294f, -4.088403f)), 
-            new VerticesData(ObjFileLoader.CreateCubeVertices()),
-            ObjFileLoader.CreateCubeIndices(),
+            MeshConstructor.CreateCube(),
             new Material(new Vector3(1f, 0.95f, 0.6f)),
             new Vector3(0.25f, 1f, 1f),
             new Vector3(1.0f, 0.45f, 0.075f),
@@ -205,8 +237,7 @@ public class RenderEngine : GameWindow
         var pointLight2 = new Light(
             "Point light", 
             new Transform(new Vector3(-6f, 1.5f, 1f)), 
-            new VerticesData(ObjFileLoader.CreateCubeVertices()),
-            ObjFileLoader.CreateCubeIndices(),
+            MeshConstructor.CreateCube(),
             new Material(new Vector3(0f, 1f, 0f)),
             new Vector3(0.25f, 1f, 1f),
             new Vector3(1.0f, 0.045f, 0.0075f),
@@ -214,7 +245,7 @@ public class RenderEngine : GameWindow
         );
         pointLight2.Transform.Scale *= 0.25f;
         
-        _objects = [rollingCube, rotatingCube, anotherCube, playerBox, floor, _terrain.TerrainObject];
+        _objects = [rollingCube, _earth.EarthObject, anotherCube, playerBox, box, floor];
         
         _lights = new Dictionary<LightTypes, List<Light>>
         {
@@ -222,23 +253,32 @@ public class RenderEngine : GameWindow
             { LightTypes.Point, [pointLight, pointLight2] }
         };
         
-        //Shader Program
-        _programs.Add(new ShaderProgram([
+        _editorManager.Save(playerBox);
+        
+        //Geometry Shader
+        _geometryShader = new ShaderProgram([
             new Shader(@"LightingShaders\vertexShader.vert", ShaderType.VertexShader),
-            new Shader(@"LightingShaders\fragmentShader.frag", ShaderType.FragmentShader)
-        ], _objects.ToList(), verticesAttribs));
-        //Light Program
-        _programs.Add(new ShaderProgram([
+            new Shader(@"LightingShaders\geometryShader.frag", ShaderType.FragmentShader)
+        ], _objects.ToList(), verticesAttribs, addTangent:true);
+        //Lighting Shader
+        var screenQuad = EngineObject.CreateEmpty();
+        screenQuad.MeshData.Vertices = MeshConstructor.CreateRenderQuad();
+        _lightingShader = new ShaderProgram([
+            new Shader(@"PostProcessShaders\postProcessShader.vert", ShaderType.VertexShader),
+            new Shader(@"LightingShaders\lightingShader.frag", ShaderType.FragmentShader)
+        ], [screenQuad], [new VertexAttribute(VertexAttribType.PosAndTex, 4)]);
+        
+        //Light Shader
+        _lightShader = new ShaderProgram([
             new Shader(@"LightingShaders\vertexShader.vert", ShaderType.VertexShader),
             new Shader(@"LightShaders\lightShader.frag", ShaderType.FragmentShader)
-        ], [..Light.LightsDicToList(_lights)], verticesAttribs));
+        ], [..Light.LightsDicToList(_lights)], verticesAttribs, addTangent:true);
         
         //Skybox
         var skybox = new EngineObject(
             "Skybox", 
             new Transform(new Vector3(0f)), 
-            new VerticesData(_skybox.Vertices),
-            _skybox.Indices,
+            _skybox.MeshData,
             new Material(new Vector3(1f))
         );
         _skyboxProgram = new ShaderProgram([
@@ -250,11 +290,18 @@ public class RenderEngine : GameWindow
         _postProcess = new PostProcess([
             new Shader(@"PostProcessShaders\postProcessShader.vert", ShaderType.VertexShader),
             new Shader(@"PostProcessShaders\postProcessShader.frag", ShaderType.FragmentShader)
-        ], _viewport);
+        ], _viewport / _renderScale);
+        
+        //gBuffer
+        _gBuffer = new GBuffer(_viewport);
         
         //Shadows
-        //_distantShadows = new ShadowMap(new Vector2i(8192, 8192), 1200f, 50f, new Vector2(0.01f, 2000f), _programs[0]);
-        _closeShadows = new ShadowMap(new Vector2i(4096, 4096), 50f, 1f, new Vector2(0.1f, 40f), _programs[0]);
+        _distantShadows = new ShadowMap(new Vector2i(8192, 8192), 1200f, 400f, new Vector2(0.01f, 1000f), _geometryShader);
+        //_closeShadows = new ShadowMap(new Vector2i(4096, 4096), 50f, 1f, new Vector2(0.1f, 40f), _geometryShader);
+        _ssao = new Ssao([
+            new Shader(@"PostProcessShaders\postProcessShader.vert", ShaderType.VertexShader),
+            new Shader(@"shadersSSAO\ssaoShader.frag", ShaderType.FragmentShader)
+        ], _viewport, 64, 4);
         
         //UI
         _windowManager = new WindowManager();
@@ -277,12 +324,14 @@ public class RenderEngine : GameWindow
 
     protected override void OnUnload()
     {
-        foreach (var program in _programs) program.Delete();
+        _geometryShader.Delete();
+        _lightShader.Delete();
         _skyboxProgram.Delete();
-        //foreach (var postProcess in _postProcess) postProcess.Value.Delete();
+        
         _postProcess.Delete();
-        //_distantShadows.Delete();
-        _closeShadows.Delete();
+        _distantShadows.Delete();
+        //_closeShadows.Delete();
+        _ssao.Delete();
         foreach (var textures in _textures) textures.DeleteAll();
         foreach (var font in _fonts) font.Value.Delete();
         _windowManager.Delete();
@@ -294,47 +343,69 @@ public class RenderEngine : GameWindow
     {
         //Shadows
         GL.Enable(EnableCap.DepthTest);
+        GL.CullFace(TriangleFace.Front);
+        GL.ClearColor(0f, 0f, 0f, 1f);
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-        //_distantShadows.RenderDepthMap(_lights[LightTypes.Directional][0], _viewport, _programs[0], _camera);
-        _closeShadows.RenderDepthMap(_lights[LightTypes.Directional][0], _viewport, _programs[0], _camera);
+        _distantShadows.RenderDepthMap(_lights[LightTypes.Directional][0], _viewport, _geometryShader, _camera);
+        //_closeShadows.RenderDepthMap(_lights[LightTypes.Directional][0], _viewport, _geometryShader, _camera);
+        GL.CullFace(TriangleFace.Back);
         
+        if (_wireframeMode) GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Line);
+        
+        
+        GL.Viewport(0, 0, _viewport.X / _renderScale, _viewport.Y / _renderScale);
         //Scene
-        _postProcess.Bind();
+        GL.Disable(EnableCap.Blend);
+        _gBuffer.Bind();
+        GL.ClearColor(0f, 0f, 0f, 1f);
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
-        if (_wireframeMode)
-        {
-            GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Line);
-        }
-
+        
+        //Geometry Pass
         var viewMat = _camera.GetViewMatrix4();
-        var projectionMat = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(_camera.Fov), (float) _viewport[0] / _viewport[1], 0.025f, 10000f);
+        var projectionMat = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(_camera.Fov), (float) _viewport[0] / _viewport[1], 0.025f, 5000f);
         var worldMat = viewMat * projectionMat;
         
-        foreach (var program in _programs) program.DrawMesh(worldMat, _lights, _camera, _skybox.Handle, _closeShadows);
+        _geometryShader.DrawMesh(worldMat);
+        _gBuffer.Unbind();
         
+        //SSAO
+        _ssao.RenderSsao(_gBuffer, projectionMat, _viewport, _testVal, viewMat);
+        
+        //Lighting Pass
+        _postProcess.Bind();
+        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        _gBuffer.BindBufferTextures();
+        _lightingShader.DrawMeshLighting(_lights, _camera, _distantShadows);
+        
+        GL.Enable(EnableCap.Blend);
+        //_gBuffer.SetDefaultDepth(_viewport);
+        
+        
+        //_lightShader.DrawMesh(worldMat);
         //Skybox
-        viewMat = _camera.GetViewMatrix4().ClearTranslation();
+        /*viewMat = _camera.GetViewMatrix4().ClearTranslation();
         worldMat = viewMat * projectionMat;
         
         GL.Disable(EnableCap.CullFace);
         GL.DepthFunc(DepthFunction.Lequal);
-        _skyboxProgram.DrawMesh(worldMat, _lights, _camera, _skybox.Handle, _closeShadows);
+        _skyboxProgram.DrawMesh(worldMat);*/
         
         if (_wireframeMode) GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
         
         //Post Process
         _postProcess.Unbind();
-        _postProcess.DrawPostProcess();
+        GL.Viewport(0, 0, _viewport.X, _viewport.Y);
+        _postProcess.DrawPostProcess(_isPostProcess ? -1 : _ssao.Framebuffer.AttachedTextures[0].Handle);
         GL.Disable(EnableCap.DepthTest);
         
         //Text
-        _fonts["ATName"].DrawText(_fpsDisplay + " fps", new Vector2(25f, _viewport.Y - 60f), 0.75f, new Vector3(1f), _viewport);
-        _fonts["Cascadia"].DrawText(_camera.Fov + " fov", new Vector2(25f, _viewport.Y - 110f), 0.75f, new Vector3(1f), _viewport);
-        _fonts["Cascadia"].DrawText("X: "+ _camera.Transform.Position.X + " Y: " + _camera.Transform.Position.Y + " Z: "+ _camera.Transform.Position.Z,
+        _fonts["Pixel"].DrawText(_fpsDisplay + " fps", new Vector2(25f, _viewport.Y - 60f), 0.75f, new Vector3(1f), _viewport);
+        _fonts["Pixel"].DrawText(_camera.Fov + " fov", new Vector2(25f, _viewport.Y - 110f), 0.75f, new Vector3(1f), _viewport);
+        _fonts["Pixel"].DrawText("X: "+ (MathF.Floor(_camera.Transform.Position.X * 1000f) / 1000f) + " Y: " + (MathF.Floor(_camera.Transform.Position.Y * 1000f) / 1000f) + " Z: "+ (MathF.Floor(_camera.Transform.Position.Z * 1000f) / 1000f),
             new Vector2(25f, _viewport.Y - 160f), 0.5f, new Vector3(1f), _viewport);
-        _fonts["Cascadia"].DrawText("Boost: " + _camera.BoostSpeed, new Vector2(25f, _viewport.Y - 210f), 0.5f, new Vector3(1f), _viewport);
-        _fonts["Cascadia"].DrawText("Grayscale: " + _postProcess.Grayscale, new Vector2(25f, _viewport.Y - 260f), 0.5f, new Vector3(1f), _viewport);
+        _fonts["Pixel"].DrawText("Boost: " + _camera.BoostSpeed, new Vector2(25f, _viewport.Y - 210f), 0.5f, new Vector3(1f), _viewport);
+        _fonts["Pixel"].DrawText("Grayscale: " + _postProcess.Grayscale, new Vector2(25f, _viewport.Y - 260f), 0.5f, new Vector3(1f), _viewport);
+        _fonts["Pixel"].DrawText("VALUE: " + _testVal, new Vector2(25f, _viewport.Y - 310f), 0.5f, new Vector3(1f), _viewport);
         
         GL.DepthFunc(DepthFunction.Less);
         
@@ -358,7 +429,7 @@ public class RenderEngine : GameWindow
     protected override void OnUpdateFrame(FrameEventArgs args)
     {
         if (_isRotation) _anim += (float)args.Time;
-        _objects[1].Transform.Rotation.Y = _anim / 2f;
+        _objects[1].Transform.Rotation.Y = _anim / 10f;
         _objects[0].Transform.Position.X = (float)Math.Sin(_anim * 2f) * 3f + 5f;
         _objects[0].Transform.Rotation.Z = (float)Math.Sin(-_anim * 2f) * 5f + 2f;
         
@@ -372,13 +443,16 @@ public class RenderEngine : GameWindow
         if (!IsFocused) return;
 
         var speedTime = (float)(_camera.Speed * args.Time * (_camera.SpeedBoost ? _camera.BoostSpeed : _camera.BaseSpeed));
-
+        var prevTransform = _camera.Transform.Position;
+        
         if (KeyboardState.IsKeyDown(Keys.W)) _camera.Transform.Position += Vector3.Normalize(Vector3.Cross(_camera.Right, _camera.Up)) * speedTime;
         if (KeyboardState.IsKeyDown(Keys.S)) _camera.Transform.Position -= Vector3.Normalize(Vector3.Cross(_camera.Right, _camera.Up)) * speedTime;
         if (KeyboardState.IsKeyDown(Keys.A)) _camera.Transform.Position -= Vector3.Normalize(Vector3.Cross(_camera.Front, _camera.Up)) * speedTime;
         if (KeyboardState.IsKeyDown(Keys.D)) _camera.Transform.Position += Vector3.Normalize(Vector3.Cross(_camera.Front, _camera.Up)) * speedTime;
         if (KeyboardState.IsKeyDown(Keys.Space) || KeyboardState.IsKeyDown(Keys.E)) _camera.Transform.Position += _camera.Up * speedTime;
         if (KeyboardState.IsKeyDown(Keys.LeftControl) || KeyboardState.IsKeyDown(Keys.Q)) _camera.Transform.Position -= _camera.Up * speedTime;
+        
+        if (_collisionBox.CheckCollision(_camera.Transform.Position)) _camera.Transform.Position = prevTransform;
         
         if (KeyboardState.IsKeyDown(Keys.LeftShift)) _camera.SpeedBoost = true;
         if (KeyboardState.IsKeyReleased(Keys.LeftShift)) _camera.SpeedBoost = false;
@@ -397,36 +471,44 @@ public class RenderEngine : GameWindow
         }
         if (_timerManager.CheckTimer("P", (float)args.Time, KeyboardState.IsKeyDown(Keys.P)))
         {
-            _framebufferSee = !_framebufferSee;
+            _isPostProcess = !_isPostProcess;
         }
         
         const float sens = 2f;
-        if (KeyboardState.IsKeyDown(Keys.Insert)) _lights[LightTypes.Directional][0].Transform.Position.X += (float)args.Time * sens;
-        if (KeyboardState.IsKeyDown(Keys.Delete)) _lights[LightTypes.Directional][0].Transform.Position.X -= (float)args.Time * sens;
-        if (KeyboardState.IsKeyDown(Keys.Home)) _lights[LightTypes.Directional][0].Transform.Position.Y += (float)args.Time * sens;
-        if (KeyboardState.IsKeyDown(Keys.End)) _lights[LightTypes.Directional][0].Transform.Position.Y -= (float)args.Time * sens;
-        if (KeyboardState.IsKeyDown(Keys.PageUp)) _lights[LightTypes.Directional][0].Transform.Position.Z += (float)args.Time * sens;
-        if (KeyboardState.IsKeyDown(Keys.PageDown)) _lights[LightTypes.Directional][0].Transform.Position.Z -= (float)args.Time * sens;
+        if (KeyboardState.IsKeyDown(Keys.Insert)) _lights[LightTypes.Directional][0].Transform.Rotation.X += (float)args.Time * sens;
+        if (KeyboardState.IsKeyDown(Keys.Delete)) _lights[LightTypes.Directional][0].Transform.Rotation.X -= (float)args.Time * sens;
+        if (KeyboardState.IsKeyDown(Keys.Home)) _lights[LightTypes.Directional][0].Transform.Rotation.Y += (float)args.Time * sens;
+        if (KeyboardState.IsKeyDown(Keys.End)) _lights[LightTypes.Directional][0].Transform.Rotation.Y -= (float)args.Time * sens;
+        if (KeyboardState.IsKeyDown(Keys.PageUp)) _lights[LightTypes.Directional][0].Transform.Rotation.Z += (float)args.Time * sens;
+        if (KeyboardState.IsKeyDown(Keys.PageDown)) _lights[LightTypes.Directional][0].Transform.Rotation.Z -= (float)args.Time * sens;
         if (KeyboardState.IsKeyDown(Keys.Enter))
         {
             _lights[LightTypes.Directional][0].Transform.SetRotationByPosition(Vector3.Zero);
             Console.WriteLine(_lights[LightTypes.Directional][0].Transform.Position.ToString());
         }
-        _lights[LightTypes.Directional][0].Transform.SetRotationByPosition(Vector3.Zero);
+        //_lights[LightTypes.Directional][0].Transform.SetRotationByPosition(Vector3.Zero);
+        if (_lights[LightTypes.Directional][0].Transform.Rotation.X > 2f * MathF.PI) _lights[LightTypes.Directional][0].Transform.Rotation.X = -2f * MathF.PI;
+        if (_lights[LightTypes.Directional][0].Transform.Rotation.X < -2f * MathF.PI) _lights[LightTypes.Directional][0].Transform.Rotation.X = 2f * MathF.PI;
+        if (_lights[LightTypes.Directional][0].Transform.Rotation.Y > 2f * MathF.PI) _lights[LightTypes.Directional][0].Transform.Rotation.Y = -2f * MathF.PI;
+        if (_lights[LightTypes.Directional][0].Transform.Rotation.Y < -2f * MathF.PI) _lights[LightTypes.Directional][0].Transform.Rotation.Y = 2f * MathF.PI;
+        if (_lights[LightTypes.Directional][0].Transform.Rotation.Z > 2f * MathF.PI) _lights[LightTypes.Directional][0].Transform.Rotation.Z = -2f * MathF.PI;
+        if (_lights[LightTypes.Directional][0].Transform.Rotation.Z < -2f * MathF.PI) _lights[LightTypes.Directional][0].Transform.Rotation.Z = 2f * MathF.PI;
         
         if (_timerManager.CheckTimer("+", (float)args.Time, KeyboardState.IsKeyDown(Keys.KeyPadAdd)))
         {
-            _camera.Fov = Math.Min(160f, _camera.Fov + 1f);
-            _camera.UpdateSensitivityByFov();
+            //_camera.Fov = Math.Min(160f, _camera.Fov + 1f);
+            //_camera.UpdateSensitivityByFov();
+            _testVal += 0.01f;
         }
         if (_timerManager.CheckTimer("-", (float)args.Time, KeyboardState.IsKeyDown(Keys.KeyPadSubtract)))
         {
-            _camera.Fov = Math.Max(1f, _camera.Fov - 1f);
-            _camera.UpdateSensitivityByFov();
+            //_camera.Fov = Math.Max(1f, _camera.Fov - 1f);
+            //_camera.UpdateSensitivityByFov();
+            _testVal -= 0.01f;
         }
 
-        if (_timerManager.CheckTimer("I", (float)args.Time, KeyboardState.IsKeyDown(Keys.I))) _postProcess.Grayscale += 0.1f;
-        if (_timerManager.CheckTimer("O", (float)args.Time, KeyboardState.IsKeyDown(Keys.O))) _postProcess.Grayscale -= 0.1f;
+        if (_timerManager.CheckTimer("I", (float)args.Time, KeyboardState.IsKeyDown(Keys.I))) _postProcess.Grayscale += 1f;
+        if (_timerManager.CheckTimer("O", (float)args.Time, KeyboardState.IsKeyDown(Keys.O))) _postProcess.Grayscale -= 1f;
         
         _camera.UpdateCameraFront();
         _objects[3].Transform.Position = _camera.Transform.Position;
@@ -489,6 +571,8 @@ public class RenderEngine : GameWindow
         
         _camera.UpdateSensitivityByAspect(_viewport);
 
-        _postProcess.Resize(_viewport);
+        _postProcess.Resize(_viewport / _renderScale);
+        _gBuffer.Resize(_viewport / _renderScale);
+        _ssao.Framebuffer.AttachedTextures[0].Resize(_viewport / _renderScale);
     }
 }

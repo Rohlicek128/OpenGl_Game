@@ -10,9 +10,9 @@ public class UiWindow
 {
     public Transform Transform;
     public Vector4 Color;
-    
-    public string Header;
 
+    public bool IsVisible;
+    public string Header;
 
     private bool _isHeld;
     private Vector2i _startPos;
@@ -23,6 +23,7 @@ public class UiWindow
         Transform = new Transform(new Vector3(50f, 800f, 0f), new Vector3(0f), new Vector3(500f, 800f, 0f));
         Header = header;
         Color = color;
+        IsVisible = false;
         
         _startPos = Vector2i.Zero;
         _origoPos = Vector2i.Zero;

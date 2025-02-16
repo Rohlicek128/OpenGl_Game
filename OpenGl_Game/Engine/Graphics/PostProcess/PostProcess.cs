@@ -21,18 +21,10 @@ public class PostProcess
 
     public unsafe PostProcess(Shader[] shaders, Vector2i viewport)
     {
-        Banding = 10;
-        Grayscale = 0.5f;
+        Banding = -1;
+        Grayscale = 0.0f;
         var screenQuad = EngineObject.CreateEmpty();
-        screenQuad.VerticesData.Data =
-        [
-            -1.0f,  1.0f,  0.0f, 1.0f,
-            -1.0f, -1.0f,  0.0f, 0.0f,
-            1.0f, -1.0f,  1.0f, 0.0f,
-            -1.0f,  1.0f,  0.0f, 1.0f,
-            1.0f, -1.0f,  1.0f, 0.0f,
-            1.0f,  1.0f,  1.0f, 1.0f
-        ];
+        screenQuad.MeshData.Vertices = MeshConstructor.CreateRenderQuad();
         
         Program = new ShaderProgram(shaders, [screenQuad], [new VertexAttribute(VertexAttribType.PosAndTex, 4)]);
         
@@ -50,14 +42,22 @@ public class PostProcess
         Program.Use();
         Program.ArrayBuffer.Bind();
         GL.Disable(EnableCap.DepthTest);
-        
-        GL.ActiveTexture(TextureUnit.Texture0);
-        Framebuffer.AttachedTextures[0].Bind();
+
+        for (int i = 0; i < Framebuffer.AttachedTextures.Count; i++)
+        {
+            GL.ActiveTexture(TextureUnit.Texture0 + (uint)i);
+            Framebuffer.AttachedTextures[i].Bind();
+        }
     }
 
-    public virtual void DrawPostProcess()
+    public void DrawPostProcess(int textureHandle)
     {
         UseProgram();
+        if (textureHandle != -1)
+        {
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(OpenTK.Graphics.OpenGL.TextureTarget.Texture2d, textureHandle);
+        }
         Program.SetUniform("banding", Banding);
         Program.SetUniform("grayscale", Grayscale);
         Draw();

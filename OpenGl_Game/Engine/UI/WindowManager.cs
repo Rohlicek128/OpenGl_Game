@@ -19,7 +19,7 @@ public class WindowManager
         
         var ui = EngineObject.CreateEmpty();
         //ui.VerticesData.Data = new float[6 * 4];
-        ui.VerticesData.Data = ObjFileLoader.CreateQuadVertices(1f);
+        ui.MeshData = MeshConstructor.CreateQuad(1f);
         UiProgram = new ShaderProgram([
             new Shader(@"UiShaders\uiShader.vert", ShaderType.VertexShader),
             new Shader(@"UiShaders\uiShader.frag", ShaderType.FragmentShader)
@@ -34,8 +34,11 @@ public class WindowManager
         UiProgram.ArrayBuffer.Bind();
         
         UiProgram.SetUniform("viewport", viewport);
-        
-        foreach (var window in Windows) window.DrawWindow(UiProgram, viewport, fonts);
+
+        foreach (var window in Windows.Where(window => window.IsVisible))
+        {
+            window.DrawWindow(UiProgram, viewport, fonts);
+        }
         
         UiProgram.ArrayBuffer.Unbind();
         UiProgram.Unbind();

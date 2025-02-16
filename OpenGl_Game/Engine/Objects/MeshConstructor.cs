@@ -5,7 +5,7 @@ using VertexAttribType = OpenGl_Game.Engine.Graphics.Buffers.VertexAttribType;
 
 namespace OpenGl_Game.Engine.Objects;
 
-public class ObjFileLoader
+public class MeshConstructor
 {
     public static EngineObject LoadFromFile(string path, VertexAttribute[] vertexAttribs)
     {
@@ -101,8 +101,7 @@ public class ObjFileLoader
         return new EngineObject(
             name ?? "N/A",
             new Transform(origin),
-            new VerticesData(CombineVerticesData(vertexAttribs, vertices, texCoords, normals, indices), PrimitiveType.Triangles),
-            FormatIndicesData(indices),
+            new MeshData(CombineVerticesData(vertexAttribs, vertices, texCoords, normals, indices), FormatIndicesData(indices)),
             new Material(new Vector3(1f))
         );
     }
@@ -192,8 +191,118 @@ public class ObjFileLoader
             u.X * v.Y - u.Y * v.X
         );
     }
+    
+    public static Vector3 CalculateNormal(Vector3[] t)
+    {
+        var u = t[1] - t[0];
+        var v = t[2] - t[0];
 
-    public static float[] CreateCubeVertices()
+        return new Vector3(
+            u.Y * v.Z - u.Z * v.Y,
+            u.Z * v.X - u.X * v.Z,
+            u.X * v.Y - u.Y * v.X
+        );
+    }
+    
+    public static Vector3 CalculateTangent(Vector3 v1, Vector3 v2, Vector3 v3, Vector2 uv1, Vector2 uv2, Vector2 uv3)
+    {
+        var e1 = v2 - v1;
+        var e2 = v3 - v1;
+        var d1 = uv2 - uv1;
+        var d2 = uv3 - uv1;
+
+        var f = 1f / (d1.X * d2.Y - d2.X * d1.Y);
+
+        return new Vector3(
+            f * (d2.Y * e1.X - d1.Y * e2.X),
+            f * (d2.Y * e1.Y - d1.Y * e2.Y),
+            f * (d2.Y * e1.Z - d1.Y * e2.Z)
+        );
+    }
+
+    public static Vector3 CubeToSphereVertex(Vector3 v)
+    {
+        var x2 = v.X * v.X;
+        var y2 = v.Y * v.Y;
+        var z2 = v.Z * v.Z;
+        var x = v.X * MathF.Sqrt(1 - (y2 + z2) / 2 + (y2 * z2) / 3);
+        var y = v.Y * MathF.Sqrt(1 - (z2 + x2) / 2 + (z2 * x2) / 3);
+        var z = v.Z * MathF.Sqrt(1 - (x2 + y2) / 2 + (x2 * y2) / 3);
+        return new Vector3(x, y, z);
+    }
+
+    public static MeshData CreateFace(Vector3 normal, int resolution, bool isSpherical = false)
+    {
+        var axisA = normal.Yzx;
+        var axisB = Vector3.Cross(normal, axisA);
+
+        var vertices = new float[(resolution) * resolution * 8];
+        var indices = new uint[(resolution - 1) * (resolution - 1) * 6];
+        var triIndex = 0;
+
+        //var divider = false;
+        for (int y = 0; y < resolution; y++)
+        {
+            for (int x = 0; x < resolution; x++)
+            {
+                var vertexIndex = x + y * resolution;
+                var t = new Vector2(x, y) / (resolution - 1);
+                var v = normal + axisA * (2 * t.X - 1) + axisB * (2 * t.Y - 1);
+                if (isSpherical) v = CubeToSphereVertex(v);
+                
+                for (int i = 0; i < 3; i++) vertices[vertexIndex * 8 + i + 0] = v[i]; //Vertex
+                //Tex Coords
+                vertices[vertexIndex * 8 + 3] = x / (resolution - 1f);
+                vertices[vertexIndex * 8 + 4] = y / (resolution - 1f);
+                for (int i = 0; i < 3; i++) vertices[vertexIndex * 8 + i + 5] = normal[i]; //Normal
+
+                if (x != resolution - 1 && y != resolution - 1)
+                {
+                    indices[triIndex + 0] = (uint)vertexIndex;
+                    indices[triIndex + 1] = (uint)(vertexIndex + resolution + 1);
+                    indices[triIndex + 2] = (uint)(vertexIndex + resolution);
+                    indices[triIndex + 3] = (uint)(vertexIndex);
+                    indices[triIndex + 4] = (uint)(vertexIndex + 1);
+                    indices[triIndex + 5] = (uint)(vertexIndex + resolution + 1);
+                    triIndex += 6;
+                }
+                /*if (!divider && y == (int)Math.Floor(resolution / 2f) - 1)
+                {
+                    x--;
+                    divider = true;
+                }*/
+            }
+        }
+
+        return new MeshData(vertices, indices);
+    }
+
+    public static MeshData CombineMeshData(MeshData[] data)
+    {
+        var vertices = data[0].Vertices;
+        for (var i = 1; i < data.Length; i++)
+        {
+            vertices = vertices.Concat(data[i].Vertices).ToArray();
+        }
+        
+        var indices = data[0].Indices;
+        for (var i = 1; i < data.Length; i++)
+        {
+            var offset = indices.Max() + 1;
+
+            for (var j = 0; j < data[i].Indices.Length; j++)
+            {
+                if (data[i].Indices[j] == RenderEngine.PrimitiveIndex) continue;
+                data[i].Indices[j] += offset;
+                if (data[i].Indices[j] == 0) Console.WriteLine("ZERO FOUND");
+            }
+            indices = indices.Concat(data[i].Indices).ToArray();
+        }
+
+        return new MeshData(vertices, indices);
+    }
+
+    public static MeshData CreateCube()
     {
         float[] vertices =
         [
@@ -227,12 +336,6 @@ public class ObjFileLoader
             -0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.0f,  1.0f,  0.0f, // H 22
             0.5f,  0.5f,  0.5f,   0.0f, 1.0f, 0.0f,  1.0f,  0.0f  // G 23
         ];
-
-        return vertices;
-    }
-
-    public static uint[] CreateCubeIndices()
-    {
         uint[] indices =
         [
             // front and back
@@ -252,10 +355,10 @@ public class ObjFileLoader
             22, 23, 20
         ];
 
-        return indices;
+        return new MeshData(vertices, indices);
     }
     
-    public static float[] CreatePlaneVertices(float texScaling)
+    public static MeshData CreatePlane(float texScaling)
     {
         float[] vertices =
         [
@@ -264,31 +367,17 @@ public class ObjFileLoader
             -1f, 0f, -1f,  texScaling, texScaling,  0.0f,  1.0f,  0.0f,
             -1f, 0f,  1f,  0.0f, texScaling,  0.0f,  1.0f,  0.0f
         ];
-
-        return vertices;
-    }
-
-    public static uint[] CreatePlaneIndices()
-    {
         uint[] indices =
         [
             0, 1, 2,
             2, 3, 0
         ];
 
-        return indices;
+        return new MeshData(vertices, indices);
     }
     
-    public static float[] CreateQuadVertices(float texScaling)
+    public static MeshData CreateQuad(float texScaling)
     {
-        /*float[] vertices =
-        [
-            1f,  1f,  0.0f, 0.0f,
-            1f, -1f,  texScaling, 0.0f,
-            -1f, -1f,  texScaling, texScaling,
-            -1f,  1f,  0.0f, texScaling
-        ];*/
-        
         float[] vertices =
         [
             1f,  1f,  0.0f, 0.0f,
@@ -299,8 +388,25 @@ public class ObjFileLoader
             -1f, -1f,  texScaling, texScaling,
             -1f,  1f,  0.0f, texScaling
         ];
+        uint[] indices =
+        [
+            0, 1, 2,
+            2, 3, 0
+        ];
 
-        return vertices;
+        return new MeshData(vertices, indices);
+    }
+
+    public static float[] CreateRenderQuad()
+    {
+        return [
+            -1.0f,  1.0f,  0.0f, 1.0f,
+            -1.0f, -1.0f,  0.0f, 0.0f,
+            1.0f, -1.0f,  1.0f, 0.0f,
+            -1.0f,  1.0f,  0.0f, 1.0f,
+            1.0f, -1.0f,  1.0f, 0.0f,
+            1.0f,  1.0f,  1.0f, 1.0f
+        ];
     }
 
 }

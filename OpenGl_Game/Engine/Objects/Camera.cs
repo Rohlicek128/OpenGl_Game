@@ -44,6 +44,7 @@ public class Camera
         FarPlane = 1000000f;
 
         _lastMouse = new Vector2(0f, 0f);
+        UpdateSensitivityByFov();
     }
 
     public void UpdateSensitivityByAspect(Vector2i viewport)

@@ -1,3 +1,4 @@
+using OpenGl_Game.Engine.Objects;
 using OpenTK.Graphics.OpenGL;
 using StbImageSharp;
 
@@ -7,7 +8,9 @@ public class CubeMap
 {
     public int Handle;
 
-    public float[] Vertices =
+    public MeshData MeshData;
+
+    private float[] _vertices =
     [
         -0.5f, -0.5f, -0.5f,
         0.5f, -0.5f, -0.5f,
@@ -39,7 +42,7 @@ public class CubeMap
         -0.5f, 0.5f, 0.5f,
         0.5f, 0.5f, 0.5f,
     ];
-    public uint[] Indices =
+    private uint[] _indices =
     [
         // front and back
         0, 3, 2,
@@ -58,9 +61,10 @@ public class CubeMap
         22, 23, 20
     ];
 
-    public CubeMap(string dirPath)
+    public CubeMap(string dirPath, bool isDirectory = true)
     {
         Handle = GL.GenTexture();
+        MeshData = new MeshData(_vertices, _indices);
         Bind();
 
         GL.TexParameteri(TextureTarget.TextureCubeMap, TextureParameterName.TextureWrapS, (int) TextureWrapMode.ClampToEdge);
@@ -69,10 +73,20 @@ public class CubeMap
         GL.TexParameteri(TextureTarget.TextureCubeMap, TextureParameterName.TextureMinFilter, (int) TextureMinFilter.Linear);
         GL.TexParameteri(TextureTarget.TextureCubeMap, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Linear);
         
-        //StbImage.stbi_set_flip_vertically_on_load(1);
+        var image = new ImageResult();
+        if (!isDirectory)
+        {
+            StbImage.stbi_set_flip_vertically_on_load(1);
+            image = ImageResult.FromStream(File.OpenRead(RenderEngine.DirectoryPath + @"Assets\" + dirPath), ColorComponents.RedGreenBlue);
+        }
         for (uint i = 0; i < 6; i++)
         {
-            var image = ImageResult.FromStream(File.OpenRead(RenderEngine.DirectoryPath + @"Assets\" + dirPath + @"\" + i + ".jpg"), ColorComponents.RedGreenBlue);
+            if (isDirectory)
+            {
+                StbImage.stbi_set_flip_vertically_on_load(1);
+                image = ImageResult.FromStream(File.OpenRead(RenderEngine.DirectoryPath + @"Assets\" + dirPath + @"\" + i + ".jpg"), ColorComponents.RedGreenBlue);
+            }
+            
             GL.TexImage2D(TextureTarget.TextureCubeMapPositiveX + i, 0, InternalFormat.Rgb, 
                 image.Width, image.Height, 0, PixelFormat.Rgb, PixelType.UnsignedByte, image.Data);
         }

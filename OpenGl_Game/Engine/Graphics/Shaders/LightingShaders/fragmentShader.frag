@@ -7,6 +7,8 @@ struct Material {
     vec3 specular;
     sampler2D diffuseMap;
     sampler2D specularMap;
+    int hasNormalMap;
+    sampler2D normalMap;
     float shininess;
 };
 struct DirLight {
@@ -30,8 +32,10 @@ in vec2 vTexCoord;
 in vec3 vNormal;
 in vec3 vFragPos;
 in vec4 vFragPosLightSpace;
+in mat3 vTBN;
 
-out vec4 pixelColor;
+layout (location = 0) out vec4 pixelColor;
+layout (location = 1) out vec4 brightColor;
 
 #define NR_POINT_LIGHTS 2
 
@@ -48,7 +52,10 @@ vec3 CalcPointLight(PointLight light, vec3 norm, vec3 viewDir, vec3 fragPos, vec
 float CalcShadow(vec4 fragPosLight);
 
 void main(){
-    vec3 norm = normalize(vNormal);
+    vec3 norm = texture(material.normalMap, vTexCoord).rgb;
+    norm = norm * 2.0 - 1.0;
+    norm = normalize(vTBN * norm) * material.hasNormalMap + normalize(vNormal) * (1 - material.hasNormalMap);
+    
     vec3 viewDir = normalize(viewPos - vFragPos);
 
     vec3 materialColor = material.color * texture(material.diffuseMap, vTexCoord).rgb * material.diffuse;
@@ -58,6 +65,7 @@ void main(){
     for (int i = 0; i < NR_POINT_LIGHTS; i++) result += CalcPointLight(pointLight[i], norm, viewDir, vFragPos, materialColor, specMap);
 
     pixelColor = vec4(result, 1.0);
+    brightColor = pixelColor;
 }
 
 vec3 CalcDirectionLight(DirLight light, vec3 norm, vec3 viewDir, vec3 materialColor, vec3 specMap){
@@ -74,6 +82,7 @@ vec3 CalcDirectionLight(DirLight light, vec3 norm, vec3 viewDir, vec3 materialCo
     
     //Shadows
     float shadow = CalcShadow(vFragPosLightSpace);
+    //float shadow = 0.0;
 
     return (ambient + (diffuse + specular) * (1.0 - shadow));
 }

@@ -1,5 +1,6 @@
 using OpenGl_Game.Engine.Graphics.Textures;
 using OpenTK.Graphics.OpenGL.Compatibility;
+using OpenTK.Mathematics;
 using FramebufferTarget = OpenTK.Graphics.OpenGL.Compatibility.FramebufferTarget;
 using FramebufferAttachment = OpenTK.Graphics.OpenGL.Compatibility.FramebufferAttachment;
 using GL = OpenTK.Graphics.OpenGL.Compatibility.GL;
@@ -39,6 +40,14 @@ public class Framebuffer
         Bind();
         GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, type, RenderbufferTarget.Renderbuffer, rbHandle);
         Unbind();
+    }
+
+    public void SetDefaultDepth(Vector2i viewport)
+    {
+        GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, Handle);
+        GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
+        GL.BlitFramebuffer(0, 0, viewport.X, viewport.Y, 0, 0, viewport.X, viewport.Y, ClearBufferMask.DepthBufferBit, BlitFramebufferFilter.Nearest);
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
     }
 
     public void Bind()

@@ -144,3 +144,7 @@ C:\Users\adam\RiderProjects\OpenGl_Game\OpenGl_Game\obj\Debug\net8.0\refint\Open
 C:\Users\adam\RiderProjects\OpenGl_Game\OpenGl_Game\obj\Debug\net8.0\OpenGl_Game.pdb
 C:\Users\adam\RiderProjects\OpenGl_Game\OpenGl_Game\obj\Debug\net8.0\OpenGl_Game.genruntimeconfig.cache
 C:\Users\adam\RiderProjects\OpenGl_Game\OpenGl_Game\obj\Debug\net8.0\ref\OpenGl_Game.dll
+C:\Files\Code\.NET\OpenGl_Game\OpenGl_Game\bin\Debug\net8.0\Microsoft.Win32.SystemEvents.dll
+C:\Files\Code\.NET\OpenGl_Game\OpenGl_Game\bin\Debug\net8.0\System.Drawing.Common.dll
+C:\Files\Code\.NET\OpenGl_Game\OpenGl_Game\bin\Debug\net8.0\System.Private.Windows.Core.dll
+C:\Files\Code\.NET\OpenGl_Game\OpenGl_Game\bin\Debug\net8.0\runtimes\win\lib\net8.0\Microsoft.Win32.SystemEvents.dll

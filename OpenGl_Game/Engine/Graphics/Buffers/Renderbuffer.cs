@@ -11,9 +11,7 @@ public class Renderbuffer
     {
         Handle = GL.GenRenderbuffer();
         Bind();
-        
         GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, format, viewport.X, viewport.Y);
-        
         Unbind();
     }
 

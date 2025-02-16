@@ -6,16 +6,19 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <ApplicationIcon>Assets\Icon\logo_v0.ico</ApplicationIcon>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="FreeTypeSharp" Version="3.0.0" />
       <PackageReference Include="OpenTK" Version="5.0.0-pre.13" />
       <PackageReference Include="StbImageSharp" Version="2.30.15" />
+      <PackageReference Include="System.Drawing.Common" Version="9.0.2" />
     </ItemGroup>
 
     <ItemGroup>
       <Folder Include="Assets\Fonts\" />
+      <Folder Include="Engine\Editor\Saved\" />
     </ItemGroup>
 
 </Project>

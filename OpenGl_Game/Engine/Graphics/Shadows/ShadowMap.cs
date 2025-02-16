@@ -56,7 +56,7 @@ public class ShadowMap
         
         GL.TexParameterf(TextureTarget.Texture2d, TextureParameterName.TextureBorderColor, [1f, 1f, 1f, 1f]);
         
-        GL.TexImage2D(TextureTarget.Texture2d, 0, InternalFormat.DepthComponent, 
+        GL.TexImage2D(TextureTarget.Texture2d, 0, InternalFormat.DepthComponent32, 
             ShadowSize.X, ShadowSize.Y, 0, PixelFormat.DepthComponent, PixelType.Float, null);
 
         return handle;
@@ -85,9 +85,9 @@ public class ShadowMap
             {
                 var model = engineObject.GetModelMatrix();
                 ShadowProgram.SetUniform("model", model);
-                GL.DrawElements(engineObject.VerticesData.Type, engineObject.IndicesData.Length, DrawElementsType.UnsignedInt, offset);
+                GL.DrawElements(engineObject.MeshData.PrimitiveType, engineObject.MeshData.Indices.Length, DrawElementsType.UnsignedInt, offset);
             }
-            offset += engineObject.IndicesData.Length * sizeof(uint);
+            offset += engineObject.MeshData.Indices.Length * sizeof(uint);
         }
         
         DepthMapFramebuffer.Unbind();
@@ -104,7 +104,7 @@ public class ShadowMap
         
         var lightProjection = Matrix4.CreateOrthographic(MaxDistance, MaxDistance, PlaneDims.X, PlaneDims.Y);
         var lightView = Matrix4.LookAt(
-            dirLight.Transform.Position * CameraOffset + camera.Transform.Position,
+            -dirLight.Transform.Rotation * CameraOffset + camera.Transform.Position,
             camera.Transform.Position,
             new Vector3(0f, 1f, 0f)
         );

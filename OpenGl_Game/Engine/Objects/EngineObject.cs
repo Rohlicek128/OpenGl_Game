@@ -13,20 +13,18 @@ public class EngineObject
 
     public Transform Transform;
     public Material Material;
-    
-    public VerticesData VerticesData;
-    public uint[] IndicesData;
-    
+
+    public MeshData MeshData;
+
     public TexturesPbr Textures;
 
-    public bool IsVisible = true;
+    public bool IsVisible;
 
-    public EngineObject(string name, Transform transform, VerticesData verticesData, uint[] indicesData, TexturesPbr textures)
+    public EngineObject(string name, Transform transform, MeshData meshData, TexturesPbr textures)
     {
         Name = name;
         Transform = transform;
-        VerticesData = verticesData;
-        IndicesData = indicesData;
+        MeshData = meshData;
         Material = new Material(
             new Vector3(1f),
             new Vector3(1f),
@@ -34,17 +32,18 @@ public class EngineObject
             32f
         );
         Textures = textures;
+        IsVisible = true;
     }
     
-    public EngineObject(string name, Transform transform, VerticesData verticesData, uint[] indicesData, Material material)
+    public EngineObject(string name, Transform transform, MeshData meshData, Material material)
     {
         Name = name;
         Transform = transform;
-        VerticesData = verticesData;
-        IndicesData = indicesData;
+        MeshData = meshData;
         Material = material;
         Textures = new TexturesPbr();
         Textures.FillRest();
+        IsVisible = true;
     }
 
     public static EngineObject CreateEmpty()
@@ -52,8 +51,7 @@ public class EngineObject
         return new EngineObject(
             "N/A",
             new Transform(new Vector3(0f)),
-            new VerticesData([], PrimitiveType.Triangles),
-            [],
+            new MeshData([], []),
             new Material(new Vector3(1f))
         );
     }
@@ -65,24 +63,25 @@ public class EngineObject
         return model;
     }
 
-    public void DrawObject(ShaderProgram program, Camera camera, int offset)
+    public void DrawObject(ShaderProgram program, int offset)
     {
         var model = GetModelMatrix();
         program.SetUniform("model", model);
         program.SetUniform("inverseModel", model.Inverted().Transposed());
+        program.SetUniform("textureScaling", Textures.Scaling);
         
         program.SetUniform("material.color", Material.Color);
         program.SetUniform("material.diffuse", Material.Diffuse);
         program.SetUniform("material.specular", Material.Specular);
         program.SetUniform("material.shininess", Material.Shininess);
         
-        program.SetUniform("viewPos", camera.Transform.Position);
-        
         program.SetUniform("material.diffuseMap", 0);
         program.SetUniform("material.specularMap", 1);
+        program.SetUniform("material.normalMap", 2);
+        program.SetUniform("material.hasNormalMap", Textures.ContainsType(TextureTypes.Normal) ? 1 : 0);
         Textures.ActiveAndBindAll();
         
-        GL.DrawElements(VerticesData.Type, IndicesData.Length, DrawElementsType.UnsignedInt, offset);
+        GL.DrawElements(MeshData.PrimitiveType, MeshData.Indices.Length, DrawElementsType.UnsignedInt, offset);
     }
 
 }

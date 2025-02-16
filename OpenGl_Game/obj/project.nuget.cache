@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "kfhDvpyh/9Q=",
+  "dgSpecHash": "FXwiAmZegCs=",
   "success": true,
-  "projectFilePath": "C:\\Users\\adam\\RiderProjects\\OpenGl_Game\\OpenGl_Game\\OpenGl_Game.csproj",
+  "projectFilePath": "C:\\Files\\Code\\.NET\\OpenGl_Game\\OpenGl_Game\\OpenGl_Game.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\adam\\.nuget\\packages\\freetypesharp\\3.0.0\\freetypesharp.3.0.0.nupkg.sha512",
+    "C:\\Users\\adam\\.nuget\\packages\\microsoft.win32.systemevents\\9.0.2\\microsoft.win32.systemevents.9.0.2.nupkg.sha512",
     "C:\\Users\\adam\\.nuget\\packages\\opentk\\5.0.0-pre.13\\opentk.5.0.0-pre.13.nupkg.sha512",
     "C:\\Users\\adam\\.nuget\\packages\\opentk.audio.openal\\5.0.0-pre.13\\opentk.audio.openal.5.0.0-pre.13.nupkg.sha512",
     "C:\\Users\\adam\\.nuget\\packages\\opentk.compute\\5.0.0-pre.13\\opentk.compute.5.0.0-pre.13.nupkg.sha512",
@@ -18,11 +19,8 @@
     "C:\\Users\\adam\\.nuget\\packages\\opentk.windowing.desktop\\5.0.0-pre.13\\opentk.windowing.desktop.5.0.0-pre.13.nupkg.sha512",
     "C:\\Users\\adam\\.nuget\\packages\\opentk.windowing.graphicslibraryframework\\5.0.0-pre.13\\opentk.windowing.graphicslibraryframework.5.0.0-pre.13.nupkg.sha512",
     "C:\\Users\\adam\\.nuget\\packages\\stbimagesharp\\2.30.15\\stbimagesharp.2.30.15.nupkg.sha512",
-    "C:\\Users\\adam\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\5.0.0\\system.runtime.compilerservices.unsafe.5.0.0.nupkg.sha512",
-    "C:\\Users\\adam\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.11\\microsoft.netcore.app.ref.8.0.11.nupkg.sha512",
-    "C:\\Users\\adam\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.11\\microsoft.windowsdesktop.app.ref.8.0.11.nupkg.sha512",
-    "C:\\Users\\adam\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.11\\microsoft.aspnetcore.app.ref.8.0.11.nupkg.sha512",
-    "C:\\Users\\adam\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\8.0.11\\microsoft.netcore.app.host.win-x64.8.0.11.nupkg.sha512"
+    "C:\\Users\\adam\\.nuget\\packages\\system.drawing.common\\9.0.2\\system.drawing.common.9.0.2.nupkg.sha512",
+    "C:\\Users\\adam\\.nuget\\packages\\system.runtime.compilerservices.unsafe\\5.0.0\\system.runtime.compilerservices.unsafe.5.0.0.nupkg.sha512"
   ],
   "logs": []
 }
