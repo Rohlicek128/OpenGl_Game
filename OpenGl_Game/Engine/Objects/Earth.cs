@@ -3,6 +3,7 @@ using OpenGl_Game.Buffers;
 using OpenGl_Game.Engine.Graphics.Textures;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 using StbImageSharp;
 
 namespace OpenGl_Game.Engine.Objects;
@@ -40,7 +41,17 @@ public class Earth
                 {TextureTypes.Normal, NormalMap}
             })
         );
-        
+    }
+
+    public void MoveEarth(KeyboardState keyboard, Camera camera, float deltaTime, float boost)
+    {
+        var speed = 0.1f + boost;
+        if (keyboard.IsKeyDown(Keys.W)) EarthObject.Transform.Rotation.Z += speed * deltaTime;
+        if (keyboard.IsKeyDown(Keys.S)) EarthObject.Transform.Rotation.Z -= speed * deltaTime;
+        if (keyboard.IsKeyDown(Keys.A)) EarthObject.Transform.Rotation.Y += speed * deltaTime;
+        if (keyboard.IsKeyDown(Keys.D)) EarthObject.Transform.Rotation.Y -= speed * deltaTime;
+        if (keyboard.IsKeyDown(Keys.Q)) camera.Transform.Rotation.Z += speed * deltaTime;
+        if (keyboard.IsKeyDown(Keys.E)) camera.Transform.Rotation.Z -= speed * deltaTime;
     }
 
     public MeshData GenerateFaces(int resolution)

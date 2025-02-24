@@ -69,14 +69,14 @@ public class Camera
         _lastMouse.X = Mouse.X;
         _lastMouse.Y = Mouse.Y;
 
-        Yaw += deltaX * Sensitivity;
-        Pitch += deltaY * Sensitivity;
-        if (Pitch > 89f) Pitch = 89f;
-        else if (Pitch < -89f) Pitch = -89f;
+        Yaw += deltaX * Sensitivity + Transform.Rotation.Z;
+        Pitch += deltaY * Sensitivity + Transform.Rotation.Z;
+        //if (Pitch > 89f) Pitch = 89f;
+        //else if (Pitch < -89f) Pitch = -89f;
 
         Front.X = (float)Math.Cos(MathHelper.DegreesToRadians(Pitch)) * (float)Math.Cos(MathHelper.DegreesToRadians(Yaw));
         Front.Y = (float)Math.Sin(MathHelper.DegreesToRadians(Pitch));
-        Front.Z = (float)Math.Cos(MathHelper.DegreesToRadians(Pitch)) * (float)Math.Sin(MathHelper.DegreesToRadians(Yaw));
+        Front.Z = (float)Math.Cos(MathHelper.DegreesToRadians(MathF.Abs(Pitch))) * (float)Math.Sin(MathHelper.DegreesToRadians(Yaw));
         Front = Vector3.Normalize(Front);
         
         Right = Vector3.Normalize(Vector3.Cross(Up, Front));

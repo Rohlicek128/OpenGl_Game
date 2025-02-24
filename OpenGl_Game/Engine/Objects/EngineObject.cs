@@ -63,11 +63,12 @@ public class EngineObject
         return model;
     }
 
-    public void DrawObject(ShaderProgram program, int offset)
+    public void DrawObject(ShaderProgram program, int offset, Matrix4 view)
     {
         var model = GetModelMatrix();
         program.SetUniform("model", model);
         program.SetUniform("inverseModel", model.Inverted().Transposed());
+        program.SetUniform("inverseModelView", (model * view).Inverted().Transposed());
         program.SetUniform("textureScaling", Textures.Scaling);
         
         program.SetUniform("material.color", Material.Color);

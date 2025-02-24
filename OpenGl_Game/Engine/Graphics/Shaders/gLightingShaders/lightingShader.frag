@@ -33,6 +33,7 @@ uniform PointLight pointLight[NR_POINT_LIGHTS];
 uniform vec3 viewPos;
 uniform mat4 lightSpace;
 uniform sampler2D shadowMap;
+uniform sampler2D ssaoMap;
 
 float CalcShadow(vec4 fragPosLight, vec3 normal){
     vec3 projectedCoords = fragPosLight.xyz / fragPosLight.w;
@@ -96,17 +97,19 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 viewDir, vec3 fragPos, v
 }
 
 void main(){
-    vec3 fragPos = texture(gPosition, vTexCoord).rgb;
+    vec3 fragPos = texture(gPosition, vTexCoord).xyz;
     vec3 normal = texture(gNormal, vTexCoord).rgb;
     vec4 albedoSpec = texture(gAlbedoSpec, vTexCoord);
     vec3 albedo = albedoSpec.rgb;
     float specular = albedoSpec.a;
-    
+    //float ambientOcclusion = texture(ssaoMap, vTexCoord).r;
+
     vec3 viewDir = normalize(viewPos - fragPos);
     vec4 fragPosLightSpace = vec4(fragPos, 1.0) * lightSpace;
     
     vec3 result = CalcDirectionLight(dirLight, normal, viewDir, albedo, specular, fragPosLightSpace);
     for (int i = 0; i < NR_POINT_LIGHTS; i++) result += CalcPointLight(pointLight[i], normal, viewDir, fragPos, albedo, specular);
 
+    //pixelColor = vec4(result * ambientOcclusion, 1.0);
     pixelColor = vec4(result, 1.0);
 }

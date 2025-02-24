@@ -114,7 +114,7 @@ public class ShaderProgram
         return new MeshData(verts, meshData.Indices);
     }
 
-    public void DrawMesh(Matrix4 worldMat)
+    public void DrawMesh(Matrix4 worldMat, Matrix4 proj, Matrix4 view)
     {
         Use();
         ArrayBuffer.Bind();
@@ -125,11 +125,13 @@ public class ShaderProgram
         GL.BindTexture(TextureTarget.TextureCubeMap, skyboxHandle);*/
         
         SetUniform("world", worldMat);
+        SetUniform("projection", proj);
+        SetUniform("view", view);
         
         var offset = 0;
         foreach (var engineObject in Objects)
         {
-            if (engineObject.IsVisible) engineObject.DrawObject(this, offset);
+            if (engineObject.IsVisible) engineObject.DrawObject(this, offset, view);
             offset += engineObject.MeshData.Indices.Length * sizeof(uint);
         }
         
@@ -137,7 +139,7 @@ public class ShaderProgram
         //IndexBuffer.Unbind();
     }
     
-    public void DrawMeshLighting(Dictionary<LightTypes, List<Light>> lights, Camera camera, ShadowMap shadowMap)
+    public void DrawMeshLighting(Dictionary<LightTypes, List<Light>> lights, Camera camera, ShadowMap shadowMap, Ssao ssao)
     {
         GL.Clear(ClearBufferMask.ColorBufferBit);
         
@@ -153,6 +155,10 @@ public class ShaderProgram
         SetUniform("shadowMap", 3);
         GL.ActiveTexture(TextureUnit.Texture3);
         GL.BindTexture(TextureTarget.Texture2d, shadowMap.TextureHandle);
+
+        SetUniform("ssaoMap", 4);
+        GL.ActiveTexture(TextureUnit.Texture4);
+        GL.BindTexture(TextureTarget.Texture2d, ssao.BlurFramebuffer.AttachedTextures[0].Handle);
         
         SetUniform("lightSpace", shadowMap.LightSpace);
         SetUniform("viewPos", camera.Transform.Position);
