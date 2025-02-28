@@ -8,6 +8,8 @@ public class Camera
     public Vector3 Target;
     public Vector3 Direction;
 
+    public Quaternion Quaternion;
+
     public Vector3 Up;
     public Vector3 Front;
     public Vector3 Right;
@@ -32,6 +34,8 @@ public class Camera
         Transform = new Transform(startingPos);
         Target = Vector3.Zero;
         Direction = Vector3.Normalize(Transform.Position - Target);
+        
+        Quaternion = Quaternion.Identity;
 
         Up = Vector3.UnitY;
         Front = new Vector3(0f, 0f, -1f);
@@ -60,6 +64,7 @@ public class Camera
     public Matrix4 GetViewMatrix4()
     {
         return Matrix4.LookAt(Transform.Position, Transform.Position + Front, Up);
+        //return Matrix4.LookAt(Transform.Position, Transform.Position + Quaternion.ToEulerAngles(), Up);
     }
 
     public void UpdateCameraFront()
@@ -69,15 +74,17 @@ public class Camera
         _lastMouse.X = Mouse.X;
         _lastMouse.Y = Mouse.Y;
 
-        Yaw += deltaX * Sensitivity + Transform.Rotation.Z;
-        Pitch += deltaY * Sensitivity + Transform.Rotation.Z;
+        Yaw += deltaX * Sensitivity;
+        Pitch += deltaY * Sensitivity;
         //if (Pitch > 89f) Pitch = 89f;
         //else if (Pitch < -89f) Pitch = -89f;
 
         Front.X = (float)Math.Cos(MathHelper.DegreesToRadians(Pitch)) * (float)Math.Cos(MathHelper.DegreesToRadians(Yaw));
         Front.Y = (float)Math.Sin(MathHelper.DegreesToRadians(Pitch));
-        Front.Z = (float)Math.Cos(MathHelper.DegreesToRadians(MathF.Abs(Pitch))) * (float)Math.Sin(MathHelper.DegreesToRadians(Yaw));
+        Front.Z = (float)Math.Cos(MathHelper.DegreesToRadians(Pitch)) * (float)Math.Sin(MathHelper.DegreesToRadians(Yaw));
         Front = Vector3.Normalize(Front);
+
+        //Quaternion = Quaternion.FromEulerAngles(Yaw, Pitch, 0f) * Quaternion;
         
         Right = Vector3.Normalize(Vector3.Cross(Up, Front));
     }

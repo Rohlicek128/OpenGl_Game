@@ -411,7 +411,7 @@ public class RenderEngine : GameWindow
             new Vector2(25f, _viewport.Y - 210f), 0.5f, new Vector3(1f), _viewport);
         _fonts["Pixel"].DrawText("Boost: " + _camera.BoostSpeed, new Vector2(25f, _viewport.Y - 260f), 0.5f, new Vector3(1f), _viewport);
         _fonts["Pixel"].DrawText("Grayscale: " + _postProcess.Grayscale, new Vector2(25f, _viewport.Y - 310f), 0.5f, new Vector3(1f), _viewport);
-        _fonts["Pixel"].DrawText("VALUE: " + _testVal, new Vector2(25f, _viewport.Y - 360f), 0.5f, new Vector3(1f), _viewport);
+        _fonts["Pixel"].DrawText("VALUE: Y: " + _camera.Yaw + ", P: " + _camera.Pitch, new Vector2(25f, _viewport.Y - 360f), 0.5f, new Vector3(1f), _viewport);
         
         GL.DepthFunc(DepthFunction.Less);
         
@@ -448,7 +448,7 @@ public class RenderEngine : GameWindow
         
         if (!IsFocused) return;
 
-        _earth.MoveEarth(KeyboardState, _camera, (float)args.Time, _camera.BoostSpeed * (_camera.SpeedBoost ? 1f : 0f));
+        _earth.MoveEarth(KeyboardState, _camera, (float)args.Time, _camera.BoostSpeed);
         var speedTime = (float)(_camera.Speed * args.Time * (_camera.SpeedBoost ? _camera.BoostSpeed : _camera.BaseSpeed));
         if (KeyboardState.IsKeyDown(Keys.Space)) _camera.Transform.Position.X += speedTime;
         if (KeyboardState.IsKeyDown(Keys.LeftControl)) _camera.Transform.Position.X -= speedTime;

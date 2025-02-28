@@ -58,7 +58,8 @@ public class EngineObject
 
     public Matrix4 GetModelMatrix()
     {
-        var model = Matrix4.CreateRotationX(Transform.Rotation.X) * Matrix4.CreateRotationY(Transform.Rotation.Y) * Matrix4.CreateRotationZ(Transform.Rotation.Z);
+        //var model = Matrix4.CreateRotationX(Transform.Rotation.X) * Matrix4.CreateRotationY(Transform.Rotation.Y) * Matrix4.CreateRotationZ(Transform.Rotation.Z);
+        var model = Matrix4.CreateFromQuaternion(Transform.Quaternion);
         model *= Matrix4.CreateScale(Transform.Scale) * Matrix4.CreateTranslation(Transform.Position);
         return model;
     }

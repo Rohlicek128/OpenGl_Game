@@ -11,6 +11,8 @@ namespace OpenGl_Game.Engine.Objects;
 public class Earth
 {
     public EngineObject EarthObject;
+
+    public float Yaw, Pitch;
     
     public Texture ColorMap;
     public Texture RoughnessMap;
@@ -45,13 +47,30 @@ public class Earth
 
     public void MoveEarth(KeyboardState keyboard, Camera camera, float deltaTime, float boost)
     {
-        var speed = 0.1f + boost;
-        if (keyboard.IsKeyDown(Keys.W)) EarthObject.Transform.Rotation.Z += speed * deltaTime;
+        var speed = deltaTime * boost / 250f;
+        
+        /*if (keyboard.IsKeyDown(Keys.W)) Yaw += speed;
+        if (keyboard.IsKeyDown(Keys.S)) Yaw -= speed;
+        if (keyboard.IsKeyDown(Keys.A)) Pitch += speed;
+        if (keyboard.IsKeyDown(Keys.D)) Pitch -= speed;
+        
+        EarthObject.Transform.Rotation.X = (float)Math.Cos(MathHelper.DegreesToRadians(Pitch)) * (float)Math.Cos(MathHelper.DegreesToRadians(Yaw));
+        EarthObject.Transform.Rotation.Y = (float)Math.Sin(MathHelper.DegreesToRadians(Pitch));
+        EarthObject.Transform.Rotation.Z = (float)Math.Cos(MathHelper.DegreesToRadians(Pitch)) * (float)Math.Sin(MathHelper.DegreesToRadians(Yaw));*/
+        
+        /*if (keyboard.IsKeyDown(Keys.W)) EarthObject.Transform.Rotation.Z += speed * deltaTime;
         if (keyboard.IsKeyDown(Keys.S)) EarthObject.Transform.Rotation.Z -= speed * deltaTime;
         if (keyboard.IsKeyDown(Keys.A)) EarthObject.Transform.Rotation.Y += speed * deltaTime;
         if (keyboard.IsKeyDown(Keys.D)) EarthObject.Transform.Rotation.Y -= speed * deltaTime;
         if (keyboard.IsKeyDown(Keys.Q)) camera.Transform.Rotation.Z += speed * deltaTime;
-        if (keyboard.IsKeyDown(Keys.E)) camera.Transform.Rotation.Z -= speed * deltaTime;
+        if (keyboard.IsKeyDown(Keys.E)) camera.Transform.Rotation.Z -= speed * deltaTime;*/
+        
+        if (keyboard.IsKeyDown(Keys.W)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(-camera.Right * speed) * EarthObject.Transform.Quaternion;
+        if (keyboard.IsKeyDown(Keys.S)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(camera.Right * speed) * EarthObject.Transform.Quaternion;
+        if (keyboard.IsKeyDown(Keys.A)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.Cross(camera.Up, -camera.Right) * speed) * EarthObject.Transform.Quaternion;
+        if (keyboard.IsKeyDown(Keys.D)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.Cross(camera.Up, camera.Right) * speed) * EarthObject.Transform.Quaternion;
+        if (keyboard.IsKeyDown(Keys.Q)) camera.Transform.Position.Y -= boost * deltaTime;
+        if (keyboard.IsKeyDown(Keys.E)) camera.Transform.Position.Y += boost * deltaTime;
     }
 
     public MeshData GenerateFaces(int resolution)
@@ -95,7 +114,7 @@ public class Earth
             //HM
             var height = HeightMap.SampleTexture(new Vector2i((int)(gps.X * HeightMap.Image.Width), (int)(gps.Y * HeightMap.Image.Height))).X / 255f;
             var realHeight = height * (highestPoint + deepestPoint) - deepestPoint;
-            if (realHeight < 0) height = deepestPoint / (float)(highestPoint + deepestPoint);
+            if (realHeight <= 0) height = deepestPoint / (float)(highestPoint + deepestPoint);
             
             height *= Scale;
             height += MidLevel;
