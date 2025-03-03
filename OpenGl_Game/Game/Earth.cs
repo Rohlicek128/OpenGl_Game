@@ -1,22 +1,19 @@
-using System.Text;
-using OpenGl_Game.Buffers;
 using OpenGl_Game.Engine.Graphics.Textures;
+using OpenGl_Game.Engine.Objects;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using StbImageSharp;
 
-namespace OpenGl_Game.Engine.Objects;
+namespace OpenGl_Game.Game;
 
 public class Earth
 {
     public EngineObject EarthObject;
-
-    public float Yaw, Pitch;
     
     public Texture ColorMap;
     public Texture RoughnessMap;
     public Texture NormalMap;
+    public Texture CitiesMap;
     
     public Texture HeightMap;
     public float Scale;
@@ -24,10 +21,11 @@ public class Earth
     
     public Earth(Transform transform, int resolution, float scale, float midLevel = 1f)
     {
-        ColorMap = new Texture("earth_color_jan.png", 0);
-        RoughnessMap = new Texture("earth_specular_map.png", 1);
-        NormalMap = new Texture("earth_normal_map.png", 2);
-        HeightMap = new Texture("earth_height_map_water.png", 0, TextureMagFilter.Linear, TextureMagFilter.Linear);
+        ColorMap = new Texture("Earth\\earth_color_mar.png", 0, TextureMagFilter.Linear, TextureMagFilter.Linear);
+        RoughnessMap = new Texture("Earth\\earth_specular.png", 1, TextureMagFilter.Linear, TextureMagFilter.Linear);
+        NormalMap = new Texture("Earth\\earth_normal_high2.png", 2, TextureMagFilter.Linear, TextureMagFilter.Linear);
+        HeightMap = new Texture("Earth\\earth_height_water.png", 0, TextureMagFilter.Linear, TextureMagFilter.Linear);
+        CitiesMap = new Texture("Earth\\earth_cities.png", 3, TextureMagFilter.Linear, TextureMagFilter.Linear);
         Scale = scale;
         MidLevel = midLevel;
         
@@ -40,37 +38,22 @@ public class Earth
             {
                 {TextureTypes.Diffuse, ColorMap},
                 {TextureTypes.Specular, RoughnessMap},
-                {TextureTypes.Normal, NormalMap}
+                {TextureTypes.Normal, NormalMap},
+                {TextureTypes.Overlay, CitiesMap}
             })
         );
     }
 
-    public void MoveEarth(KeyboardState keyboard, Camera camera, float deltaTime, float boost)
+    public void MoveEarth(KeyboardState keyboard, float deltaTime, float boost)
     {
         var speed = deltaTime * boost / 250f;
         
-        /*if (keyboard.IsKeyDown(Keys.W)) Yaw += speed;
-        if (keyboard.IsKeyDown(Keys.S)) Yaw -= speed;
-        if (keyboard.IsKeyDown(Keys.A)) Pitch += speed;
-        if (keyboard.IsKeyDown(Keys.D)) Pitch -= speed;
-        
-        EarthObject.Transform.Rotation.X = (float)Math.Cos(MathHelper.DegreesToRadians(Pitch)) * (float)Math.Cos(MathHelper.DegreesToRadians(Yaw));
-        EarthObject.Transform.Rotation.Y = (float)Math.Sin(MathHelper.DegreesToRadians(Pitch));
-        EarthObject.Transform.Rotation.Z = (float)Math.Cos(MathHelper.DegreesToRadians(Pitch)) * (float)Math.Sin(MathHelper.DegreesToRadians(Yaw));*/
-        
-        /*if (keyboard.IsKeyDown(Keys.W)) EarthObject.Transform.Rotation.Z += speed * deltaTime;
-        if (keyboard.IsKeyDown(Keys.S)) EarthObject.Transform.Rotation.Z -= speed * deltaTime;
-        if (keyboard.IsKeyDown(Keys.A)) EarthObject.Transform.Rotation.Y += speed * deltaTime;
-        if (keyboard.IsKeyDown(Keys.D)) EarthObject.Transform.Rotation.Y -= speed * deltaTime;
-        if (keyboard.IsKeyDown(Keys.Q)) camera.Transform.Rotation.Z += speed * deltaTime;
-        if (keyboard.IsKeyDown(Keys.E)) camera.Transform.Rotation.Z -= speed * deltaTime;*/
-        
-        if (keyboard.IsKeyDown(Keys.W)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(-camera.Right * speed) * EarthObject.Transform.Quaternion;
-        if (keyboard.IsKeyDown(Keys.S)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(camera.Right * speed) * EarthObject.Transform.Quaternion;
-        if (keyboard.IsKeyDown(Keys.A)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.Cross(camera.Up, -camera.Right) * speed) * EarthObject.Transform.Quaternion;
-        if (keyboard.IsKeyDown(Keys.D)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.Cross(camera.Up, camera.Right) * speed) * EarthObject.Transform.Quaternion;
-        if (keyboard.IsKeyDown(Keys.Q)) camera.Transform.Position.Y -= boost * deltaTime;
-        if (keyboard.IsKeyDown(Keys.E)) camera.Transform.Position.Y += boost * deltaTime;
+        if (keyboard.IsKeyDown(Keys.W)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitZ * speed) * EarthObject.Transform.Quaternion;
+        if (keyboard.IsKeyDown(Keys.S)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitZ * speed) * EarthObject.Transform.Quaternion;
+        if (keyboard.IsKeyDown(Keys.A)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitY * speed) * EarthObject.Transform.Quaternion;
+        if (keyboard.IsKeyDown(Keys.D)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitY * speed) * EarthObject.Transform.Quaternion;
+        if (keyboard.IsKeyDown(Keys.Q)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitX * deltaTime * 0.5f) * EarthObject.Transform.Quaternion;
+        if (keyboard.IsKeyDown(Keys.E)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitX * deltaTime * 0.5f) * EarthObject.Transform.Quaternion;
     }
 
     public MeshData GenerateFaces(int resolution)
@@ -114,7 +97,12 @@ public class Earth
             //HM
             var height = HeightMap.SampleTexture(new Vector2i((int)(gps.X * HeightMap.Image.Width), (int)(gps.Y * HeightMap.Image.Height))).X / 255f;
             var realHeight = height * (highestPoint + deepestPoint) - deepestPoint;
-            if (realHeight <= 0) height = deepestPoint / (float)(highestPoint + deepestPoint);
+            if (realHeight > 0f)
+            {
+                height -= deepestPoint / (float)(highestPoint + deepestPoint);
+                height *= deepestPoint / (float)(highestPoint + deepestPoint);
+            }
+            else height = 0f;
             
             height *= Scale;
             height += MidLevel;

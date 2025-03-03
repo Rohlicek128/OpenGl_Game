@@ -10,6 +10,8 @@ struct Material {
     int hasNormalMap;
     sampler2D normalMap;
     float shininess;
+    
+    sampler2D overlay;
 };
 
 in vec2 vTexCoord;
@@ -40,7 +42,7 @@ void main(){
     gViewNormal = normalize((vTBN * norm) * mat3(inverseModelView)) * material.hasNormalMap + normalize(vNormalView) * (1 - material.hasNormalMap);
     
     //Albedo
-    gAlbedoSpec.rgb = material.color * texture(material.diffuseMap, vTexCoord).rgb * material.diffuse;
+    gAlbedoSpec.rgb = (material.color * texture(material.diffuseMap, vTexCoord).rgb * material.diffuse + texture(material.overlay, vTexCoord).rgb * vec3(1.0, 0.84, 0.61));
     
     //Specular
     gAlbedoSpec.a = texture(material.specularMap, vTexCoord).r;

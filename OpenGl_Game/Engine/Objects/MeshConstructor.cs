@@ -1,7 +1,6 @@
 using OpenTK.Mathematics;
 using OpenGl_Game.Engine.Graphics.Buffers;
 using OpenTK.Graphics.OpenGL;
-using VertexAttribType = OpenGl_Game.Engine.Graphics.Buffers.VertexAttribType;
 
 namespace OpenGl_Game.Engine.Objects;
 
@@ -119,8 +118,8 @@ public class MeshConstructor
                 for (int j = 0; j < attributes[i].Size; j++)
                 {
                     var index = (v * stride) + offset + j;
-                    if (attributes[i].Type == VertexAttribType.Position) result[index] = vertices[v][j];
-                    if (attributes[i].Type == VertexAttribType.TextureCoords) result[index] = texCoords[FindVertexInIndices(indices, v).Y][j];
+                    if (attributes[i].Type == VertexAttributeType.Position) result[index] = vertices[v][j];
+                    if (attributes[i].Type == VertexAttributeType.TextureCoords) result[index] = texCoords[FindVertexInIndices(indices, v).Y][j];
                     //if (attributes[i].Type == AttribType.Normal) result[index] = CalculateNormal();
                 }
 
@@ -138,7 +137,7 @@ public class MeshConstructor
 
             var normal = CalculateNormal(triangle[0].Xyz, triangle[1].Xyz, triangle[2].Xyz);
 
-            var offset = attributes.TakeWhile(attribute => attribute.Type != VertexAttribType.Normal).Sum(attribute => attribute.Size);
+            var offset = attributes.TakeWhile(attribute => attribute.Type != VertexAttributeType.Normal).Sum(attribute => attribute.Size);
 
             for (int i = 0; i < triangle.Length; i++)
             {
@@ -358,7 +357,7 @@ public class MeshConstructor
         return new MeshData(vertices, indices);
     }
     
-    public static MeshData CreatePlane(float texScaling)
+    public static MeshData CreatePlane(float texScaling = 1f)
     {
         float[] vertices =
         [
@@ -376,7 +375,7 @@ public class MeshConstructor
         return new MeshData(vertices, indices);
     }
     
-    public static MeshData CreateQuad(float texScaling)
+    public static MeshData CreateQuad(float texScaling = 1f)
     {
         float[] vertices =
         [

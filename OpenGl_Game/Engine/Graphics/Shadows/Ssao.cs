@@ -1,5 +1,6 @@
 using System.Drawing;
 using OpenGl_Game.Engine.Graphics.Buffers;
+using OpenGl_Game.Engine.Graphics.Shaders;
 using OpenGl_Game.Engine.Graphics.Textures;
 using OpenGl_Game.Engine.Objects;
 using OpenGl_Game.Shaders;
@@ -9,7 +10,6 @@ using OpenTK.Platform;
 using Bitmap = System.Drawing.Bitmap;
 using FramebufferAttachment = OpenTK.Graphics.OpenGL.Compatibility.FramebufferAttachment;
 using TextureTarget = OpenTK.Graphics.OpenGL.Compatibility.TextureTarget;
-using VertexAttribType = OpenGl_Game.Engine.Graphics.Buffers.VertexAttribType;
 
 namespace OpenGl_Game.Engine.Graphics.Shadows;
 
@@ -28,10 +28,10 @@ public class Ssao
     {
         var screenQuad = EngineObject.CreateEmpty();
         screenQuad.MeshData.Vertices = MeshConstructor.CreateRenderQuad();
-        Program = new ShaderProgram(shaders, [screenQuad], [new VertexAttribute(VertexAttribType.PosAndTex, 4)]);
+        Program = new ShaderProgram(shaders, [screenQuad], [new VertexAttribute(VertexAttributeType.PosAndTex, 4)]);
         screenQuad = EngineObject.CreateEmpty();
         screenQuad.MeshData.Vertices = MeshConstructor.CreateRenderQuad();
-        BlurProgram = new ShaderProgram(blurShaders, [screenQuad], [new VertexAttribute(VertexAttribType.PosAndTex, 4)]);
+        BlurProgram = new ShaderProgram(blurShaders, [screenQuad], [new VertexAttribute(VertexAttributeType.PosAndTex, 4)]);
         
         Framebuffer = new Framebuffer();
         Framebuffer.AttachTexture(

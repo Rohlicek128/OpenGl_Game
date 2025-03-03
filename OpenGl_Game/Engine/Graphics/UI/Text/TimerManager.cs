@@ -1,4 +1,4 @@
-namespace OpenGl_Game.Engine.Graphics.Text;
+namespace OpenGl_Game.Engine.Graphics.UI.Text;
 
 public class TimerManager
 {

@@ -1,13 +1,12 @@
 using OpenGl_Game.Buffers;
-using OpenGl_Game.Engine;
 using OpenGl_Game.Engine.Graphics.Buffers;
 using OpenGl_Game.Engine.Graphics.Shadows;
 using OpenGl_Game.Engine.Objects;
+using OpenGl_Game.Shaders;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
-using VertexAttribType = OpenGl_Game.Engine.Graphics.Buffers.VertexAttribType;
 
-namespace OpenGl_Game.Shaders;
+namespace OpenGl_Game.Engine.Graphics.Shaders;
 
 public class ShaderProgram
 {
@@ -75,7 +74,7 @@ public class ShaderProgram
         //Attributes
         var attribs = new VertexAttribute[attributes.Length + 1];
         for (int i = 0; i < attributes.Length; i++) attribs[i] = attributes[i];
-        attribs[attributes.Length] = new VertexAttribute(VertexAttribType.Tangent, 3);
+        attribs[attributes.Length] = new VertexAttribute(VertexAttributeType.Tangent, 3);
         attributes = attribs;
         
         //Vertices
@@ -114,11 +113,11 @@ public class ShaderProgram
         return new MeshData(verts, meshData.Indices);
     }
 
-    public void DrawMesh(Matrix4 worldMat, Matrix4 proj, Matrix4 view)
+    public void DrawGeometryMesh(Matrix4 worldMat, Matrix4 proj, Matrix4 view)
     {
         Use();
         ArrayBuffer.Bind();
-        //IndexBuffer.Bind();
+        IndexBuffer.Bind();
         
         /*SetUniform("skybox", 10);
         GL.ActiveTexture(TextureUnit.Texture10);
@@ -136,7 +135,7 @@ public class ShaderProgram
         }
         
         ArrayBuffer.Unbind();
-        //IndexBuffer.Unbind();
+        IndexBuffer.Unbind();
     }
     
     public void DrawMeshLighting(Dictionary<LightTypes, List<Light>> lights, Camera camera, ShadowMap shadowMap, Ssao ssao)
@@ -263,7 +262,8 @@ public class ShaderProgram
         GL.UniformMatrix4f(GetUniformLocation(name), 1, transpose, ref value);
     }
 
-    public void Use()
+    public void 
+        Use()
     {
         GL.UseProgram(Handle);
     }

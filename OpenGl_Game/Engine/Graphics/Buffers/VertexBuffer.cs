@@ -2,7 +2,6 @@ using OpenGl_Game.Engine.Graphics.Buffers;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using Buffer = OpenTK.Graphics.OpenGL.Buffer;
-using VertexAttribType = OpenGl_Game.Engine.Graphics.Buffers.VertexAttribType;
 
 namespace OpenGl_Game.Buffers;
 

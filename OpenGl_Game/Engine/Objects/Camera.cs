@@ -1,4 +1,5 @@
 using OpenTK.Mathematics;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace OpenGl_Game.Engine.Objects;
 
@@ -76,8 +77,8 @@ public class Camera
 
         Yaw += deltaX * Sensitivity;
         Pitch += deltaY * Sensitivity;
-        //if (Pitch > 89f) Pitch = 89f;
-        //else if (Pitch < -89f) Pitch = -89f;
+        if (Pitch > 89f) Pitch = 89f;
+        else if (Pitch < -89f) Pitch = -89f;
 
         Front.X = (float)Math.Cos(MathHelper.DegreesToRadians(Pitch)) * (float)Math.Cos(MathHelper.DegreesToRadians(Yaw));
         Front.Y = (float)Math.Sin(MathHelper.DegreesToRadians(Pitch));
@@ -87,6 +88,18 @@ public class Camera
         //Quaternion = Quaternion.FromEulerAngles(Yaw, Pitch, 0f) * Quaternion;
         
         Right = Vector3.Normalize(Vector3.Cross(Up, Front));
+    }
+
+    public void Move(KeyboardState keyboard, float deltaTime)
+    {
+        var speedTime = Speed * deltaTime * (SpeedBoost ? BoostSpeed : BaseSpeed);
+        
+        if (keyboard.IsKeyDown(Keys.W)) Transform.Position += Vector3.Normalize(Vector3.Cross(Right, Up)) * speedTime;
+        if (keyboard.IsKeyDown(Keys.S)) Transform.Position -= Vector3.Normalize(Vector3.Cross(Right, Up)) * speedTime;
+        if (keyboard.IsKeyDown(Keys.A)) Transform.Position -= Vector3.Normalize(Vector3.Cross(Front, Up)) * speedTime;
+        if (keyboard.IsKeyDown(Keys.D)) Transform.Position += Vector3.Normalize(Vector3.Cross(Front, Up)) * speedTime;
+        if (keyboard.IsKeyDown(Keys.Space) || keyboard.IsKeyDown(Keys.E)) Transform.Position += Up * speedTime;
+        if (keyboard.IsKeyDown(Keys.LeftControl) || keyboard.IsKeyDown(Keys.Q)) Transform.Position -= Up * speedTime;
     }
 
 }

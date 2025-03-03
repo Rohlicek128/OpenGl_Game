@@ -25,6 +25,7 @@ public class TexturesPbr
         if (!Textures.ContainsKey(TextureTypes.Diffuse)) AddTexture(TextureTypes.Diffuse, new Texture("white1x1.png", 0));
         if (!Textures.ContainsKey(TextureTypes.Specular)) AddTexture(TextureTypes.Specular, new Texture("white1x1.png", 1));
         //if (!Textures.ContainsKey(TextureTypes.Normal)) AddTexture(TextureTypes.Normal, new Texture("black1x1.png", 2));
+        if (!Textures.ContainsKey(TextureTypes.Overlay)) AddTexture(TextureTypes.Overlay, new Texture("black1x1.png", 3));
     }
 
     public bool ContainsType(TextureTypes type)
@@ -40,12 +41,6 @@ public class TexturesPbr
     public void ActiveAndBindAll()
     {
         foreach (var texture in Textures) texture.Value.ActiveAndBind();
-        
-        /*Textures[TextureTypes.Diffuse].ActiveAndBind(TextureUnit.Texture0);
-        program.SetUniform(TextureTypes.Diffuse.Value, 0);
-        
-        Textures[TextureTypes.Specular].ActiveAndBind(TextureUnit.Texture1);
-        program.SetUniform(TextureTypes.Specular.Value, 1);*/
     }
 
     public void DeleteAll()

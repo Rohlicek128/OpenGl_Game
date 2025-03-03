@@ -1,21 +1,22 @@
 using System.Runtime.InteropServices;
 using FreeTypeSharp;
+using OpenGl_Game.Engine.Graphics.Shaders;
 using OpenGl_Game.Shaders;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 
-namespace OpenGl_Game.Engine.Graphics.Text;
+namespace OpenGl_Game.Engine.Graphics.UI.Text;
 
 public class FontMap
 {
     public Dictionary<char, FontCharacter> Characters;
 
-    private ShaderProgram FontProgram; 
+    private ShaderProgram _fontProgram; 
     
     public unsafe FontMap(string fontPath, ShaderProgram program)
     {
         Characters = new Dictionary<char, FontCharacter>();
-        FontProgram = program;
+        _fontProgram = program;
         
         FT_LibraryRec_* ft;
         FT_FaceRec_* face;
@@ -69,16 +70,16 @@ public class FontMap
         FT.FT_Done_FreeType(ft);
     }
 
-    public void DrawText(string text, Vector2 position, float scale, Vector3 color, Vector2 viewport)
+    public void DrawText(string text, Vector2 position, float scale, Vector4 color, Vector2 viewport)
     {
-        FontProgram.Use();
-        FontProgram.ArrayBuffer.Bind();
+        _fontProgram.Use();
+        _fontProgram.ArrayBuffer.Bind();
         
         GL.ActiveTexture(TextureUnit.Texture0);
-        FontProgram.SetUniform("text", 0);
-        FontProgram.SetUniform("textColor", color);
+        _fontProgram.SetUniform("text", 0);
+        _fontProgram.SetUniform("textColor", color);
         
-        FontProgram.SetUniform("viewport", viewport);
+        _fontProgram.SetUniform("viewport", viewport);
 
         float[] vertices = [
             0f, 0f,  0f, 0f,
@@ -114,22 +115,22 @@ public class FontMap
             
             GL.BindTexture(TextureTarget.Texture2d, ch.Handle);
             
-            FontProgram.VertexBuffer.Bind();
+            _fontProgram.VertexBuffer.Bind();
             GL.BufferSubData(BufferTarget.ArrayBuffer, 0, vertices.Length * sizeof(float), vertices);
-            FontProgram.VertexBuffer.Unbind();
+            _fontProgram.VertexBuffer.Unbind();
             
             GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
             position.X += (ch.Advance >> 6) * scale;
         }
-        FontProgram.ArrayBuffer.Unbind();
-        FontProgram.Unbind();
+        _fontProgram.ArrayBuffer.Unbind();
+        _fontProgram.Unbind();
         GL.BindTexture(TextureTarget.Texture2d, 0);
     }
 
     public void Delete()
     {
         foreach (var c in Characters) GL.DeleteTexture(c.Value.Handle);
-        FontProgram.Delete();
+        _fontProgram.Delete();
     }
     
 }

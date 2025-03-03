@@ -12,6 +12,7 @@ public class TextureTypes
     public static TextureTypes Diffuse => new("diffuseMap");
     public static TextureTypes Specular => new("specularMap");
     public static TextureTypes Normal => new("normalMap");
+    public static TextureTypes Overlay => new("overlay");
 
     public override string ToString()
     {

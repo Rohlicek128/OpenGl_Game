@@ -1,4 +1,5 @@
 using OpenGl_Game.Engine.Graphics.Buffers;
+using OpenGl_Game.Engine.Graphics.Shaders;
 using OpenGl_Game.Shaders;
 using OpenTK.Mathematics;
 
@@ -24,7 +25,7 @@ public class Light : EngineObject
 
     public void SetUniformsForDirectional(ShaderProgram program)
     {
-        program.SetUniform("dirLight.direction", Transform.Rotation);
+        program.SetUniform("dirLight.direction", Vector3.UnitY * Matrix3.CreateFromQuaternion(Transform.Quaternion));
         program.SetUniform("dirLight.ambient", Material.Ambient);
         program.SetUniform("dirLight.diffuse", Material.Diffuse);
         program.SetUniform("dirLight.specular", Material.Specular);

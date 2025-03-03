@@ -1,5 +1,6 @@
 using OpenGl_Game.Engine.Graphics;
 using OpenGl_Game.Engine.Graphics.Buffers;
+using OpenGl_Game.Engine.Graphics.Shaders;
 using OpenGl_Game.Engine.Graphics.Textures;
 using OpenGl_Game.Shaders;
 using OpenTK.Graphics.OpenGL;
@@ -80,9 +81,15 @@ public class EngineObject
         program.SetUniform("material.diffuseMap", 0);
         program.SetUniform("material.specularMap", 1);
         program.SetUniform("material.normalMap", 2);
+        program.SetUniform("material.overlay", 3);
         program.SetUniform("material.hasNormalMap", Textures.ContainsType(TextureTypes.Normal) ? 1 : 0);
         Textures.ActiveAndBindAll();
         
+        Draw(offset);
+    }
+
+    public void Draw(int offset)
+    {
         GL.DrawElements(MeshData.PrimitiveType, MeshData.Indices.Length, DrawElementsType.UnsignedInt, offset);
     }
 

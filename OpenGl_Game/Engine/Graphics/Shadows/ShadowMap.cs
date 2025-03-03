@@ -1,4 +1,5 @@
 using OpenGl_Game.Engine.Graphics.Buffers;
+using OpenGl_Game.Engine.Graphics.Shaders;
 using OpenGl_Game.Engine.Objects;
 using OpenGl_Game.Shaders;
 using OpenTK.Graphics.OpenGL;
@@ -104,7 +105,7 @@ public class ShadowMap
         
         var lightProjection = Matrix4.CreateOrthographic(MaxDistance, MaxDistance, PlaneDims.X, PlaneDims.Y);
         var lightView = Matrix4.LookAt(
-            -dirLight.Transform.Rotation * CameraOffset + camera.Transform.Position,
+            (-Vector3.UnitY * Matrix3.CreateFromQuaternion(dirLight.Transform.Quaternion)) * CameraOffset + camera.Transform.Position,
             camera.Transform.Position,
             new Vector3(0f, 1f, 0f)
         );

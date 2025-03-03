@@ -9,6 +9,5 @@ uniform mat4 model;
 
 void main(){
     vTexCoord = aVertex.zw;
-    gl_Position = vec4(aVertex.x, aVertex.y, 0.0, 1.0) * model;
-    //gl_Position = vec4(aVertex.x / viewport.x * 2.0 - 1.0, aVertex.y / viewport.y * 2.0 - 1.0, 0.0, 1.0) * model;
+    gl_Position = vec4(aVertex.x / (viewport.x / viewport.y), aVertex.y, 0.0, 1.0) * model;
 }

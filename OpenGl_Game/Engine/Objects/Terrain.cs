@@ -3,7 +3,6 @@ using OpenGl_Game.Engine.Graphics.Textures;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using StbImageSharp;
-using VertexAttribType = OpenGl_Game.Engine.Graphics.Buffers.VertexAttribType;
 
 namespace OpenGl_Game.Engine.Objects;
 
@@ -99,9 +98,9 @@ public class Terrain
                 for (int j = 0; j < attributes[i].Size; j++)
                 {
                     var index = (v * stride) + offset + j;
-                    if (attributes[i].Type == VertexAttribType.Position) vertices[index] = verts[v][j];
-                    if (attributes[i].Type == VertexAttribType.TextureCoords) vertices[index] = texCoords[v][j];
-                    if (attributes[i].Type == VertexAttribType.Normal) vertices[index] = normal[j];
+                    if (attributes[i].Type == VertexAttributeType.Position) vertices[index] = verts[v][j];
+                    if (attributes[i].Type == VertexAttributeType.TextureCoords) vertices[index] = texCoords[v][j];
+                    if (attributes[i].Type == VertexAttributeType.Normal) vertices[index] = normal[j];
                 }
 
                 offset += attributes[i].Size;

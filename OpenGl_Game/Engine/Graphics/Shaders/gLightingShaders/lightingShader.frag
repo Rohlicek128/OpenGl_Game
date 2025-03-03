@@ -40,7 +40,7 @@ float CalcShadow(vec4 fragPosLight, vec3 normal){
     projectedCoords = projectedCoords * 0.5 + 0.5;
 
     //float closestDepth = texture(shadowMap, projectedCoords.xy).r;
-    float bias = max(0.003 * (1.0 - dot(normal, dirLight.direction)), 0.0003);
+    float bias = max(0.03 * (1.0 - dot(normal, dirLight.direction)), 0.003);
 
     float shadow;
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);

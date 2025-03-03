@@ -1,4 +1,5 @@
-using OpenGl_Game.Engine.Graphics.Text;
+using OpenGl_Game.Engine.Graphics.Shaders;
+using OpenGl_Game.Engine.Graphics.UI.Text;
 using OpenGl_Game.Engine.Objects;
 using OpenGl_Game.Shaders;
 using OpenTK.Graphics.OpenGL;
@@ -78,6 +79,6 @@ public class UiWindow
         
         GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
         
-        fonts["Cascadia"].DrawText(Header, new Vector2(Transform.Position.X + 25f, Transform.Position.Y - 40f), 0.5f, new Vector3(1f), viewport);
+        fonts["Cascadia"].DrawText(Header, new Vector2(Transform.Position.X + 25f, Transform.Position.Y - 40f), 0.5f, new Vector4(1f), viewport);
     }
 }

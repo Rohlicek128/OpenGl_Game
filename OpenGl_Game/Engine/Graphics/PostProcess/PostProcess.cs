@@ -1,4 +1,5 @@
 using OpenGl_Game.Engine.Graphics.Buffers;
+using OpenGl_Game.Engine.Graphics.Shaders;
 using OpenGl_Game.Engine.Graphics.Textures;
 using OpenGl_Game.Engine.Objects;
 using OpenGl_Game.Shaders;
@@ -6,7 +7,6 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using FramebufferAttachment = OpenTK.Graphics.OpenGL.Compatibility.FramebufferAttachment;
 using TextureTarget = OpenTK.Graphics.OpenGL.Compatibility.TextureTarget;
-using VertexAttribType = OpenGl_Game.Engine.Graphics.Buffers.VertexAttribType;
 
 namespace OpenGl_Game.Engine.Graphics.PostProcess;
 
@@ -26,7 +26,7 @@ public class PostProcess
         var screenQuad = EngineObject.CreateEmpty();
         screenQuad.MeshData.Vertices = MeshConstructor.CreateRenderQuad();
         
-        Program = new ShaderProgram(shaders, [screenQuad], [new VertexAttribute(VertexAttribType.PosAndTex, 4)]);
+        Program = new ShaderProgram(shaders, [screenQuad], [new VertexAttribute(VertexAttributeType.PosAndTex, 4)]);
         
         Framebuffer = new Framebuffer();
         Framebuffer.AttachTexture(new Texture(0, viewport, null), (FramebufferAttachment)OpenTK.Graphics.OpenGL.FramebufferAttachment.ColorAttachment0, (TextureTarget)OpenTK.Graphics.OpenGL.TextureTarget.Texture2d);
