@@ -20,6 +20,8 @@ public class EngineObject
     public TexturesPbr Textures;
 
     public bool IsVisible;
+    public bool IsShadowVisible;
+    public bool IsInverted;
 
     public EngineObject(string name, Transform transform, MeshData meshData, TexturesPbr textures)
     {
@@ -34,6 +36,8 @@ public class EngineObject
         );
         Textures = textures;
         IsVisible = true;
+        IsShadowVisible = true;
+        IsInverted = false;
     }
     
     public EngineObject(string name, Transform transform, MeshData meshData, Material material)
@@ -45,6 +49,8 @@ public class EngineObject
         Textures = new TexturesPbr();
         Textures.FillRest();
         IsVisible = true;
+        IsShadowVisible = true;
+        IsInverted = false;
     }
 
     public static EngineObject CreateEmpty()
@@ -67,6 +73,8 @@ public class EngineObject
 
     public void DrawObject(ShaderProgram program, int offset, Matrix4 view)
     {
+        if (IsInverted) GL.CullFace(TriangleFace.Front);
+        
         var model = GetModelMatrix();
         program.SetUniform("model", model);
         program.SetUniform("inverseModel", model.Inverted().Transposed());
@@ -86,6 +94,8 @@ public class EngineObject
         Textures.ActiveAndBindAll();
         
         Draw(offset);
+        
+        if (IsInverted) GL.CullFace(TriangleFace.Back);
     }
 
     public void Draw(int offset)

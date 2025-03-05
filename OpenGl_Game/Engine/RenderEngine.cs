@@ -206,15 +206,23 @@ public class RenderEngine : GameWindow
         floor.Transform.Scale *= 20f;
         floor.Textures.Scaling = 0.5f;
         
-        /*var teapot = MeshConstructor.LoadFromFile(@"teapot\teapot.obj", verticesAttribs);
+        /*var teapot = MeshConstructor.LoadFromFile(@"rungholt\house.obj", verticesAttribs);
         teapot.Transform.Scale /= 80f;
         teapot.Transform.Position *= teapot.Transform.Scale;
         teapot.Transform.Position.Z += 3f;
         teapot.Material.Color = new Vector3(0.8f, 0.05f, 0.2f);
         teapot.Material.Shininess = 600f;*/
 
+        var assimpHouse = new EngineObject(
+            "house",
+            new Transform(new Vector3(3f)),
+             MeshConstructor.LoadObjFromFileAssimp(@"station\station_v01.obj"),
+            new Material(new Vector3(1f))
+        );
+
         //var terrain = new Terrain("new-zealand-height-map.jpg", verticesAttribs);
-        _earth = new Earth(new Transform(new Vector3(0f), new Vector3(0f, MathF.PI, 0f), new Vector3(6378 / 6f)), 650, 0.025f);
+        _earth = new Earth(new Transform(new Vector3(0f), new Vector3(0f, MathF.PI, 0f), new Vector3(6378 / 6f)), 450, 0.025f);
+        _earth.EarthObject.Transform.Position = new Vector3(-_earth.EarthObject.Transform.Scale.X * 1.0639f, 0f, 0f);
         _station = new Station(_earth.EarthObject.Transform.Scale.X, _camera, []);
         
         //lights
@@ -252,7 +260,7 @@ public class RenderEngine : GameWindow
         );
         pointLight2.Transform.Scale *= 0.25f;
         
-        _objects = [rollingCube, rotatingCube, anotherCube, box, floor, _earth.EarthObject, _station.StationObject];
+        _objects = [_earth.EarthObject, _station.StationObject, assimpHouse];
         
         _lights = new Dictionary<LightTypes, List<Light>>
         {
@@ -413,14 +421,14 @@ public class RenderEngine : GameWindow
         _fonts["Pixel"].DrawText(_camera.Fov + " fov", new Vector2(25f, _viewport.Y - 110f), 0.75f, new Vector4(1f), _viewport);
         _fonts["Pixel"].DrawText("PLAYER X: "+ (MathF.Floor(_camera.Front.X * 1000f) / 1000f) + " Y: " + (MathF.Floor(_camera.Front.Y * 1000f) / 1000f) + " Z: "+ (MathF.Floor(_camera.Front.Z * 1000f) / 1000f),
             new Vector2(25f, _viewport.Y - 160f), 0.5f, new Vector4(1f), _viewport);
-        _fonts["Pixel"].DrawText("STATION  X: "+ (MathF.Floor(_station.StationObject.Transform.Position.X * 1000f) / 1000f) + " Y: " + (MathF.Floor(_station.StationObject.Transform.Position.Y * 1000f) / 1000f) + " Z: "+ (MathF.Floor(_station.StationObject.Transform.Position.Z * 1000f) / 1000f),
+        _fonts["Pixel"].DrawText("STATION  X: "+ (MathF.Floor(_earth.EarthObject.Transform.Position.X * 1000f) / 1000f) + " Y: " + (MathF.Floor(_earth.EarthObject.Transform.Position.Y * 1000f) / 1000f) + " Z: "+ (MathF.Floor(_earth.EarthObject.Transform.Position.Z * 1000f) / 1000f),
             new Vector2(25f, _viewport.Y - 210f), 0.5f, new Vector4(1f), _viewport);
         _fonts["Pixel"].DrawText("Boost: " + _camera.BoostSpeed, new Vector2(25f, _viewport.Y - 260f), 0.5f, new Vector4(1f), _viewport);
         _fonts["Pixel"].DrawText("Grayscale: " + _postProcess.Grayscale, new Vector2(25f, _viewport.Y - 310f), 0.5f, new Vector4(1f), _viewport);
         _fonts["Pixel"].DrawText("VALUE: Y: " + _camera.Yaw + ", P: " + _camera.Pitch, new Vector2(25f, _viewport.Y - 360f), 0.5f, new Vector4(1f), _viewport);
-        _fonts["Pixel"].DrawText("Altitude: " + Math.Floor((_camera.Transform.Position.X - _earth.EarthObject.Transform.Scale.X) * 6f) + " km", new Vector2(25f, _viewport.Y - 410f), 0.5f, new Vector4(1f), _viewport);
+        _fonts["Pixel"].DrawText("Altitude: " + Math.Floor(-(_earth.EarthObject.Transform.Scale.X + _earth.EarthObject.Transform.Position.X) * 6f) + " km", new Vector2(25f, _viewport.Y - 410f), 0.5f, new Vector4(1f), _viewport);
         
-        _fonts["Pixel"].DrawText("FROM ORBIT v0.0.11", new Vector2(_viewport.X - 245f, _viewport.Y - 30f), 0.35f, new Vector4(1f, 1f, 1f, 0.2f), _viewport);
+        _fonts["Pixel"].DrawText("FROM ORBIT v0.0.13", new Vector2(_viewport.X - 255f, _viewport.Y - 30f), 0.35f, new Vector4(1f, 1f, 1f, 0.2f), _viewport);
         
         GL.DepthFunc(DepthFunction.Less);
         
@@ -443,9 +451,9 @@ public class RenderEngine : GameWindow
     protected override void OnUpdateFrame(FrameEventArgs args)
     {
         if (_isRotation) _anim += (float)args.Time;
-        _objects[1].Transform.Rotation.Y = _anim / 10f;
-        _objects[0].Transform.Position.X = (float)Math.Sin(_anim * 2f) * 3f + 5f;
-        _objects[0].Transform.Rotation.Z = (float)Math.Sin(-_anim * 2f) * 5f + 2f;
+        //_objects[1].Transform.Rotation.Y = _anim / 10f;
+        //_objects[0].Transform.Position.X = (float)Math.Sin(_anim * 2f) * 3f + 5f;
+        //_objects[0].Transform.Rotation.Z = (float)Math.Sin(-_anim * 2f) * 5f + 2f;
         
         _lights[LightTypes.Point][0].Transform.Position.X = (float)Math.Sin(-_anim * 2f) * 10f;
         _lights[LightTypes.Point][0].Transform.Position.Y = (float)Math.Cos(-_anim) + 2.5f;
@@ -456,10 +464,10 @@ public class RenderEngine : GameWindow
         
         if (!IsFocused) return;
 
-        _earth.MoveEarth(KeyboardState, (float)args.Time, _camera.BoostSpeed);
-        _station.MoveAltitude(KeyboardState, (float)args.Time);
+        //_earth.MoveEarth(KeyboardState, (float)args.Time, _camera.BoostSpeed);
+        //_station.MoveAltitude(KeyboardState, (float)args.Time);
         
-        //_camera.Move(KeyboardState, (float)args.Time);
+        _camera.Move(KeyboardState, (float)args.Time);
         
         //var prevTransform = _camera.Transform.Position;
         //if (_collisionBox.CheckCollision(_camera.Transform.Position)) _camera.Transform.Position = prevTransform;

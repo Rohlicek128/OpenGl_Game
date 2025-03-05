@@ -1,6 +1,8 @@
+using Assimp;
+using Assimp.Configs;
+using Assimp.Unmanaged;
 using OpenTK.Mathematics;
 using OpenGl_Game.Engine.Graphics.Buffers;
-using OpenTK.Graphics.OpenGL;
 
 namespace OpenGl_Game.Engine.Objects;
 
@@ -103,6 +105,38 @@ public class MeshConstructor
             new MeshData(CombineVerticesData(vertexAttribs, vertices, texCoords, normals, indices), FormatIndicesData(indices)),
             new Material(new Vector3(1f))
         );
+    }
+
+    public static MeshData LoadObjFromFileAssimp(string path)
+    {
+        var importer = new AssimpContext();
+        importer.SetConfig(new NormalSmoothingAngleConfig(66f));
+        var scene = importer.ImportFile(RenderEngine.DirectoryPath + @"Assets\" + path, PostProcessPreset.TargetRealTimeMaximumQuality);
+
+        float[] vertices = [];
+        uint[] indices = [];
+        uint indsMax = 0;
+
+        foreach (var mesh in scene.Meshes)
+        {
+            var verts = new float[mesh.Vertices.Count * 8];
+            for (var i = 0; i < mesh.Vertices.Count; i++)
+            {
+                for (var j = 0; j < 3; j++) verts[i * 8 + j] = mesh.Vertices[i][j];
+                for (var j = 0; j < 2; j++) verts[i * 8 + j + 3] = mesh.TextureCoordinateChannels[0][i][j];
+                for (var j = 0; j < 3; j++) verts[i * 8 + j + 5] = mesh.Normals[i][j];
+            }
+
+            vertices = vertices.Concat(verts).ToArray();
+
+            var inds = mesh.GetUnsignedIndices();
+            for (var i = 0; i < inds.Length; i++) inds[i] += indsMax;
+            
+            indices = indices.Concat(inds).ToArray();
+            indsMax = indices.Max() + 1;
+        }
+        
+        return new MeshData(vertices, indices);
     }
 
     public static float[] CombineVerticesData(VertexAttribute[] attributes, List<Vector3> vertices, List<Vector3> texCoords, List<Vector3> normals, List<List<Vector3i>> indices)

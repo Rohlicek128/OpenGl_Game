@@ -54,6 +54,9 @@ public class Earth
         if (keyboard.IsKeyDown(Keys.D)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitY * speed) * EarthObject.Transform.Quaternion;
         if (keyboard.IsKeyDown(Keys.Q)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitX * deltaTime * 0.5f) * EarthObject.Transform.Quaternion;
         if (keyboard.IsKeyDown(Keys.E)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitX * deltaTime * 0.5f) * EarthObject.Transform.Quaternion;
+        
+        if (keyboard.IsKeyDown(Keys.Space)) EarthObject.Transform.Position.X -= speed * 200f;
+        if (keyboard.IsKeyDown(Keys.LeftControl)) EarthObject.Transform.Position.X += speed * 200f;
     }
 
     public MeshData GenerateFaces(int resolution)

@@ -50,6 +50,10 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "AssimpNet": {
+              "target": "Package",
+              "version": "[5.0.0-beta1, )"
+            },
             "FreeTypeSharp": {
               "target": "Package",
               "version": "[3.0.0, )"

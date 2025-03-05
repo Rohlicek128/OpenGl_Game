@@ -82,7 +82,7 @@ public class ShadowMap
         var offset = 0;
         foreach (var engineObject in ShadowProgram.Objects)
         {
-            if (engineObject.IsVisible)
+            if (engineObject.IsVisible && engineObject.IsShadowVisible)
             {
                 var model = engineObject.GetModelMatrix();
                 ShadowProgram.SetUniform("model", model);
