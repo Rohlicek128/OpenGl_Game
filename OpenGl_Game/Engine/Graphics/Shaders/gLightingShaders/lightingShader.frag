@@ -40,7 +40,7 @@ float CalcShadow(vec4 fragPosLight, vec3 normal){
     projectedCoords = projectedCoords * 0.5 + 0.5;
 
     //float closestDepth = texture(shadowMap, projectedCoords.xy).r;
-    float bias = max(0.03 * (1.0 - dot(normal, dirLight.direction)), 0.003);
+    float bias = max(0.002 * (1.0 - dot(normal, dirLight.direction)), 0.0002);
 
     float shadow;
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
@@ -70,6 +70,7 @@ vec3 CalcDirectionLight(DirLight light, vec3 normal, vec3 viewDir, vec3 material
 
     //Shadows
     float shadow = CalcShadow(fragPosLight, normal);
+    //float shadow = 0.0;
 
     return (ambient + (diffuse + specular) * (1.0 - shadow));
 }
@@ -108,7 +109,7 @@ void main(){
     vec4 fragPosLightSpace = vec4(fragPos, 1.0) * lightSpace;
     
     vec3 result = CalcDirectionLight(dirLight, normal, viewDir, albedo, specular, fragPosLightSpace);
-    for (int i = 0; i < NR_POINT_LIGHTS; i++) result += CalcPointLight(pointLight[i], normal, viewDir, fragPos, albedo, specular);
+    //for (int i = 0; i < NR_POINT_LIGHTS; i++) result += CalcPointLight(pointLight[i], normal, viewDir, fragPos, albedo, specular);
 
     //pixelColor = vec4(result * ambientOcclusion, 1.0);
     pixelColor = vec4(result, 1.0);

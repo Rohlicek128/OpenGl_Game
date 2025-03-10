@@ -105,8 +105,8 @@ public class ShadowMap
         
         var lightProjection = Matrix4.CreateOrthographic(MaxDistance, MaxDistance, PlaneDims.X, PlaneDims.Y);
         var lightView = Matrix4.LookAt(
-            (-Vector3.UnitY * Matrix3.CreateFromQuaternion(dirLight.Transform.Quaternion)) * CameraOffset + camera.Transform.Position,
-            camera.Transform.Position,
+            (-Vector3.UnitY * Matrix3.CreateFromQuaternion(dirLight.Transform.Quaternion)) * CameraOffset,
+            Vector3.Zero, 
             new Vector3(0f, 1f, 0f)
         );
         return lightView * lightProjection;

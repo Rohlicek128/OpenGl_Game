@@ -117,8 +117,10 @@ public class MeshConstructor
         uint[] indices = [];
         uint indsMax = 0;
 
-        foreach (var mesh in scene.Meshes)
-        {
+        //scene.Meshes.Remove(scene.Meshes[0]);
+        var mesh = scene.Meshes[0];
+        //foreach (var mesh in scene.Meshes)
+        //{
             var verts = new float[mesh.Vertices.Count * 8];
             for (var i = 0; i < mesh.Vertices.Count; i++)
             {
@@ -134,7 +136,7 @@ public class MeshConstructor
             
             indices = indices.Concat(inds).ToArray();
             indsMax = indices.Max() + 1;
-        }
+        //}
         
         return new MeshData(vertices, indices);
     }

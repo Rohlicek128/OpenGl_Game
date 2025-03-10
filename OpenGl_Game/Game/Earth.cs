@@ -44,7 +44,7 @@ public class Earth
         );
     }
 
-    public void MoveEarth(KeyboardState keyboard, float deltaTime, float boost)
+    public void MoveEarth(KeyboardState keyboard, float deltaTime, float boost, EngineObject[] engineObjects)
     {
         var speed = deltaTime * boost / 250f;
         
@@ -57,6 +57,11 @@ public class Earth
         
         if (keyboard.IsKeyDown(Keys.Space)) EarthObject.Transform.Position.X -= speed * 200f;
         if (keyboard.IsKeyDown(Keys.LeftControl)) EarthObject.Transform.Position.X += speed * 200f;
+
+        foreach (var engineObject in engineObjects)
+        {
+            engineObject.Transform.Quaternion = EarthObject.Transform.Quaternion * engineObject.Transform.Quaternion;
+        }
     }
 
     public MeshData GenerateFaces(int resolution)

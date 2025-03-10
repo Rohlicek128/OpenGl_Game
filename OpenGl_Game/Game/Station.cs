@@ -22,7 +22,7 @@ public class Station
             MeshConstructor.CreateCube(),
             new Material(new Vector3(1f, 0.33f, 0.05f))
         );
-        StationObject.IsShadowVisible = false;
+        //StationObject.IsShadowVisible = false;
         //StationObject.IsInverted = true;
         //StationObject.Transform.Position = new Vector3(earthRadius * 1.0639f, 0f, 0f);
 

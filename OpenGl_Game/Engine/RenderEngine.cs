@@ -37,6 +37,7 @@ public class RenderEngine : GameWindow
     private bool _isMouseGrabbed = true;
     private bool _wireframeMode = false;
     private bool _isPostProcess = true;
+    private bool _MoveEarthMode = true;
 
     private Mouse _mouse;
     private Vector2i _viewport;
@@ -216,13 +217,16 @@ public class RenderEngine : GameWindow
         var assimpHouse = new EngineObject(
             "house",
             new Transform(new Vector3(3f)),
-             MeshConstructor.LoadObjFromFileAssimp(@"station\station_v01.obj"),
+             MeshConstructor.LoadObjFromFileAssimp(@"station\desk_3.obj"),
             new Material(new Vector3(1f))
         );
+        assimpHouse.Transform.Quaternion = Quaternion.FromEulerAngles(3f * Vector3.UnitY) * assimpHouse.Transform.Quaternion;
+        //assimpHouse.IsShadowVisible = false;
 
         //var terrain = new Terrain("new-zealand-height-map.jpg", verticesAttribs);
         _earth = new Earth(new Transform(new Vector3(0f), new Vector3(0f, MathF.PI, 0f), new Vector3(6378 / 6f)), 450, 0.025f);
         _earth.EarthObject.Transform.Position = new Vector3(-_earth.EarthObject.Transform.Scale.X * 1.0639f, 0f, 0f);
+        //_earth.EarthObject.Transform.Position = new Vector3(-MathF.Cos(MathHelper.DegreesToRadians(35f)) * _earth.EarthObject.Transform.Scale.X * 1.0639f, MathF.Sin(MathHelper.DegreesToRadians(35f)) * _earth.EarthObject.Transform.Scale.X * 1.0639f, 0f);
         _station = new Station(_earth.EarthObject.Transform.Scale.X, _camera, []);
         
         //lights
@@ -260,12 +264,12 @@ public class RenderEngine : GameWindow
         );
         pointLight2.Transform.Scale *= 0.25f;
         
-        _objects = [_earth.EarthObject, _station.StationObject, assimpHouse];
+        _objects = [_earth.EarthObject, _station.StationObject, assimpHouse, floor];
         
         _lights = new Dictionary<LightTypes, List<Light>>
         {
-            { LightTypes.Directional, [dirLight] },
-            { LightTypes.Point, [pointLight, pointLight2] }
+            { LightTypes.Directional, [dirLight] }
+            //{ LightTypes.Point, [pointLight, pointLight2] }
         };
         
         //_editorManager.Save(playerBox);
@@ -311,14 +315,14 @@ public class RenderEngine : GameWindow
         _gBuffer = new GBuffer(_viewport);
         
         //Shadows
-        _shadows = new ShadowMap(new Vector2i(8192, 8192), 1100f, 300f, new Vector2(0.01f, 400f), _geometryShader);
-        //_shadows = new ShadowMap(new Vector2i(4096, 4096), 50f, 1f, new Vector2(0.1f, 40f), _geometryShader);
+        //_shadows = new ShadowMap(new Vector2i(8192, 8192), 1100f, 300f, new Vector2(0.01f, 400f), _geometryShader);
+        _shadows = new ShadowMap(new Vector2i(4096, 4096), 25f, 10f, new Vector2(1f, 15f), _geometryShader);
         _ssao = new Ssao([
                 new Shader(@"PostProcessShaders\postProcessShader.vert", ShaderType.VertexShader),
                 new Shader(@"shadersSSAO\ssaoShader.frag", ShaderType.FragmentShader)], [
                 new Shader(@"PostProcessShaders\postProcessShader.vert", ShaderType.VertexShader),
                 new Shader(@"shaderBlurSSAO\ssaoBlurShader.frag", ShaderType.FragmentShader)
-            ], _viewport, 48, 4);
+        ], _viewport, 48, 4);
         
         //UI
         _canvas = new Canvas();
@@ -413,7 +417,7 @@ public class RenderEngine : GameWindow
         //Post Process
         _postProcess.Unbind();
         GL.Viewport(0, 0, _viewport.X, _viewport.Y);
-        _postProcess.DrawPostProcess(_isPostProcess ? -1 : _shadows.TextureHandle);
+        _postProcess.DrawPostProcess(_isPostProcess ? -1 : _gBuffer.NormalsTexture.Handle); //_shadows.TextureHandle : _gBuffer.NormalsTexture.Handle
         GL.Disable(EnableCap.DepthTest);
         
         //Text
@@ -455,19 +459,17 @@ public class RenderEngine : GameWindow
         //_objects[0].Transform.Position.X = (float)Math.Sin(_anim * 2f) * 3f + 5f;
         //_objects[0].Transform.Rotation.Z = (float)Math.Sin(-_anim * 2f) * 5f + 2f;
         
-        _lights[LightTypes.Point][0].Transform.Position.X = (float)Math.Sin(-_anim * 2f) * 10f;
-        _lights[LightTypes.Point][0].Transform.Position.Y = (float)Math.Cos(-_anim) + 2.5f;
-        _lights[LightTypes.Point][0].Transform.Position.Z = (float)Math.Cos(-_anim * 2f) * 5f;
-        
-        _lights[LightTypes.Point][1].Transform.Position.Y = (float)Math.Cos(-_anim) * 4f + 4f;
-        _lights[LightTypes.Point][1].Material.Color = Light.HsvToRgb(new Vector3(_anim * 40f, 1f, 1f));
+        //_lights[LightTypes.Point][0].Transform.Position.X = (float)Math.Sin(-_anim * 2f) * 10f;
+        //_lights[LightTypes.Point][0].Transform.Position.Y = (float)Math.Cos(-_anim) + 2.5f;
+        //_lights[LightTypes.Point][0].Transform.Position.Z = (float)Math.Cos(-_anim * 2f) * 5f;
+        //
+        //_lights[LightTypes.Point][1].Transform.Position.Y = (float)Math.Cos(-_anim) * 4f + 4f;
+        //_lights[LightTypes.Point][1].Material.Color = Light.HsvToRgb(new Vector3(_anim * 40f, 1f, 1f));
         
         if (!IsFocused) return;
 
-        //_earth.MoveEarth(KeyboardState, (float)args.Time, _camera.BoostSpeed);
-        //_station.MoveAltitude(KeyboardState, (float)args.Time);
-        
-        _camera.Move(KeyboardState, (float)args.Time);
+        if (_MoveEarthMode) _earth.MoveEarth(KeyboardState, (float)args.Time, _camera.BoostSpeed, [_lights[LightTypes.Directional][0]]);
+        else _camera.Move(KeyboardState, (float)args.Time);
         
         //var prevTransform = _camera.Transform.Position;
         //if (_collisionBox.CheckCollision(_camera.Transform.Position)) _camera.Transform.Position = prevTransform;
@@ -490,6 +492,10 @@ public class RenderEngine : GameWindow
         if (_timerManager.CheckTimer("P", (float)args.Time, KeyboardState.IsKeyDown(Keys.P)))
         {
             _isPostProcess = !_isPostProcess;
+        }
+        if (_timerManager.CheckTimer("B", (float)args.Time, KeyboardState.IsKeyDown(Keys.B)))
+        {
+            _MoveEarthMode = !_MoveEarthMode;
         }
         
         var sens = (float)args.Time * 2f;
