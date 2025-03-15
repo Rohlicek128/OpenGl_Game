@@ -8,7 +8,7 @@ uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D noiseTexture;
 
-uniform vec3 samples[48];
+uniform vec3 samples[128];
 uniform int kernelSize;
 uniform float radius;
 uniform float bias;

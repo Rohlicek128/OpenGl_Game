@@ -10,6 +10,7 @@ uniform float grayscale;
 
 void main(){
     vec3 color = texture(screenTexture, vTexCoord).rgb;
+    //vec3 color = (texture(screenTexture, vTexCoord).rgb + 1.0) / 2.0;
     //pixelColor = vec4(vec3(1.0) - exp(-color * grayscale), 1.0);
     //pixelColor = vec4(color, 1.0);
     
@@ -17,6 +18,7 @@ void main(){
     float average = (color.r + color.g + color.b) / 3.0;
     pixelColor = vec4(average, average, average, 1.0) * grayscale;
     pixelColor += vec4(color * (1.0 - grayscale), 1.0);
+    
 
     //Banding
     if (banding > 0) {

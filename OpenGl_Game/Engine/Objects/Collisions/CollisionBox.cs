@@ -21,4 +21,9 @@ public class CollisionBox : CollisionShape
 
         return true;
     }
+
+    public override RayInfo CheckCollision(Ray ray)
+    {
+        throw new NotImplementedException();
+    }
 }

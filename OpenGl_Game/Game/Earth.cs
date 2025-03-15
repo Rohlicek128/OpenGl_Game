@@ -1,5 +1,6 @@
 using OpenGl_Game.Engine.Graphics.Textures;
 using OpenGl_Game.Engine.Objects;
+using OpenGl_Game.Engine.Objects.Collisions;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -9,6 +10,7 @@ namespace OpenGl_Game.Game;
 public class Earth
 {
     public EngineObject EarthObject;
+    public CollisionSphere CollisionSphere;
     
     public Texture ColorMap;
     public Texture RoughnessMap;
@@ -21,10 +23,10 @@ public class Earth
     
     public Earth(Transform transform, int resolution, float scale, float midLevel = 1f)
     {
-        ColorMap = new Texture("Earth\\earth_color_mar.png", 0, TextureMagFilter.Linear, TextureMagFilter.Linear);
-        RoughnessMap = new Texture("Earth\\earth_specular.png", 1, TextureMagFilter.Linear, TextureMagFilter.Linear);
-        NormalMap = new Texture("Earth\\earth_normal_high2.png", 2, TextureMagFilter.Linear, TextureMagFilter.Linear);
-        HeightMap = new Texture("Earth\\earth_height_water.png", 0, TextureMagFilter.Linear, TextureMagFilter.Linear);
+        ColorMap = new Texture("Earth\\world.200401.3x5400x2700.png", 0, TextureMagFilter.Linear, TextureMagFilter.Linear);
+        RoughnessMap = new Texture("Earth\\earth_specular_map.png", 1, TextureMagFilter.Linear, TextureMagFilter.Linear);
+        NormalMap = new Texture("Earth\\earth_normal_map.png", 2, TextureMagFilter.Linear, TextureMagFilter.Linear);
+        HeightMap = new Texture("Earth\\earth_height_map_water.png", 0, TextureMagFilter.Linear, TextureMagFilter.Linear);
         CitiesMap = new Texture("Earth\\earth_cities.png", 3, TextureMagFilter.Linear, TextureMagFilter.Linear);
         Scale = scale;
         MidLevel = midLevel;
@@ -42,26 +44,26 @@ public class Earth
                 {TextureTypes.Overlay, CitiesMap}
             })
         );
+
+        CollisionSphere = new CollisionSphere(transform, transform.Scale.X);
     }
 
-    public void MoveEarth(KeyboardState keyboard, float deltaTime, float boost, EngineObject[] engineObjects)
+    public void MoveEarth(KeyboardState keyboard, float deltaTime, float boost, List<EngineObject> engineObjects)
     {
+        engineObjects.Add(EarthObject);
         var speed = deltaTime * boost / 250f;
         
-        if (keyboard.IsKeyDown(Keys.W)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitZ * speed) * EarthObject.Transform.Quaternion;
-        if (keyboard.IsKeyDown(Keys.S)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitZ * speed) * EarthObject.Transform.Quaternion;
-        if (keyboard.IsKeyDown(Keys.A)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitY * speed) * EarthObject.Transform.Quaternion;
-        if (keyboard.IsKeyDown(Keys.D)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitY * speed) * EarthObject.Transform.Quaternion;
-        if (keyboard.IsKeyDown(Keys.Q)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitX * deltaTime * 0.5f) * EarthObject.Transform.Quaternion;
-        if (keyboard.IsKeyDown(Keys.E)) EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitX * deltaTime * 0.5f) * EarthObject.Transform.Quaternion;
+        if (keyboard.IsKeyDown(Keys.W) || true) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitZ * speed) * o.Transform.Quaternion;
+        if (keyboard.IsKeyDown(Keys.S)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitZ * speed) * o.Transform.Quaternion;
+        if (keyboard.IsKeyDown(Keys.A)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitY * speed) * o.Transform.Quaternion;
+        if (keyboard.IsKeyDown(Keys.D)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitY * speed) * o.Transform.Quaternion;
+        if (keyboard.IsKeyDown(Keys.Q)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitX * deltaTime * 0.5f) * o.Transform.Quaternion;
+        if (keyboard.IsKeyDown(Keys.E)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitX * deltaTime * 0.5f) * o.Transform.Quaternion;
         
         if (keyboard.IsKeyDown(Keys.Space)) EarthObject.Transform.Position.X -= speed * 200f;
         if (keyboard.IsKeyDown(Keys.LeftControl)) EarthObject.Transform.Position.X += speed * 200f;
-
-        foreach (var engineObject in engineObjects)
-        {
-            engineObject.Transform.Quaternion = EarthObject.Transform.Quaternion * engineObject.Transform.Quaternion;
-        }
+        
+        CollisionSphere.Transform.Position = EarthObject.Transform.Position;
     }
 
     public MeshData GenerateFaces(int resolution)

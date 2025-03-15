@@ -17,13 +17,15 @@ public class ShaderProgram
     public VertexArrayBuffer ArrayBuffer;
     
     public List<EngineObject> Objects;
+    public VertexAttribute[] Attributes;
     
-    public readonly ShaderAttribute[] Attributes;
-    public readonly ShaderUniform[] Uniforms;
+    public readonly ShaderAttribute[] ShaderAttributes;
+    public readonly ShaderUniform[] ShaderUniforms;
 
     public ShaderProgram(Shader[] shaders, List<EngineObject> objects, VertexAttribute[] attributes, BufferUsage hint = BufferUsage.StaticDraw, bool addTangent = false)
     {
         Objects = objects;
+        Attributes = attributes;
         var meshData = new MeshData(VertexBuffer.CombineBufferData(Objects.Select(o => o.MeshData.Vertices).ToArray()),
             IndexBuffer.CombineIndexBuffers(Objects.Select(o => o.MeshData.Indices).ToArray()));
         if (addTangent) meshData = AddTangents(meshData, ref attributes);
@@ -43,8 +45,8 @@ public class ShaderProgram
             GL.DeleteShader(shader.Handle);
         }
 
-        Attributes = CreateAttributeList();
-        Uniforms = CreateUniformList();
+        ShaderAttributes = CreateAttributeList();
+        ShaderUniforms = CreateUniformList();
     }
     
     public ShaderProgram(Shader[] shaders, ShaderProgram otherProgram)
@@ -65,8 +67,17 @@ public class ShaderProgram
             GL.DeleteShader(shader.Handle);
         }
 
-        Attributes = CreateAttributeList();
-        Uniforms = CreateUniformList();
+        ShaderAttributes = CreateAttributeList();
+        ShaderUniforms = CreateUniformList();
+    }
+
+    public void AddEngineObject(EngineObject eo, VertexAttribute[] attributes)
+    {
+        eo.MeshData = AddTangents(eo.MeshData, ref attributes);
+        Objects.Add(eo);
+        
+        eo.MeshData = new MeshData(VertexBuffer.CombineBufferData(Objects.Select(o => o.MeshData.Vertices).ToArray()),
+            IndexBuffer.CombineIndexBuffers(Objects.Select(o => o.MeshData.Indices).ToArray()));
     }
     
     public MeshData AddTangents(MeshData meshData, ref VertexAttribute[] attributes)
@@ -212,7 +223,7 @@ public class ShaderProgram
 
     public int GetUniformLocation(string name)
     {
-        foreach (var uniform in Uniforms)
+        foreach (var uniform in ShaderUniforms)
         {
             if (name.Equals(uniform.Name)) return uniform.Location;
         }

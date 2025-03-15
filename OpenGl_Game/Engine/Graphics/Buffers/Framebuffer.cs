@@ -46,7 +46,8 @@ public class Framebuffer
     {
         GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, Handle);
         GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
-        GL.BlitFramebuffer(0, 0, viewport.X, viewport.Y, 0, 0, viewport.X, viewport.Y, ClearBufferMask.DepthBufferBit, BlitFramebufferFilter.Nearest);
+        GL.BlitNamedFramebuffer(Handle, 0, 0, 0, viewport.X, viewport.Y, 0, 0, viewport.X, viewport.Y, ClearBufferMask.DepthBufferBit, BlitFramebufferFilter.Nearest);
+        //GL.BlitFramebuffer(0, 0, viewport.X, viewport.Y, 0, 0, viewport.X, viewport.Y, ClearBufferMask.DepthBufferBit, BlitFramebufferFilter.Nearest);
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
     }
 

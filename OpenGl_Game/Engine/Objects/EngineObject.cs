@@ -95,6 +95,7 @@ public class EngineObject
         
         Draw(offset);
         
+        Textures.UnbindAll();
         if (IsInverted) GL.CullFace(TriangleFace.Back);
     }
 

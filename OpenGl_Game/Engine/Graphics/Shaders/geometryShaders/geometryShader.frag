@@ -38,7 +38,12 @@ void main(){
     //Normal
     vec3 norm = texture(material.normalMap, vTexCoord).rgb;
     norm = norm * 2.0 - 1.0;
-    gNormal = normalize(vTBN * norm) * material.hasNormalMap + normalize(vNormal) * (1 - material.hasNormalMap);
+    if (material.hasNormalMap == 0){
+        gNormal = normalize(vNormal);
+    }
+    else if (material.hasNormalMap == 1) {
+        gNormal = normalize(vTBN * norm);
+    }
     gViewNormal = normalize((vTBN * norm) * mat3(inverseModelView)) * material.hasNormalMap + normalize(vNormalView) * (1 - material.hasNormalMap);
     
     //Albedo

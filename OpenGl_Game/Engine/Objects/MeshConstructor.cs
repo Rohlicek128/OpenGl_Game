@@ -3,6 +3,7 @@ using Assimp.Configs;
 using Assimp.Unmanaged;
 using OpenTK.Mathematics;
 using OpenGl_Game.Engine.Graphics.Buffers;
+using BoundingBox = OpenGl_Game.Engine.Objects.Collisions.BoundingBox;
 
 namespace OpenGl_Game.Engine.Objects;
 
@@ -117,15 +118,30 @@ public class MeshConstructor
         uint[] indices = [];
         uint indsMax = 0;
 
-        //scene.Meshes.Remove(scene.Meshes[0]);
-        var mesh = scene.Meshes[0];
-        //foreach (var mesh in scene.Meshes)
-        //{
+        var min = Vector3.Zero;
+        var max = Vector3.Zero;
+
+        scene.Meshes.RemoveAt(0);
+        foreach (var mesh in scene.Meshes)
+        {
             var verts = new float[mesh.Vertices.Count * 8];
             for (var i = 0; i < mesh.Vertices.Count; i++)
             {
-                for (var j = 0; j < 3; j++) verts[i * 8 + j] = mesh.Vertices[i][j];
-                for (var j = 0; j < 2; j++) verts[i * 8 + j + 3] = mesh.TextureCoordinateChannels[0][i][j];
+                for (var j = 0; j < 3; j++)
+                {
+                    verts[i * 8 + j] = mesh.Vertices[i][j];
+                    if (min[j] > mesh.Vertices[i][j]) min[j] = mesh.Vertices[i][j];
+                    if (max[j] < mesh.Vertices[i][j]) max[j] = mesh.Vertices[i][j];
+                }
+
+                if (mesh.TextureCoordinateChannelCount > 0)
+                {
+                    for (var j = 0; j < 2; j++) verts[i * 8 + j + 3] = mesh.TextureCoordinateChannels[0][i][j];
+                }
+                else
+                {
+                    for (var j = 0; j < 2; j++) verts[i * 8 + j + 3] = 0f;
+                }
                 for (var j = 0; j < 3; j++) verts[i * 8 + j + 5] = mesh.Normals[i][j];
             }
 
@@ -136,9 +152,9 @@ public class MeshConstructor
             
             indices = indices.Concat(inds).ToArray();
             indsMax = indices.Max() + 1;
-        //}
+        }
         
-        return new MeshData(vertices, indices);
+        return new MeshData(vertices, indices, new BoundingBox(min, max, (max + min) / 2f));
     }
 
     public static float[] CombineVerticesData(VertexAttribute[] attributes, List<Vector3> vertices, List<Vector3> texCoords, List<Vector3> normals, List<List<Vector3i>> indices)

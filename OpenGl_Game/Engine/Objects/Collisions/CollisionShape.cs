@@ -12,5 +12,11 @@ public abstract class CollisionShape
         Transform = transform;
     }
 
+    protected CollisionShape()
+    {
+        throw new NotImplementedException();
+    }
+
     public abstract bool CheckCollision(Vector3 point);
+    public abstract RayInfo CheckCollision(Ray ray);
 }

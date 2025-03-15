@@ -12,19 +12,20 @@ public class Station
     public Camera Camera;
     public List<EngineObject> ChildObjects;
     
-    public Station(float earthRadius, Camera camera, List<EngineObject> children)
+    public Station(Camera camera, List<EngineObject> children)
     {
         Camera = camera;
         ChildObjects = children;
         StationObject = new EngineObject(
             "Station",
-            new Transform(new Vector3(0f)),
-            MeshConstructor.CreateCube(),
-            new Material(new Vector3(1f, 0.33f, 0.05f))
+            new Transform(new Vector3(3f)),
+            MeshConstructor.LoadObjFromFileAssimp(@"station\station_v05.obj"),
+            new Material(new Vector3(1f))
         );
-        //StationObject.IsShadowVisible = false;
-        //StationObject.IsInverted = true;
-        //StationObject.Transform.Position = new Vector3(earthRadius * 1.0639f, 0f, 0f);
+        StationObject.Material.Shininess = 1f;
+        StationObject.Transform.Quaternion = Quaternion.FromEulerAngles(MathF.PI * Vector3.UnitY) * StationObject.Transform.Quaternion;
+        StationObject.Transform.Position = -StationObject.MeshData.BoundingBox.Origin;
+        StationObject.Transform.Position.X -= 6f;
 
         Camera.Transform.Position = StationObject.Transform.Position;
         foreach (var childObject in ChildObjects) childObject.Transform.Position = StationObject.Transform.Position;

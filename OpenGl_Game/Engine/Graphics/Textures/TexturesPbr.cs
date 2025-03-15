@@ -42,6 +42,11 @@ public class TexturesPbr
     {
         foreach (var texture in Textures) texture.Value.ActiveAndBind();
     }
+    
+    public void UnbindAll()
+    {
+        foreach (var texture in Textures) texture.Value.Unbind();
+    }
 
     public void DeleteAll()
     {
