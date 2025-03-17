@@ -124,7 +124,7 @@ public class ShaderProgram
         return new MeshData(verts, meshData.Indices);
     }
 
-    public void DrawGeometryMesh(Matrix4 worldMat, Matrix4 proj, Matrix4 view)
+    public void DrawGeometryMesh(Matrix4 worldMat, Matrix4 view)
     {
         Use();
         ArrayBuffer.Bind();
@@ -133,9 +133,9 @@ public class ShaderProgram
         /*SetUniform("skybox", 10);
         GL.ActiveTexture(TextureUnit.Texture10);
         GL.BindTexture(TextureTarget.TextureCubeMap, skyboxHandle);*/
+        SetUniform("laser", Random.Shared.NextSingle() * 0.5f + 0.5f);
         
         SetUniform("world", worldMat);
-        SetUniform("projection", proj);
         SetUniform("view", view);
         
         var offset = 0;

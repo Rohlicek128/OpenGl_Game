@@ -10,16 +10,14 @@ public class Station
     public EngineObject StationObject;
 
     public Camera Camera;
-    public List<EngineObject> ChildObjects;
     
-    public Station(Camera camera, List<EngineObject> children)
+    public Station(Camera camera)
     {
         Camera = camera;
-        ChildObjects = children;
         StationObject = new EngineObject(
             "Station",
             new Transform(new Vector3(3f)),
-            MeshConstructor.LoadObjFromFileAssimp(@"station\station_v05.obj"),
+            MeshConstructor.LoadObjFromFileAssimp(@"station\station_v05.obj", true),
             new Material(new Vector3(1f))
         );
         StationObject.Material.Shininess = 1f;
@@ -28,7 +26,6 @@ public class Station
         StationObject.Transform.Position.X -= 6f;
 
         Camera.Transform.Position = StationObject.Transform.Position;
-        foreach (var childObject in ChildObjects) childObject.Transform.Position = StationObject.Transform.Position;
     }
 
     public void MoveAltitude(KeyboardState keyboard, float deltaTime)

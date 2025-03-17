@@ -37,7 +37,7 @@ public class GBuffer : Framebuffer
         GL.DrawBuffers(5, [DrawBufferMode.ColorAttachment0, DrawBufferMode.ColorAttachment1, DrawBufferMode.ColorAttachment2, DrawBufferMode.ColorAttachment3, DrawBufferMode.ColorAttachment4]);
         Unbind();
         
-        Renderbuffer = new Renderbuffer(InternalFormat.DepthComponent, viewport);
+        Renderbuffer = new Renderbuffer(InternalFormat.DepthComponent24, viewport);
         AttachRenderbuffer(FramebufferAttachment.DepthAttachment, Renderbuffer.Handle);
     }
 

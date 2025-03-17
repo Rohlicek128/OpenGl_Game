@@ -15,6 +15,7 @@ struct PointLight {
     vec3 specular;
 
     vec3 attenParams;
+    bool isLighting;
 };
 
 in vec2 vTexCoord;
@@ -25,7 +26,7 @@ uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedoSpec;
 
-#define NR_POINT_LIGHTS 1
+#define NR_POINT_LIGHTS 2
 
 uniform DirLight dirLight;
 uniform PointLight pointLight[NR_POINT_LIGHTS];
@@ -108,7 +109,9 @@ void main(){
     vec4 fragPosLightSpace = vec4(fragPos, 1.0) * lightSpace;
     
     vec3 result = CalcDirectionLight(dirLight, normal, viewDir, albedo, specular, fragPosLightSpace);
-    for (int i = 0; i < NR_POINT_LIGHTS; i++) result += CalcPointLight(pointLight[i], normal, viewDir, fragPos, albedo, specular);
+    for (int i = 0; i < NR_POINT_LIGHTS; i++){
+        if (pointLight[i].isLighting) result += CalcPointLight(pointLight[i], normal, viewDir, fragPos, albedo, specular);
+    }
 
     //pixelColor = vec4(result * ambientOcclusion, 1.0);
     pixelColor = vec4(result, 1.0);

@@ -108,7 +108,7 @@ public class MeshConstructor
         );
     }
 
-    public static MeshData LoadObjFromFileAssimp(string path)
+    public static MeshData LoadObjFromFileAssimp(string path, bool removeFirst = false)
     {
         var importer = new AssimpContext();
         importer.SetConfig(new NormalSmoothingAngleConfig(66f));
@@ -121,7 +121,7 @@ public class MeshConstructor
         var min = Vector3.Zero;
         var max = Vector3.Zero;
 
-        scene.Meshes.RemoveAt(0);
+        if (removeFirst) scene.Meshes.RemoveAt(0);
         foreach (var mesh in scene.Meshes)
         {
             var verts = new float[mesh.Vertices.Count * 8];

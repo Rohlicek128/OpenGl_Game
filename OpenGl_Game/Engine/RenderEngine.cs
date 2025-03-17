@@ -19,15 +19,13 @@ using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using StbImageSharp;
 using FontMap = OpenGl_Game.Engine.Graphics.UI.Text.FontMap;
-using FramebufferAttachment = OpenTK.Graphics.OpenGL.Compatibility.FramebufferAttachment;
-using TextureTarget = OpenTK.Graphics.OpenGL.Compatibility.TextureTarget;
 
 namespace OpenGl_Game.Engine;
 
 public class RenderEngine : GameWindow
 {
-    //public const string DirectoryPath = @"C:\Files\Code\.NET\OpenGl_Game\OpenGl_Game\";
-    public const string DirectoryPath = @"C:\Users\adam\RiderProjects\OpenGl_Game\OpenGl_Game\";
+    public const string DirectoryPath = @"C:\Files\Code\.NET\OpenGl_Game\OpenGl_Game\";
+    //public const string DirectoryPath = @"C:\Users\adam\RiderProjects\OpenGl_Game\OpenGl_Game\";
 
     private Camera _camera;
     private float _anim, _fpsTimer;
@@ -47,6 +45,7 @@ public class RenderEngine : GameWindow
     private ShaderProgram _lightingShader;
     private ShaderProgram _lightShader;
     private ShaderProgram _skyboxProgram;
+    private ShaderProgram _laserProgram;
     private GBuffer _gBuffer;
     
     private PostProcess _postProcess;
@@ -77,7 +76,7 @@ public class RenderEngine : GameWindow
     
     public RenderEngine(int width, int height, string title) : base(
             GameWindowSettings.Default, 
-            new NativeWindowSettings()
+            new NativeWindowSettings
             {
                 Title = title,
                 Size = new Vector2i(width, height),
@@ -86,7 +85,8 @@ public class RenderEngine : GameWindow
                 StartFocused = true,
                 API = ContextAPI.OpenGL,
                 Profile = ContextProfile.Core,
-                APIVersion = new Version(4, 2)
+                APIVersion = new Version(4, 2),
+                DepthBits = 24
             }
         )
     {
@@ -104,7 +104,7 @@ public class RenderEngine : GameWindow
 
         _collisionBox = new CollisionBox(new Transform(new Vector3(0f)));
         
-        _camera = new Camera(new Vector3(0f, 0f, -3f), 3f, 0.03f, 95f);
+        _camera = new Camera(new Vector3(0f, 0f, -3f), 3f, 0.09f, 95f);
         _camera.UpdateSensitivityByAspect(_viewport);
     }
 
@@ -218,7 +218,16 @@ public class RenderEngine : GameWindow
         _earth.EarthObject.Transform.Position = new Vector3(-_earth.EarthObject.Transform.Scale.X * 1.0639f, 0f, 0f);
         _earth.CollisionSphere.Transform.Position = _earth.EarthObject.Transform.Position;
         //_earth.EarthObject.Transform.Position = new Vector3(-MathF.Cos(MathHelper.DegreesToRadians(35f)) * _earth.EarthObject.Transform.Scale.X * 1.0639f, MathF.Sin(MathHelper.DegreesToRadians(35f)) * _earth.EarthObject.Transform.Scale.X * 1.0639f, 0f);
-        _station = new Station(_camera, []);
+        _station = new Station(_camera);
+        
+        var laser = new EngineObject(
+            "Laser",
+            new Transform(Vector3.Zero, Vector3.Zero, new Vector3(1f, 1f, 1f)),
+            MeshConstructor.LoadObjFromFileAssimp(@"Station\laserCylinder.obj"),
+            new Material(new Vector3(10f, 0f, 0f))
+        );
+        laser.Transform.Scale.X = 200f;
+        laser.Transform.Position.X = -100;
         
         //lights
         var dirLight = new Light(
@@ -244,23 +253,24 @@ public class RenderEngine : GameWindow
             LightTypes.Point
         );
         pointLight.Transform.Scale *= 0.2f;
-        var pointLight2 = new Light(
-            "Point light2", 
-            new Transform(new Vector3(-6f, 1.5f, 1f)), 
+        var laserLight = new Light(
+            "Laser Light", 
+            new Transform(Vector3.Zero), 
             MeshConstructor.CreateCube(),
-            new Material(new Vector3(0f, 1f, 0f)),
+            laser.Material,
             new Vector3(0.25f, 1f, 1f),
             new Vector3(1.0f, 0.045f, 0.0075f),
             LightTypes.Point
         );
-        pointLight2.Transform.Scale *= 0.25f;
+        laserLight.IsVisible = false;
+        laserLight.Transform.Position.X = _earth.EarthObject.Transform.Position.X + _earth.EarthObject.Transform.Scale.X;
         
         _objects = [_earth.EarthObject, _station.StationObject];
         
         _lights = new Dictionary<LightTypes, List<Light>>
         {
             { LightTypes.Directional, [dirLight] },
-            { LightTypes.Point, [pointLight] }
+            { LightTypes.Point, [pointLight, laserLight] }
         };
         
         //_editorManager.Save(playerBox);
@@ -283,6 +293,11 @@ public class RenderEngine : GameWindow
             new Shader(@"geometryShaders\vertexShader.vert", ShaderType.VertexShader),
             new Shader(@"LightShaders\lightShader.frag", ShaderType.FragmentShader)
         ], [..Light.LightsDicToList(_lights)], verticesAttribs, addTangent:true);
+        
+        _laserProgram = new ShaderProgram([
+            new Shader(@"laserShaders\laser.vert", ShaderType.VertexShader),
+            new Shader(@"LightShaders\lightShader.frag", ShaderType.FragmentShader)
+        ], [laser], verticesAttribs, addTangent:true);
         
         //Skybox
         var skybox = new EngineObject(
@@ -340,6 +355,7 @@ public class RenderEngine : GameWindow
     {
         _geometryShader.Delete();
         _lightShader.Delete();
+        _laserProgram.Delete();
         _skyboxProgram.Delete();
         
         _postProcess.Delete();
@@ -377,13 +393,17 @@ public class RenderEngine : GameWindow
         var projectionMat = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(_camera.Fov), (float) _viewport[0] / _viewport[1], 0.025f, 5000f);
         var worldMat = viewMat * projectionMat;
         
-        _geometryShader.DrawGeometryMesh(worldMat, projectionMat, viewMat);
+        _geometryShader.DrawGeometryMesh(worldMat, viewMat);
         _gBuffer.Unbind();
         
         if (_wireframeMode) GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
         
         //SSAO
         //_ssao.RenderSsao(_gBuffer, projectionMat, _viewport, _testVal, viewMat);
+        
+        GL.Enable(EnableCap.DepthTest);
+        _gBuffer.SetDefaultDepth(_viewport);
+        GL.DepthFunc(DepthFunction.Lequal);
         
         //Lighting Pass
         _postProcess.Bind();
@@ -393,8 +413,8 @@ public class RenderEngine : GameWindow
         
         GL.Enable(EnableCap.Blend);
         
-        //_gBuffer.SetDefaultDepth(_viewport);
-        _lightShader.DrawGeometryMesh(worldMat, projectionMat, viewMat);
+        _lightShader.DrawGeometryMesh(worldMat, viewMat);
+        _laserProgram.DrawGeometryMesh(worldMat, viewMat);
         //Skybox
         /*viewMat = _camera.GetViewMatrix4().ClearTranslation();
         worldMat = viewMat * projectionMat;
@@ -412,7 +432,7 @@ public class RenderEngine : GameWindow
         //Text
         _fonts["Wide"].DrawText(_fpsDisplay + " fps", new Vector2(25f, _viewport.Y - 60f), 0.75f, new Vector4(1f), _viewport);
         _fonts["Pixel"].DrawText(_camera.Fov + " fov", new Vector2(25f, _viewport.Y - 110f), 0.75f, new Vector4(1f), _viewport);
-        _fonts["Pixel"].DrawText("PLAYER X: "+ (MathF.Floor(_camera.Front.X * 1000f) / 1000f) + " Y: " + (MathF.Floor(_camera.Front.Y * 1000f) / 1000f) + " Z: "+ (MathF.Floor(_camera.Front.Z * 1000f) / 1000f),
+        _fonts["Pixel"].DrawText("PLAYER X: "+ (MathF.Floor(_camera.Transform.Position.X * 1000f) / 1000f) + " Y: " + (MathF.Floor(_camera.Transform.Position.Y * 1000f) / 1000f) + " Z: "+ (MathF.Floor(_camera.Transform.Position.Z * 1000f) / 1000f),
             new Vector2(25f, _viewport.Y - 160f), 0.5f, new Vector4(1f), _viewport);
         _fonts["Pixel"].DrawText("STATION  X: "+ (MathF.Floor(_earth.EarthObject.Transform.Position.X * 1000f) / 1000f) + " Y: " + (MathF.Floor(_earth.EarthObject.Transform.Position.Y * 1000f) / 1000f) + " Z: "+ (MathF.Floor(_earth.EarthObject.Transform.Position.Z * 1000f) / 1000f),
             new Vector2(25f, _viewport.Y - 210f), 0.5f, new Vector4(1f), _viewport);
@@ -506,15 +526,20 @@ public class RenderEngine : GameWindow
             //_camera.Fov = Math.Min(160f, _camera.Fov + 2f);
             //_camera.UpdateSensitivityByFov();
             //_testVal += 0.25f;
-            _camera.Sensitivity += 1f;
+            _camera.Sensitivity += 0.1f;
         }
         if (_timerManager.CheckTimer("-", (float)args.Time, KeyboardState.IsKeyDown(Keys.H)))
         {
             //_camera.UpdateSensitivityByFov();
             //_camera.Fov = Math.Max(1f, _camera.Fov - 2f);
             //_testVal -= 0.25f;
-            _camera.Sensitivity -= 1f;
+            _camera.Sensitivity -= 0.1f;
         }
+
+        _laserProgram.Objects[0].IsVisible = KeyboardState.IsKeyDown(Keys.L);
+        _lights[LightTypes.Point][1].IsLighting = _laserProgram.Objects[0].IsVisible;
+        _lights[LightTypes.Point][1].Transform.Position.Y = (Random.Shared.NextSingle() * 2f - 1f);
+        _lights[LightTypes.Point][1].Transform.Position.Z = (Random.Shared.NextSingle() * 2f - 1f);
 
         if (_timerManager.CheckTimer("I", (float)args.Time, KeyboardState.IsKeyDown(Keys.I))) _postProcess.Grayscale += 1f;
         if (_timerManager.CheckTimer("O", (float)args.Time, KeyboardState.IsKeyDown(Keys.O))) _postProcess.Grayscale -= 1f;

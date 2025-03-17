@@ -9,6 +9,7 @@ public class Light : EngineObject
 {
     public Vector3 AttenuationParams;
     public LightTypes Type;
+    public bool IsLighting;
 
     public Vector3 PbrParams;
     
@@ -21,6 +22,7 @@ public class Light : EngineObject
         AttenuationParams = attenParams;
         Type = type;
         PbrParams = pbrParams;
+        IsLighting = true;
     }
 
     public void SetUniformsForDirectional(ShaderProgram program)
@@ -38,6 +40,7 @@ public class Light : EngineObject
         program.SetUniform($"pointLight[{index}].diffuse", Material.Color * PbrParams.Y);
         program.SetUniform($"pointLight[{index}].specular", Material.Color * PbrParams.Z);
         program.SetUniform($"pointLight[{index}].attenParams", AttenuationParams);
+        program.SetUniform($"pointLight[{index}].isLighting", IsLighting ? 1 : 0);
     }
 
     public static List<Light> LightsDicToList(Dictionary<LightTypes, List<Light>> lights)

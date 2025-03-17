@@ -23,10 +23,10 @@ public class Earth
     
     public Earth(Transform transform, int resolution, float scale, float midLevel = 1f)
     {
-        ColorMap = new Texture("Earth\\world.200401.3x5400x2700.png", 0, TextureMagFilter.Linear, TextureMagFilter.Linear);
-        RoughnessMap = new Texture("Earth\\earth_specular_map.png", 1, TextureMagFilter.Linear, TextureMagFilter.Linear);
-        NormalMap = new Texture("Earth\\earth_normal_map.png", 2, TextureMagFilter.Linear, TextureMagFilter.Linear);
-        HeightMap = new Texture("Earth\\earth_height_map_water.png", 0, TextureMagFilter.Linear, TextureMagFilter.Linear);
+        ColorMap = new Texture("Earth\\earth_color_mar.png", 0, TextureMagFilter.Linear, TextureMagFilter.Linear);
+        RoughnessMap = new Texture("Earth\\earth_specular.png", 1, TextureMagFilter.Linear, TextureMagFilter.Linear);
+        NormalMap = new Texture("Earth\\earth_normal_high2.png", 2, TextureMagFilter.Linear, TextureMagFilter.Linear);
+        HeightMap = new Texture("Earth\\earth_height_water.png", 0, TextureMagFilter.Linear, TextureMagFilter.Linear);
         CitiesMap = new Texture("Earth\\earth_cities.png", 3, TextureMagFilter.Linear, TextureMagFilter.Linear);
         Scale = scale;
         MidLevel = midLevel;

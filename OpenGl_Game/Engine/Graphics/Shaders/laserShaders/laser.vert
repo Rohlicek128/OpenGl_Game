@@ -19,31 +19,21 @@ uniform mat4 inverseModel;
 uniform mat4 inverseModelView;
 uniform float textureScaling;
 
+uniform float laser;
+
 void main(){
     vTexCoord = aTexCoord * (vec2(length(vec3(model[0])), length(vec3(model[1]))) * textureScaling + (1 - textureScaling));
     vNormal = aNormal * mat3(inverseModel);
     vNormalView = aNormal * mat3(inverseModelView);
     
-    vec4 viewPos = vec4(aPosition, 1.0) * model;
+    vec4 viewPos = vec4(aPosition.x, aPosition.y * laser, aPosition.z * laser, 1.0) * model;
     vFragPos = viewPos.xyz;
     vFragPosView = vec3(viewPos * view);
-    
+
     vec3 T = normalize(vec3(vec4(aTangent, 0.0) * model));
     vec3 N = normalize(vec3(vec4(aNormal, 0.0) * model));
     vec3 B = cross(N, T);
     vTBN = mat3(T, B, N);
 
     gl_Position = viewPos * world;
-
-    /*vec4 viewPos = view * model * vec4(aPosition, 1.0);
-    vFragPos = viewPos.xyz;
-    vTexCoord = aTexCoord;
-    vNormal = aNormal * mat3(inverseModel);
-
-    vec3 T = normalize(vec3(vec4(aTangent, 0.0) * model));
-    vec3 N = normalize(vec3(vec4(aNormal, 0.0) * model));
-    vec3 B = cross(N, T);
-    vTBN = mat3(T, B, N);
-
-    gl_Position = vec4(aPosition, 1.0) * model * view;*/
 }
