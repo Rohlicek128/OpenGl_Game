@@ -10,6 +10,9 @@ namespace OpenGl_Game.Engine.Objects;
 
 public class EngineObject
 {
+    public int Id;
+    public static int ObjectIdCounter = 0;
+    
     public string Name;
 
     public Transform Transform;
@@ -38,6 +41,9 @@ public class EngineObject
         IsVisible = true;
         IsShadowVisible = true;
         IsInverted = false;
+
+        ObjectIdCounter++;
+        Id = ObjectIdCounter;
     }
     
     public EngineObject(string name, Transform transform, MeshData meshData, Material material)
@@ -51,6 +57,9 @@ public class EngineObject
         IsVisible = true;
         IsShadowVisible = true;
         IsInverted = false;
+        
+        ObjectIdCounter++;
+        Id = ObjectIdCounter;
     }
 
     public static EngineObject CreateEmpty()
@@ -74,6 +83,7 @@ public class EngineObject
     public void DrawObject(ShaderProgram program, int offset, Matrix4 view)
     {
         if (IsInverted) GL.CullFace(TriangleFace.Front);
+        program.SetUniform("vecEoId", (Id / (float)RenderEngine.MaxObjectIds) * 20f);
         
         var model = GetModelMatrix();
         program.SetUniform("model", model);

@@ -7,7 +7,7 @@ public class IndexBuffer
 {
     public readonly int Handle;
     
-    public readonly uint[] Data;
+    public uint[] Data;
 
     public int TriangleCount;
 
@@ -22,6 +22,22 @@ public class IndexBuffer
         Unbind();
 
         TriangleCount = data.Length / 3;
+    }
+    
+    public void Add(uint[] data)
+    {
+        var offset = Data.Max() + 1;
+        for (var i = 0; i < data.Length; i++)
+        {
+            if (data[i] == RenderEngine.PrimitiveIndex) continue;
+            data[i] += offset;
+            if (data[i] == 0) Console.WriteLine("ZERO FOUND");
+        }
+        
+        Bind();
+        GL.BufferSubData(BufferTarget.ElementArrayBuffer, Data.Length * sizeof(float), data.Length * sizeof(float), data);
+        Unbind();
+        Data = Data.Concat(data).ToArray();
     }
 
     public void Bind()

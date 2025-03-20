@@ -28,9 +28,9 @@ public class ShaderProgram
         Attributes = attributes;
         var meshData = new MeshData(VertexBuffer.CombineBufferData(Objects.Select(o => o.MeshData.Vertices).ToArray()),
             IndexBuffer.CombineIndexBuffers(Objects.Select(o => o.MeshData.Indices).ToArray()));
-        if (addTangent) meshData = AddTangents(meshData, ref attributes);
+        if (addTangent) meshData = AddTangents(meshData, ref Attributes);
         
-        VertexBuffer = new VertexBuffer(meshData.Vertices, attributes, hint);
+        VertexBuffer = new VertexBuffer(meshData.Vertices, Attributes, hint);
         IndexBuffer = new IndexBuffer(meshData.Indices);
         ArrayBuffer = new VertexArrayBuffer(VertexBuffer);
         
@@ -76,17 +76,20 @@ public class ShaderProgram
         eo.MeshData = AddTangents(eo.MeshData, ref attributes);
         Objects.Add(eo);
         
-        eo.MeshData = new MeshData(VertexBuffer.CombineBufferData(Objects.Select(o => o.MeshData.Vertices).ToArray()),
-            IndexBuffer.CombineIndexBuffers(Objects.Select(o => o.MeshData.Indices).ToArray()));
+        VertexBuffer.Add(eo.MeshData.Vertices);
+        IndexBuffer.Add(eo.MeshData.Indices);
     }
     
     public MeshData AddTangents(MeshData meshData, ref VertexAttribute[] attributes)
     {
         //Attributes
-        var attribs = new VertexAttribute[attributes.Length + 1];
-        for (int i = 0; i < attributes.Length; i++) attribs[i] = attributes[i];
-        attribs[attributes.Length] = new VertexAttribute(VertexAttributeType.Tangent, 3);
-        attributes = attribs;
+        if (attributes.All(a => a.Type != VertexAttributeType.Tangent))
+        {
+            var attribs = new VertexAttribute[attributes.Length + 1];
+            for (int i = 0; i < attributes.Length; i++) attribs[i] = attributes[i];
+            attribs[attributes.Length] = new VertexAttribute(VertexAttributeType.Tangent, 3);
+            attributes = attribs;
+        }
         
         //Vertices
         var verts = new float[(meshData.Vertices.Length / 8) * 11];
@@ -124,18 +127,15 @@ public class ShaderProgram
         return new MeshData(verts, meshData.Indices);
     }
 
-    public void DrawGeometryMesh(Matrix4 worldMat, Matrix4 view)
+    public void DrawGeometryMesh(Matrix4 world, Matrix4 view)
     {
         Use();
         ArrayBuffer.Bind();
         IndexBuffer.Bind();
         
-        /*SetUniform("skybox", 10);
-        GL.ActiveTexture(TextureUnit.Texture10);
-        GL.BindTexture(TextureTarget.TextureCubeMap, skyboxHandle);*/
         SetUniform("laser", Random.Shared.NextSingle() * 0.5f + 0.5f);
         
-        SetUniform("world", worldMat);
+        SetUniform("world", world);
         SetUniform("view", view);
         
         var offset = 0;
@@ -147,6 +147,7 @@ public class ShaderProgram
         
         ArrayBuffer.Unbind();
         IndexBuffer.Unbind();
+        Unbind();
     }
     
     public void DrawMeshLighting(Dictionary<LightTypes, List<Light>> lights, Camera camera, ShadowMap shadowMap, Ssao ssao)
@@ -186,6 +187,7 @@ public class ShaderProgram
         
         ArrayBuffer.Unbind();
         IndexBuffer.Unbind();
+        Unbind();
         GL.Enable(EnableCap.DepthTest);
     }
     

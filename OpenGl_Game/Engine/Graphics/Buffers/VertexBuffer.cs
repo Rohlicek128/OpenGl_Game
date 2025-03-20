@@ -9,7 +9,7 @@ public class VertexBuffer
 {
     public readonly int Handle;
     
-    public readonly float[] Data;
+    public float[] Data;
     public readonly VertexAttribute[] Attributes;
     public readonly int Stride;
 
@@ -23,6 +23,14 @@ public class VertexBuffer
         Bind();
         GL.BufferData(BufferTarget.ArrayBuffer, data.Length * sizeof(float), data, hint);
         Unbind();
+    }
+
+    public void Add(float[] data)
+    {
+        Bind();
+        GL.BufferSubData(BufferTarget.ArrayBuffer, Data.Length * sizeof(float), data.Length * sizeof(float), data);
+        Unbind();
+        Data = Data.Concat(data).ToArray();
     }
 
     public void Bind()
