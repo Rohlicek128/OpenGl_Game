@@ -70,7 +70,7 @@ public class FontMap
         FT.FT_Done_FreeType(ft);
     }
 
-    public void DrawText(string text, Vector2 position, float scale, Vector4 color, Vector2 viewport)
+    public void DrawText(string text, Vector2 position, float scale, Vector4 color, Vector2 viewport, int substract = 0)
     {
         _fontProgram.Use();
         _fontProgram.ArrayBuffer.Bind();
@@ -90,9 +90,9 @@ public class FontMap
             0f, 0f,  1f, 0f
         ];
         var chars = text.ToCharArray();
-        foreach (var c in chars)
+        for (var i = 0; i < chars.Length - substract; i++)
         {
-            var ch = Characters[c];
+            var ch = Characters[chars[i]];
 
             var xpos = position.X + ch.Bearing.X * scale;
             var ypos = position.Y - (ch.Size.Y - ch.Bearing.Y) * scale;

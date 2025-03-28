@@ -23,6 +23,7 @@ public class EngineObject
     public TexturesPbr Textures;
 
     public bool IsVisible;
+    public bool IsSelectable;
     public bool IsShadowVisible;
     public bool IsInverted;
 
@@ -39,6 +40,7 @@ public class EngineObject
         );
         Textures = textures;
         IsVisible = true;
+        IsSelectable = true;
         IsShadowVisible = true;
         IsInverted = false;
 
@@ -55,6 +57,7 @@ public class EngineObject
         Textures = new TexturesPbr();
         Textures.FillRest();
         IsVisible = true;
+        IsSelectable = true;
         IsShadowVisible = true;
         IsInverted = false;
         

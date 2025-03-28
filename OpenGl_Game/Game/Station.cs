@@ -1,5 +1,7 @@
+using OpenGl_Game.Engine;
 using OpenGl_Game.Engine.Graphics.Textures;
 using OpenGl_Game.Engine.Objects;
+using OpenGl_Game.Game.Buttons;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
@@ -9,14 +11,11 @@ public class Station
 {
     public EngineObject StationObject;
 
-    public Camera Camera;
-
-    public List<EngineObject> StationObjects;
+    public Dictionary<int, ButtonHandler> Buttons;
     
-    public Station(Camera camera)
+    public Station()
     {
-        Camera = camera;
-        StationObjects = [];
+        Buttons = [];
         StationObject = new EngineObject(
             "Station",
             new Transform(new Vector3(3f)),
@@ -28,14 +27,9 @@ public class Station
         StationObject.Transform.Position = -StationObject.MeshData.BoundingBox.Origin;
         StationObject.Transform.Position.X -= 6f;
 
-        Camera.Transform.Position = StationObject.Transform.Position;
+        StationObject.IsSelectable = false;
         
-        StationObjects.Add(new EngineObject(
-            "Laser Button", 
-            new Transform(new Vector3(-5.079833f, 1.1671673f, 0.0257724f), new Vector3(0f, 0f, -0.8928769f), new Vector3(0.35f)), 
-            MeshConstructor.CreateCube(),
-            new Material(new Vector3(1f, 1f, 0f))
-        ));
+        Buttons.Add(EngineObject.ObjectIdCounter + 1, new LaserButton());
     }
     
 }

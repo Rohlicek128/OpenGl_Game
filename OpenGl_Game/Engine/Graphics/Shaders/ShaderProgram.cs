@@ -70,6 +70,23 @@ public class ShaderProgram
         ShaderAttributes = CreateAttributeList();
         ShaderUniforms = CreateUniformList();
     }
+    
+    public ShaderProgram(Shader[] shaders)
+    {
+        Handle = GL.CreateProgram();
+
+        foreach (var shader in shaders) GL.AttachShader(Handle, shader.Handle);
+        GL.LinkProgram(Handle);
+
+        foreach (var shader in shaders)
+        {
+            GL.DetachShader(Handle, shader.Handle);
+            GL.DeleteShader(shader.Handle);
+        }
+
+        ShaderAttributes = CreateAttributeList();
+        ShaderUniforms = CreateUniformList();
+    }
 
     public void AddEngineObject(EngineObject eo, VertexAttribute[] attributes)
     {
@@ -127,7 +144,7 @@ public class ShaderProgram
         return new MeshData(verts, meshData.Indices);
     }
 
-    public void DrawGeometryMesh(Matrix4 world, Matrix4 view)
+    public void DrawGeometryMesh(Matrix4 world, Matrix4 view, int selectedId = -1)
     {
         Use();
         ArrayBuffer.Bind();
@@ -141,7 +158,11 @@ public class ShaderProgram
         var offset = 0;
         foreach (var engineObject in Objects)
         {
-            if (engineObject.IsVisible) engineObject.DrawObject(this, offset, view);
+            if (engineObject.IsVisible)
+            {
+                if (selectedId != -1 && engineObject.IsSelectable) SetUniform("isSelected", engineObject.Id == selectedId ? 1 : 0);
+                engineObject.DrawObject(this, offset, view);
+            }
             offset += engineObject.MeshData.Indices.Length * sizeof(uint);
         }
         

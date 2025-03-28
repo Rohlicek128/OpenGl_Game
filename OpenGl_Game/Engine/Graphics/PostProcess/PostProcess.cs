@@ -16,6 +16,8 @@ public class PostProcess
     public Framebuffer Framebuffer;
     public Renderbuffer Renderbuffer;
 
+    public List<PostProcessShader> PostProcessShaders;
+
     public int Banding;
     public float Grayscale;
 
@@ -23,6 +25,7 @@ public class PostProcess
     {
         Banding = -1;
         Grayscale = 0.0f;
+        PostProcessShaders = [];
         var screenQuad = EngineObject.CreateEmpty();
         screenQuad.MeshData.Vertices = MeshConstructor.CreateRenderQuad();
         
@@ -61,6 +64,19 @@ public class PostProcess
         Program.SetUniform("banding", Banding);
         Program.SetUniform("grayscale", Grayscale);
         Draw();
+        
+        GL.Disable(EnableCap.DepthTest);
+        Program.ArrayBuffer.Bind();
+        foreach (var postProcess in PostProcessShaders)
+        {
+            postProcess.UseProgram();
+            
+            postProcess.SetUniforms();
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
+            postProcess.UnbindProgram();
+        }
+        Program.ArrayBuffer.Unbind();
+        GL.Enable(EnableCap.DepthTest);
     }
 
     public void Draw()
