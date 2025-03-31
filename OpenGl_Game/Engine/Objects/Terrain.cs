@@ -26,7 +26,7 @@ public class Terrain
             //new Material(new Vector3(74f / 255f, 149f / 255f, 207f / 255f))
             new TexturesPbr(new Dictionary<TextureTypes, Texture>
             {
-                {TextureTypes.Diffuse, new Texture(path, 0, TextureMagFilter.Linear, TextureMagFilter.Linear)},
+                {TextureTypes.Diffuse, new Texture(path, 0, TextureMinFilter.Linear, TextureMagFilter.Linear)},
                 {TextureTypes.Specular, new Texture("black1x1.png", 1)}
             })
         );

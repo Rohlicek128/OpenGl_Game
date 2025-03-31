@@ -11,6 +11,7 @@ public class Earth
 {
     public EngineObject EarthObject;
     public CollisionSphere CollisionSphere;
+    public const int EarthAxis = 1; 
     
     public Texture ColorMap;
     public Texture RoughnessMap;
@@ -23,11 +24,11 @@ public class Earth
     
     public Earth(Transform transform, int resolution, float scale, float midLevel = 1f)
     {
-        ColorMap = new Texture("Earth\\world.200401.3x5400x2700.png", 0, TextureMagFilter.Linear, TextureMagFilter.Linear);
-        RoughnessMap = new Texture("Earth\\earth_specular.png", 1, TextureMagFilter.Linear, TextureMagFilter.Linear);
-        NormalMap = new Texture("Earth\\earth_normal.png", 2, TextureMagFilter.Linear, TextureMagFilter.Linear);
-        HeightMap = new Texture("Earth\\earth_height_water.png", 0, TextureMagFilter.Linear, TextureMagFilter.Linear);
-        CitiesMap = new Texture("Earth\\earth_cities.png", 3, TextureMagFilter.Linear, TextureMagFilter.Linear);
+        ColorMap = new Texture("Earth\\earth_color_mar.png", 0, TextureMinFilter.Linear, TextureMagFilter.Linear);
+        RoughnessMap = new Texture("Earth\\earth_specular.png", 1, TextureMinFilter.Linear, TextureMagFilter.Linear);
+        NormalMap = new Texture("Earth\\earth_normal_high2.png", 2, TextureMinFilter.Linear, TextureMagFilter.Linear);
+        HeightMap = new Texture("Earth\\earth_height_water.png", 0, TextureMinFilter.Linear, TextureMagFilter.Linear);
+        CitiesMap = new Texture("Earth\\earth_cities.png", 3, TextureMinFilter.Linear, TextureMagFilter.Linear);
         Scale = scale;
         MidLevel = midLevel;
         
@@ -44,6 +45,7 @@ public class Earth
                 {TextureTypes.Overlay, CitiesMap}
             })
         );
+        EarthObject.IsSelectable = false;
 
         CollisionSphere = new CollisionSphere(transform, transform.Scale.X);
     }
@@ -55,13 +57,13 @@ public class Earth
         
         if (keyboard.IsKeyDown(Keys.W) || true) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitZ * speed) * o.Transform.Quaternion;
         if (keyboard.IsKeyDown(Keys.S)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitZ * speed) * o.Transform.Quaternion;
-        if (keyboard.IsKeyDown(Keys.A)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitY * speed) * o.Transform.Quaternion;
-        if (keyboard.IsKeyDown(Keys.D)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitY * speed) * o.Transform.Quaternion;
-        if (keyboard.IsKeyDown(Keys.Q)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitX * deltaTime * 0.5f) * o.Transform.Quaternion;
-        if (keyboard.IsKeyDown(Keys.E)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitX * deltaTime * 0.5f) * o.Transform.Quaternion;
+        if (keyboard.IsKeyDown(Keys.A)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitX * speed) * o.Transform.Quaternion;
+        if (keyboard.IsKeyDown(Keys.D)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitX * speed) * o.Transform.Quaternion;
+        if (keyboard.IsKeyDown(Keys.Q)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitY * deltaTime * 0.5f) * o.Transform.Quaternion;
+        if (keyboard.IsKeyDown(Keys.E)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitY * deltaTime * 0.5f) * o.Transform.Quaternion;
         
-        if (keyboard.IsKeyDown(Keys.Space)) EarthObject.Transform.Position.X -= speed * 200f;
-        if (keyboard.IsKeyDown(Keys.LeftControl)) EarthObject.Transform.Position.X += speed * 200f;
+        if (keyboard.IsKeyDown(Keys.Space)) EarthObject.Transform.Position[EarthAxis] -= speed * 200f;
+        if (keyboard.IsKeyDown(Keys.LeftControl)) EarthObject.Transform.Position[EarthAxis] += speed * 200f;
         
         CollisionSphere.Transform.Position = EarthObject.Transform.Position;
     }

@@ -41,7 +41,7 @@ public class Camera
         Quaternion = Quaternion.Identity;
 
         Up = Vector3.UnitY;
-        Front = new Vector3(0f, 0f, -1f);
+        Front = new Vector3(0f, 0f, 1f);
         Right = Vector3.Normalize(Vector3.Cross(Up, Direction));
 
         Speed = speed;

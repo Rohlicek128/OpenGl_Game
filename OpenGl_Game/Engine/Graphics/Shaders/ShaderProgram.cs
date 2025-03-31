@@ -160,7 +160,7 @@ public class ShaderProgram
         {
             if (engineObject.IsVisible)
             {
-                if (selectedId != -1 && engineObject.IsSelectable) SetUniform("isSelected", engineObject.Id == selectedId ? 1 : 0);
+                if (selectedId != -1) SetUniform("isSelected", engineObject.IsSelectable && engineObject.Id == selectedId ? 1 : 0);
                 engineObject.DrawObject(this, offset, view);
             }
             offset += engineObject.MeshData.Indices.Length * sizeof(uint);
@@ -296,8 +296,7 @@ public class ShaderProgram
         GL.UniformMatrix4f(GetUniformLocation(name), 1, transpose, ref value);
     }
 
-    public void 
-        Use()
+    public void Use()
     {
         GL.UseProgram(Handle);
     }

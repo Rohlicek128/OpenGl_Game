@@ -6,6 +6,13 @@ namespace OpenGl_Game.Game.Buttons;
 
 public class LaserButton : ButtonHandler
 {
+    private ShaderProgram _laserShader;
+    public ShaderProgram LaserShader
+    {
+        get => _laserShader;
+        set => _laserShader = value ?? throw new ArgumentNullException(nameof(value));
+    }
+
     public LaserButton()
     {
         AddEvent(MyEvent);
@@ -18,10 +25,16 @@ public class LaserButton : ButtonHandler
         );
     }
 
-    private void MyEvent(object sender, params object?[] param)
+    private void SetButtonValue(bool down)
+    {
+        ButtonValue = down ? 1f : 0f;
+    }
+
+    private protected override void MyEvent(object sender, params object?[] param)
     {
         if (param[0] == null) return;
+        SetButtonValue((bool)param[0]);
 
-        ((ShaderProgram)param[1]).Objects[0].IsVisible = (bool)param[0];
+        _laserShader.Objects[0].IsVisible = (int)ButtonValue == 1;
     }
 }

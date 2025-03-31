@@ -8,5 +8,5 @@ uniform mat4 model;
 uniform float laser;
 
 void main(){
-    gl_Position = vec4(aPosition.x, aPosition.y * laser, aPosition.z * laser, 1.0) * model * world;
+    gl_Position = vec4(aPosition.x * laser, aPosition.y, aPosition.z * laser, 1.0) * model * world;
 }

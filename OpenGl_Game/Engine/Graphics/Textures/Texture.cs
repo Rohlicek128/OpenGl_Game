@@ -7,7 +7,7 @@ namespace OpenGl_Game.Engine.Graphics.Textures;
 
 public class Texture
 {
-    public readonly int Handle;
+    public int Handle;
     public uint Index;
 
     public ImageResult Image;
@@ -15,7 +15,7 @@ public class Texture
     public PixelType Type;
     public PixelFormat Pixel;
 
-    public unsafe Texture(uint index, Vector2i size, void* data, InternalFormat format = InternalFormat.Rgba, PixelType type = PixelType.UnsignedByte, PixelFormat pixel = PixelFormat.Rgba)
+    public unsafe Texture(uint index, Vector2i size, void* data, InternalFormat format = InternalFormat.Rgba, PixelType type = PixelType.UnsignedByte, PixelFormat pixel = PixelFormat.Rgba, TextureMinFilter minFilter = TextureMinFilter.Nearest, TextureMagFilter magFilter = TextureMagFilter.Nearest)
     {
         Handle = GL.GenTexture();
         Index = index;
@@ -27,8 +27,8 @@ public class Texture
 
         GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureWrapS, (int) TextureWrapMode.Repeat);
         GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureWrapT, (int) TextureWrapMode.Repeat);
-        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMinFilter, (int) TextureMinFilter.Nearest);
-        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMagFilter, (int) TextureMagFilter.Nearest);
+        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMinFilter, (int) minFilter);
+        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMagFilter, (int) magFilter);
 
         GL.GenerateMipmap(TextureTarget.Texture2d);
         
@@ -47,7 +47,7 @@ public class Texture
         Pixel = pixel;
     }
     
-    public Texture(string path, uint index, TextureMagFilter minFilter = TextureMagFilter.Nearest, TextureMagFilter magFilter = TextureMagFilter.Nearest, InternalFormat format = InternalFormat.Rgba, PixelType type = PixelType.UnsignedByte, PixelFormat pixel = PixelFormat.Rgba)
+    public Texture(string path, uint index, TextureMinFilter minFilter = TextureMinFilter.Nearest, TextureMagFilter magFilter = TextureMagFilter.Nearest, InternalFormat format = InternalFormat.Rgba, PixelType type = PixelType.UnsignedByte, PixelFormat pixel = PixelFormat.Rgba)
     {
         Image = LoadImage(path);
         Handle = GL.GenTexture();

@@ -24,7 +24,7 @@ public class UiWindow
         Transform = new Transform(new Vector3(50f, 800f, 0f), new Vector3(0f), new Vector3(500f, 800f, 0f));
         Header = header;
         Color = color;
-        IsVisible = false;
+        IsVisible = true;
         
         _startPos = Vector2i.Zero;
         _origoPos = Vector2i.Zero;
@@ -79,6 +79,6 @@ public class UiWindow
         
         GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
         
-        fonts["Cascadia"].DrawText(Header, new Vector2(Transform.Position.X + 25f, Transform.Position.Y - 40f), 0.5f, new Vector4(1f), viewport);
+        fonts["Wide"].DrawText(Header, new Vector2(Transform.Position.X + 25f, Transform.Position.Y - 40f), 0.5f, new Vector4(1f), viewport);
     }
 }

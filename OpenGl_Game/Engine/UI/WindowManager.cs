@@ -18,8 +18,7 @@ public class WindowManager
         Windows = [];
         
         var ui = EngineObject.CreateEmpty();
-        //ui.VerticesData.Data = new float[6 * 4];
-        ui.MeshData = MeshConstructor.CreateQuad(1f);
+        ui.MeshData = MeshConstructor.CreateQuad();
         UiProgram = new ShaderProgram([
             new Shader(@"UiShaders\uiShader.vert", ShaderType.VertexShader),
             new Shader(@"UiShaders\uiShader.frag", ShaderType.FragmentShader)

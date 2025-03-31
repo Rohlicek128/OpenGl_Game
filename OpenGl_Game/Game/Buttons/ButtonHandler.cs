@@ -11,6 +11,13 @@ public abstract class ButtonHandler
         set => _engineObject = value ?? throw new ArgumentNullException(nameof(value));
     }
 
+    private float _buttonValue;
+    public float ButtonValue
+    {
+        get => _buttonValue;
+        set => _buttonValue = value;
+    }
+
     public delegate void EventHandler(object sender, params object?[] param);
     public event EventHandler OnEvent;
 
@@ -18,6 +25,11 @@ public abstract class ButtonHandler
     {
         if (OnEvent != null) return;
         OnEvent += e;
+    }
+
+    private protected virtual void MyEvent(object sender, params object?[] param)
+    {
+        
     }
 
     public void Activate(params object?[] param)

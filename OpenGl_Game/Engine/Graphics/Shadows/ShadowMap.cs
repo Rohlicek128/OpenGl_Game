@@ -65,8 +65,10 @@ public class ShadowMap
 
     public void RenderDepthMap(Light light, Vector2i viewport, ShaderProgram sceneProgram, Camera camera)
     {
-        GL.CullFace(TriangleFace.Front);
-        GL.Disable(EnableCap.CullFace);
+        GL.ClearColor(0f, 0f, 0f, 1f);
+        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        //GL.CullFace(TriangleFace.Front);
+        //GL.Disable(EnableCap.CullFace);
         
         ShadowProgram.Use();
         sceneProgram.ArrayBuffer.Bind();
@@ -94,7 +96,7 @@ public class ShadowMap
         DepthMapFramebuffer.Unbind();
         GL.Viewport(0, 0, viewport.X, viewport.Y);
         GL.CullFace(TriangleFace.Back);
-        GL.Enable(EnableCap.CullFace);
+        //GL.Enable(EnableCap.CullFace);
     }
 
     public Matrix4 GetLightSpaceMatrix(Light dirLight, Camera camera)
@@ -103,7 +105,7 @@ public class ShadowMap
         //var frustumSize = 1000f;
         //var lightProjection = Matrix4.CreateOrthographic(frustumSize / 2f,  frustumSize / 2f, 0.01f, 250f);
         
-        var lightProjection = Matrix4.CreateOrthographic(MaxDistance, MaxDistance, PlaneDims.X, PlaneDims.Y);
+        var lightProjection = Matrix4.CreateOrthographic(14, 14, PlaneDims.X, PlaneDims.Y);
         var lightView = Matrix4.LookAt(
             (-Vector3.UnitY * Matrix3.CreateFromQuaternion(dirLight.Transform.Quaternion)) * CameraOffset,
             Vector3.Zero, 
