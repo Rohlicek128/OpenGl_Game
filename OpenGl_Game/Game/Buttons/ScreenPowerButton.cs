@@ -19,7 +19,7 @@ public class ScreenPowerButton : ButtonHandler
         AddEvent(MyEvent);
         EngineObject = new EngineObject(
             "OS Power Button",
-            new Transform(new Vector3(-4.879647f, 1.1132897f, 0.6464115f), new Vector3(-MathF.PI / 2f, -0.6888647f, -MathF.PI / 2f),
+            new Transform(new Vector3(-4.9225183f, -0.3374207f, 0.9792786f), new Vector3(-MathF.PI/2f, -0.5290095f, -MathF.PI/2f),
                 new Vector3(0.08f)),
             MeshConstructor.CreateCube(),
             new Material(new Vector3(0f, 0f, 0f))

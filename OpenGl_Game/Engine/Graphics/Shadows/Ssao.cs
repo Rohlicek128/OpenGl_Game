@@ -28,10 +28,10 @@ public class Ssao
     {
         var screenQuad = EngineObject.CreateEmpty();
         screenQuad.MeshData.Vertices = MeshConstructor.CreateRenderQuad();
-        Program = new ShaderProgram(shaders, [screenQuad], [new VertexAttribute(VertexAttributeType.PosAndTex, 4)]);
+        //Program = new ShaderProgram(shaders, [screenQuad], [new VertexAttribute(VertexAttributeType.PosAndTex, 4)]);
         screenQuad = EngineObject.CreateEmpty();
         screenQuad.MeshData.Vertices = MeshConstructor.CreateRenderQuad();
-        BlurProgram = new ShaderProgram(blurShaders, [screenQuad], [new VertexAttribute(VertexAttributeType.PosAndTex, 4)]);
+        //BlurProgram = new ShaderProgram(blurShaders, [screenQuad], [new VertexAttribute(VertexAttributeType.PosAndTex, 4)]);
         
         Framebuffer = new Framebuffer();
         Framebuffer.AttachTexture(
@@ -170,7 +170,7 @@ public class Ssao
 
     public void Delete()
     {
-        Program.Delete();
+        //Program.Delete();
         Framebuffer.Delete();
         BlurFramebuffer.Delete();
         NoiseTexture.Delete();

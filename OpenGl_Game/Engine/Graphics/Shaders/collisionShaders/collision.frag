@@ -1,9 +1,9 @@
 #version 420 core
 
-out vec4 pCollision;
+out vec4 pixelColor;
 
 uniform float vecEoId;
 
 void main(){
-    pCollision = vec4(vecEoId, vecEoId, vecEoId, 1.0);
+    pixelColor = vec4(1.0);
 }

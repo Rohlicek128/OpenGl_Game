@@ -1,6 +1,8 @@
+using System.Drawing;
 using System.Runtime.InteropServices;
 using FreeTypeSharp;
 using OpenGl_Game.Engine.Graphics.Shaders;
+using OpenGl_Game.Engine.Graphics.Shaders.Programs;
 using OpenGl_Game.Shaders;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
@@ -9,11 +11,11 @@ namespace OpenGl_Game.Engine.Graphics.UI.Text;
 
 public class FontMap
 {
-    public Dictionary<char, FontCharacter> Characters;
+    public Dictionary<char, FontCharacter> Characters { get; set; }
 
-    private ShaderProgram _fontProgram; 
+    private FontShader _fontProgram; 
     
-    public unsafe FontMap(string fontPath, ShaderProgram program)
+    public unsafe FontMap(string fontPath, FontShader program)
     {
         Characters = new Dictionary<char, FontCharacter>();
         _fontProgram = program;

@@ -30,8 +30,6 @@ public class Camera
     public Vector2 Mouse;
     private Vector2 _lastMouse;
 
-    public EngineObject LookingAtObject;
-
     public Camera(Vector3 startingPos, float speed, float sensitivity, float fov)
     {
         Transform = new Transform(startingPos);

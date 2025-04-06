@@ -8,7 +8,7 @@ using OpenTK.Mathematics;
 
 namespace OpenGl_Game.Engine.Graphics.Shaders;
 
-public class ShaderProgram
+public abstract class ShaderProgram
 {
     public readonly int Handle;
 
@@ -144,72 +144,46 @@ public class ShaderProgram
         return new MeshData(verts, meshData.Indices);
     }
 
-    public void DrawGeometryMesh(Matrix4 world, Matrix4 view, int selectedId = -1)
+    public virtual void SetUniforms(params object[] param)
     {
-        Use();
-        ArrayBuffer.Bind();
-        IndexBuffer.Bind();
         
-        SetUniform("laser", Random.Shared.NextSingle() * 0.5f + 0.5f);
+    }
+
+    public virtual void Draw(params object[] param)
+    {
         
-        SetUniform("world", world);
-        SetUniform("view", view);
-        
+    }
+
+    protected void DrawEachObject(Matrix4 view)
+    {
         var offset = 0;
         foreach (var engineObject in Objects)
         {
             if (engineObject.IsVisible)
             {
-                if (selectedId != -1) SetUniform("isSelected", engineObject.IsSelectable && engineObject.Id == selectedId ? 1 : 0);
                 engineObject.DrawObject(this, offset, view);
             }
             offset += engineObject.MeshData.Indices.Length * sizeof(uint);
         }
-        
-        ArrayBuffer.Unbind();
-        IndexBuffer.Unbind();
-        Unbind();
     }
-    
-    public void DrawMeshLighting(Dictionary<LightTypes, List<Light>> lights, Camera camera, ShadowMap shadowMap, Ssao ssao)
+
+    public virtual void DeleteAll()
     {
-        GL.Clear(ClearBufferMask.ColorBufferBit);
         
+    }
+
+    public void BindAll()
+    {
         Use();
         ArrayBuffer.Bind();
         IndexBuffer.Bind();
-        GL.Disable(EnableCap.DepthTest);
-        
-        SetUniform("gPosition", 0);
-        SetUniform("gNormal", 1);
-        SetUniform("gAlbedoSpec", 2);
-        
-        SetUniform("shadowMap", 3);
-        GL.ActiveTexture(TextureUnit.Texture3);
-        GL.BindTexture(TextureTarget.Texture2d, shadowMap.TextureHandle);
+    }
 
-        SetUniform("ssaoMap", 4);
-        GL.ActiveTexture(TextureUnit.Texture4);
-        GL.BindTexture(TextureTarget.Texture2d, ssao.BlurFramebuffer.AttachedTextures[0].Handle);
-        
-        SetUniform("lightSpace", shadowMap.LightSpace);
-        SetUniform("viewPos", camera.Transform.Position);
-        
-        foreach (var lightList in lights)
-        {
-            if (lightList.Key == LightTypes.Directional) lightList.Value[0].SetUniformsForDirectional(this);
-            else if (lightList.Key == LightTypes.Point)
-            {
-                for (int i = 0; i < lightList.Value.Count; i++) lightList.Value[i].SetUniformsForPoint(this, i);
-            }
-        }
-        
-        GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
-        
-        ArrayBuffer.Unbind();
+    public void UnbindAll()
+    {
         IndexBuffer.Unbind();
+        ArrayBuffer.Unbind();
         Unbind();
-        GL.Enable(EnableCap.DepthTest);
     }
     
     private ShaderAttribute[] CreateAttributeList()

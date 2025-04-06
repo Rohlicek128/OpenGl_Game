@@ -2,6 +2,7 @@ using OpenGl_Game.Engine.Editor;
 using OpenGl_Game.Engine.Graphics.Buffers;
 using OpenGl_Game.Engine.Graphics.PostProcess;
 using OpenGl_Game.Engine.Graphics.Shaders;
+using OpenGl_Game.Engine.Graphics.Shaders.Programs;
 using OpenGl_Game.Engine.Graphics.Shadows;
 using OpenGl_Game.Engine.Graphics.Textures;
 using OpenGl_Game.Engine.Graphics.UI;
@@ -25,8 +26,8 @@ namespace OpenGl_Game.Engine;
 
 public class RenderEngine : GameWindow
 {
-    public const string DirectoryPath = @"C:\Files\Code\.NET\OpenGl_Game\OpenGl_Game\";
-    //public const string DirectoryPath = @"C:\Users\adam\RiderProjects\OpenGl_Game\OpenGl_Game\";
+    //public const string DirectoryPath = @"C:\Files\Code\.NET\OpenGl_Game\OpenGl_Game\";
+    public const string DirectoryPath = @"C:\Users\adam\RiderProjects\OpenGl_Game\OpenGl_Game\";
     public const uint PrimitiveIndex = uint.MaxValue;
     public const int MaxObjectIds = 255;
 
@@ -46,18 +47,17 @@ public class RenderEngine : GameWindow
     private Vector2i _viewport;
     private int _renderScale;
     
-    private ShaderProgram _geometryShader;
-    private ShaderProgram _lightingShader;
-    private ShaderProgram _lightShader;
-    private ShaderProgram _skyboxShader;
-    private ShaderProgram _laserShader;
-    private ShaderProgram _collisionShader;
+    private GeometryShader _geometryShader;
+    private LightingShader _lightingShader;
+    private LightShader _lightShader;
+    private LaserShader _laserShader;
+    private CollisionShader _collisionShader;
     private OutlineShader _outlineShader;
     private GBuffer _gBuffer;
     
-    private PostProcess _postProcess;
+    private PostProcessShader _postProcessShader;
 
-    private ShaderProgram _fontShader;
+    private FontShader _fontShader;
     private Dictionary<string, FontMap> _fonts;
     private Canvas _canvas;
 
@@ -75,7 +75,6 @@ public class RenderEngine : GameWindow
     private EditorManager _editorManager;
 
     private float _testVal = 1f;
-    private EngineObject _emptyObject;
     
     private Earth _earth;
     private Station _station;
@@ -110,8 +109,6 @@ public class RenderEngine : GameWindow
         
         _camera = new Camera(new Vector3(-3.25f, 0.4f, 0f), 3f, 0.09f, 95f);
         _camera.UpdateSensitivityByAspect(_viewport);
-
-        _emptyObject = EngineObject.CreateEmpty();
     }
 
     public WindowIcon CreateWindowIcon(string path)
@@ -147,10 +144,7 @@ public class RenderEngine : GameWindow
         //Fonts
         var text = EngineObject.CreateEmpty();
         text.MeshData.Vertices = new float[6 * 4];
-        _fontShader = new ShaderProgram([
-            new Shader(@"TextShaders\textShader.vert", ShaderType.VertexShader),
-            new Shader(@"TextShaders\textShader.frag", ShaderType.FragmentShader)
-        ], [text], [new VertexAttribute(VertexAttributeType.PosAndTex, 4)], BufferUsage.DynamicDraw);
+        _fontShader = new FontShader(text);
         
         _fonts.Add("Cascadia", new FontMap("CascadiaCode.ttf", _fontShader));
         _fonts.Add("ATName", new FontMap("ATNameSansTextTrial-ExtraBold.otf", _fontShader));
@@ -193,7 +187,7 @@ public class RenderEngine : GameWindow
         teapot.Material.Shininess = 600f;*/
 
         //var terrain = new Terrain("new-zealand-height-map.jpg", verticesAttribs);
-        _earth = new Earth(new Transform(new Vector3(0f), new Vector3(0f, MathF.PI, 0f), new Vector3(6378 / 4f)), 400, 0.025f);
+        _earth = new Earth(new Transform(new Vector3(0f), new Vector3(0f, MathF.PI, 0f), new Vector3(6378 / 4f)), 200, 0.025f);
         _earth.EarthObject.Transform.Position = new Vector3(0f, -_earth.EarthObject.Transform.Scale[Earth.EarthAxis] * 1.0639f, 0f);
         _earth.CollisionSphere.Transform.Position = _earth.EarthObject.Transform.Position;
         //_earth.EarthObject.Transform.Position = new Vector3(-MathF.Cos(MathHelper.DegreesToRadians(35f)) * _earth.EarthObject.Transform.Scale.X * 1.0639f, MathF.Sin(MathHelper.DegreesToRadians(35f)) * _earth.EarthObject.Transform.Scale.X * 1.0639f, 0f);
@@ -258,63 +252,36 @@ public class RenderEngine : GameWindow
         };
         
         //Geometry Shader
-        _geometryShader = new ShaderProgram([
-            new Shader(@"geometryShaders\vertexShader.vert", ShaderType.VertexShader),
-            new Shader(@"geometryShaders\geometryShader.frag", ShaderType.FragmentShader)
-        ], _objects.ToList(), verticesAttribs, addTangent:true);
+        _geometryShader = new GeometryShader(_objects.ToList(), verticesAttribs);
         //Lighting Shader
         var screenQuad = EngineObject.CreateEmpty();
         screenQuad.MeshData.Vertices = MeshConstructor.CreateRenderQuad();
-        _lightingShader = new ShaderProgram([
-            new Shader(@"gLightingShaders\lightingShader.vert", ShaderType.VertexShader),
-            new Shader(@"gLightingShaders\lightingShader.frag", ShaderType.FragmentShader)
-        ], [screenQuad], [new VertexAttribute(VertexAttributeType.PosAndTex, 4)]);
+        _lightingShader = new LightingShader(screenQuad, _lights);
         
         //Light Shader
-        _lightShader = new ShaderProgram([
-            new Shader(@"geometryShaders\vertexShader.vert", ShaderType.VertexShader),
-            new Shader(@"LightShaders\lightShader.frag", ShaderType.FragmentShader)
-        ], [..Light.LightsDicToList(_lights)], verticesAttribs, addTangent:true);
-        
-        _laserShader = new ShaderProgram([
-            new Shader(@"laserShaders\laser.vert", ShaderType.VertexShader),
-            new Shader(@"LightShaders\lightShader.frag", ShaderType.FragmentShader)
-        ], [laser], verticesAttribs, addTangent:true);
+        _lightShader = new LightShader(_lights, verticesAttribs);
+
+        _laserShader = new LaserShader(laser, verticesAttribs);
         ((LaserButton)_station.Buttons.First().Value).LaserShader = _laserShader;
-        
-        //Skybox
-        var skybox = new EngineObject(
-            "Skybox", 
-            new Transform(new Vector3(0f)), 
-            _skybox.MeshData,
-            new Material(new Vector3(1f))
-        );
-        _skyboxShader = new ShaderProgram([
-            new Shader(@"SkyboxShaders\skybox.vert", ShaderType.VertexShader),
-            new Shader(@"SkyboxShaders\skybox.frag", ShaderType.FragmentShader)
-        ], [skybox], [new VertexAttribute(VertexAttributeType.Position, 3)]);
         
         //Post Process
         _outlineShader = new OutlineShader(_geometryShader, _viewport);
         
-        _postProcess = new PostProcess([
-            new Shader(@"PostProcessShaders\postProcessShader.vert", ShaderType.VertexShader),
-            new Shader(@"PostProcessShaders\postProcessShader.frag", ShaderType.FragmentShader)
-        ], _viewport / _renderScale);
-        _postProcess.PostProcessShaders.Add(_outlineShader);
+        screenQuad = EngineObject.CreateEmpty();
+        screenQuad.MeshData.Vertices = MeshConstructor.CreateRenderQuad();
+        
+        _postProcessShader = new PostProcessShader(screenQuad, _viewport / _renderScale);
+        _postProcessShader.Shaders.Add(_outlineShader);
         
         //Collision
-        _collisionShader = new ShaderProgram([
-            new Shader(@"geometryShaders\vertexShader.vert", ShaderType.VertexShader),
-            new Shader(@"collisionShaders\collision.frag", ShaderType.FragmentShader)
-        ], _geometryShader);
+        _collisionShader = new CollisionShader(_geometryShader);
         
         //gBuffer
         _gBuffer = new GBuffer(_viewport);
         
         //Shadows
         //_shadows = new ShadowMap(new Vector2i(8192, 8192), 1100f, 300f, new Vector2(0.01f, 400f), _geometryShader);
-        _shadows = new ShadowMap(new Vector2i(8192, 8192), 26f, 10f, new Vector2(1f, 18f), _geometryShader);
+        _shadows = new ShadowMap(new Vector2i(8192, 8192), 14f, 10f, new Vector2(1f, 18f), _geometryShader);
         _ssao = new Ssao([
                 new Shader(@"PostProcessShaders\postProcessShader.vert", ShaderType.VertexShader),
                 new Shader(@"shadersSSAO\ssaoShader.frag", ShaderType.FragmentShader)], [
@@ -323,7 +290,10 @@ public class RenderEngine : GameWindow
         ], _viewport, 128, 4);
         
         //UI
-        _canvas = new Canvas();
+        var reticule = EngineObject.CreateEmpty();
+        reticule.MeshData = MeshConstructor.CreateQuad();
+        reticule.Transform.Scale *= 0.005f;
+        _canvas = new Canvas(reticule);
         
         _windowManager = new WindowManager();
         
@@ -345,18 +315,17 @@ public class RenderEngine : GameWindow
 
     protected override void OnUnload()
     {
-        _geometryShader.Delete();
-        _lightShader.Delete();
-        _laserShader.Delete();
-        _skyboxShader.Delete();
+        _geometryShader.DeleteAll();
+        _lightShader.DeleteAll();
+        _laserShader.DeleteAll();
         
-        _postProcess.Delete();
-        _shadows.Delete();
+        _postProcessShader.DeleteAll();
+        _shadows.DeleteAll();
         _gBuffer.DeleteGBuffer();
         _ssao.Delete();
         foreach (var textures in _textures) textures.DeleteAll();
         foreach (var font in _fonts) font.Value.Delete();
-        _windowManager.Delete();
+        //_windowManager.Delete();
         
         Console.WriteLine("end");
     }
@@ -365,7 +334,7 @@ public class RenderEngine : GameWindow
     {
         //Shadows
         GL.Enable(EnableCap.DepthTest);
-        _shadows.RenderDepthMap(_lights[LightTypes.Directional][0], _viewport, _geometryShader, _camera);
+        _shadows.Draw(_lights[LightTypes.Directional][0], _camera, _viewport, _geometryShader);
         
         if (_wireframeMode) GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Line);
         
@@ -377,11 +346,11 @@ public class RenderEngine : GameWindow
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
         
         //Geometry Pass
-        var viewMat = _camera.GetViewMatrix4();
-        var projectionMat = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(_camera.Fov), (float) _viewport[0] / _viewport[1], 0.025f, 5000f);
-        var worldMat = viewMat * projectionMat;
+        _geometryShader.ViewMat = _camera.GetViewMatrix4();
+        _geometryShader.ProjectionMat = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(_camera.Fov), (float) _viewport[0] / _viewport[1], 0.025f, 5000f);
+        _geometryShader.WorldMat = _geometryShader.ViewMat * _geometryShader.ProjectionMat;
         
-        _geometryShader.DrawGeometryMesh(worldMat, viewMat);
+        _geometryShader.Draw();
         _gBuffer.Unbind();
         
         if (_wireframeMode) GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
@@ -390,40 +359,29 @@ public class RenderEngine : GameWindow
         //_ssao.RenderSsao(_gBuffer, projectionMat, _viewport, _testVal, viewMat);
         
         //Collisions
-        _collisionShader.DrawGeometryMesh(worldMat, viewMat);
-        var lookingAtId = (int)(ReadPixel(_viewport.X / 2, _viewport.Y / 2)[0] * MaxObjectIds / 20f);
-        _camera.LookingAtObject = _collisionShader.Objects.FirstOrDefault(engineObject => engineObject.Id == lookingAtId, _emptyObject);
-        
-        _outlineShader.Render(worldMat, viewMat, lookingAtId);
+        _outlineShader.RenderSilhouette(_geometryShader.WorldMat, _geometryShader.ViewMat, _collisionShader.LookingAtObject.Id);
         
         GL.Enable(EnableCap.DepthTest);
         _gBuffer.SetDefaultDepth(_viewport);
         GL.DepthFunc(DepthFunction.Lequal);
         
         //Lighting Pass
-        _postProcess.Bind();
+        _postProcessShader.Framebuffer.Bind();
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
         _gBuffer.BindBufferTextures();
-        _lightingShader.DrawMeshLighting(_lights, _camera, _shadows, _ssao);
+        _lightingShader.Draw(_camera, _shadows, _ssao.BlurFramebuffer.AttachedTextures[0].Handle);
         
         GL.Enable(EnableCap.Blend);
         
-        _lightShader.DrawGeometryMesh(worldMat, viewMat);
-        _laserShader.DrawGeometryMesh(worldMat, viewMat);
+        _lightShader.Draw(_geometryShader.ViewMat);
+        _laserShader.Draw(_geometryShader.ViewMat);
         
-        _station.Screens.First().Value.RenderScreen(_geometryShader, worldMat, viewMat, _viewport, _fonts["Pixel"], _camera.BoostSpeed);
-        //Skybox
-        /*viewMat = _camera.GetViewMatrix4().ClearTranslation();
-        worldMat = viewMat * projectionMat;
-        
-        GL.Disable(EnableCap.CullFace);
-        GL.DepthFunc(DepthFunction.Lequal);
-        _skyboxProgram.DrawMesh(worldMat);*/
+        _station.Screens.First().Value.RenderScreen(_geometryShader, _geometryShader.WorldMat, _geometryShader.ViewMat, _viewport, _fonts["Pixel"], _camera.BoostSpeed);
         
         //Post Process
-        _postProcess.Unbind();
+        _postProcessShader.Framebuffer.Unbind();
         GL.Viewport(0, 0, _viewport.X, _viewport.Y);
-        _postProcess.DrawPostProcess(_isPostProcess ? -1 : _shadows.TextureHandle); //_shadows.TextureHandle : _gBuffer.NormalsTexture.Handle
+        _postProcessShader.Draw(_isPostProcess ? -1 : _outlineShader.Framebuffer.AttachedTextures[0].Handle); //_shadows.TextureHandle : _gBuffer.NormalsTexture.Handle
         GL.Disable(EnableCap.DepthTest);
 
         //var pixel = ReadPixel(_viewport.X / 2, _viewport.Y / 2);
@@ -439,7 +397,7 @@ public class RenderEngine : GameWindow
             _fonts["Pixel"].DrawText("EARTH  X: "+ (MathF.Floor(_earth.EarthObject.Transform.Position.X * 1000f) / 1000f) + " Y: " + (MathF.Floor(_earth.EarthObject.Transform.Position.Y * 1000f) / 1000f) + " Z: "+ (MathF.Floor(_earth.EarthObject.Transform.Position.Z * 1000f) / 1000f),
                 new Vector2(25f, _viewport.Y - 210f), 0.5f, new Vector4(1f), _viewport);
             _fonts["Pixel"].DrawText("Boost: " + _camera.BoostSpeed, new Vector2(25f, _viewport.Y - 260f), 0.5f, new Vector4(1f), _viewport);
-            _fonts["Pixel"].DrawText("Grayscale: " + _postProcess.Grayscale, new Vector2(25f, _viewport.Y - 310f), 0.5f, new Vector4(1f), _viewport);
+            _fonts["Pixel"].DrawText("Grayscale: " + _postProcessShader.Grayscale, new Vector2(25f, _viewport.Y - 310f), 0.5f, new Vector4(1f), _viewport);
             _fonts["Pixel"].DrawText("VALUE: Y: " + _camera.Yaw + ", P: " + _camera.Pitch, new Vector2(25f, _viewport.Y - 360f), 0.5f, new Vector4(1f), _viewport);
             _fonts["Pixel"].DrawText("Altitude: " + Math.Floor(-(_earth.EarthObject.Transform.Scale[Earth.EarthAxis] + _earth.EarthObject.Transform.Position[Earth.EarthAxis]) * 4f) + " km", new Vector2(25f, _viewport.Y - 410f), 0.5f, new Vector4(1f), _viewport);
             
@@ -447,15 +405,16 @@ public class RenderEngine : GameWindow
             if (!hit.HasHit) _fonts["Pixel"].DrawText("RAY: NO COLLISION", new Vector2(25f, _viewport.Y - 460f), 0.5f, new Vector4(1f), _viewport);
             else _fonts["Pixel"].DrawText("RAY: HIT, POS: " + hit.HitPos + ", LEN: " + hit.Distance, new Vector2(25f, _viewport.Y - 460f), 0.5f, new Vector4(1f), _viewport);
             
-            _fonts["Pixel"].DrawText(_camera.LookingAtObject.Name + " [" + _camera.LookingAtObject.Id + "]", new Vector2(_viewport.X / 2f + 10f, _viewport.Y / 2f + 10f), 0.4f, new Vector4(1f), _viewport);
+            _fonts["Pixel"].DrawText(_collisionShader.LookingAtObject.Name + " [" + _collisionShader.LookingAtObject.Id + "]", new Vector2(_viewport.X / 2f + 10f, _viewport.Y / 2f + 10f), 0.4f, new Vector4(1f), _viewport);
         }
-        _fonts["Pixel"].DrawText("FROM ORBIT v0.0.17", new Vector2(_viewport.X - 255f, _viewport.Y - 30f), 0.35f, new Vector4(1f, 1f, 1f, 0.2f), _viewport);
+        _fonts["Pixel"].DrawText("FROM ORBIT v0.0.18", new Vector2(_viewport.X - 255f, _viewport.Y - 30f), 0.35f, new Vector4(1f, 1f, 1f, 0.2f), _viewport);
         
         GL.DepthFunc(DepthFunction.Less);
         
         //UI Windows
-        _canvas.DrawCanvas(_viewport);
+        _canvas.Draw(_viewport);
         //_windowManager.DrawWindows(_viewport, _fonts);
+        _collisionShader.Draw(_geometryShader.ViewMat, _viewport, _geometryShader);
         
         Context.SwapBuffers();
         
@@ -530,7 +489,7 @@ public class RenderEngine : GameWindow
         }
 
         var eo = _lights[LightTypes.Directional][0]; //_lights[LightTypes.Directional][0] : _station.Screens.First().Value.EngineObject
-        var sens = (float)args.Time * 1f;
+        var sens = (float)args.Time * 0.5f;
         if (KeyboardState.IsKeyDown(Keys.Insert)) eo.Transform.Quaternion = Quaternion.FromEulerAngles(sens, 0f, 0f) * eo.Transform.Quaternion;
         if (KeyboardState.IsKeyDown(Keys.Delete)) eo.Transform.Quaternion = Quaternion.FromEulerAngles(-sens, 0f, 0f) * eo.Transform.Quaternion;
         if (KeyboardState.IsKeyDown(Keys.Home)) eo.Transform.Quaternion = Quaternion.FromEulerAngles(0f, sens, 0f) * eo.Transform.Quaternion;
@@ -542,7 +501,7 @@ public class RenderEngine : GameWindow
         if (KeyboardState.IsKeyDown(Keys.Down)) eo.Transform.Position.X -= sens;
         if (KeyboardState.IsKeyDown(Keys.Left)) eo.Transform.Position.Z += sens;
         if (KeyboardState.IsKeyDown(Keys.Right)) eo.Transform.Position.Z -= sens;
-        if (KeyboardState.IsKeyDown(Keys.RightControl)) eo.Transform.Position.Y += sens;
+        if (KeyboardState.IsKeyDown(Keys.RightShift)) eo.Transform.Position.Y += sens;
         if (KeyboardState.IsKeyDown(Keys.RightAlt)) eo.Transform.Position.Y -= sens;
         
         if (KeyboardState.IsKeyDown(Keys.Enter))
@@ -574,14 +533,14 @@ public class RenderEngine : GameWindow
             _lights[LightTypes.Point][1].Transform.Position.Z = (Random.Shared.NextSingle() * 2f - 1f) / 2f;
         }
 
-        if (_timerManager.CheckTimer("I", (float)args.Time, KeyboardState.IsKeyDown(Keys.I))) _postProcess.Grayscale += 1f;
-        if (_timerManager.CheckTimer("O", (float)args.Time, KeyboardState.IsKeyDown(Keys.O))) _postProcess.Grayscale -= 1f;
+        if (_timerManager.CheckTimer("I", (float)args.Time, KeyboardState.IsKeyDown(Keys.I))) _postProcessShader.Grayscale += 1f;
+        if (_timerManager.CheckTimer("O", (float)args.Time, KeyboardState.IsKeyDown(Keys.O))) _postProcessShader.Grayscale -= 1f;
         
         _camera.UpdateCameraFront();
         if (_mouse.IsDown) _mouse.PressLenght++;
     }
 
-    public float[] ReadPixel(int x, int y)
+    public static float[] ReadPixel(int x, int y)
     {
         var pixel = new float[4];
         GL.ReadPixels(x, y, 1, 1, PixelFormat.Rgba, PixelType.Float, pixel);
@@ -630,7 +589,7 @@ public class RenderEngine : GameWindow
 
         if (e.Button == MouseButton.Left)
         {
-            if (_station.Buttons.TryGetValue(_camera.LookingAtObject.Id, out var button))
+            if (_station.Buttons.TryGetValue(_collisionShader.LookingAtObject.Id, out var button))
             {
                 button.Activate(false);
             }
@@ -647,7 +606,7 @@ public class RenderEngine : GameWindow
 
         if (e.Button == MouseButton.Left)
         {
-            if (_station.Buttons.TryGetValue(_camera.LookingAtObject.Id, out var button))
+            if (_station.Buttons.TryGetValue(_collisionShader.LookingAtObject.Id, out var button))
             {
                 button.Activate(true);
             }
@@ -670,7 +629,7 @@ public class RenderEngine : GameWindow
         _camera.UpdateSensitivityByAspect(_viewport);
 
         var viewScaled = _viewport / _renderScale;
-        _postProcess.Resize(viewScaled);
+        _postProcessShader.Resize(viewScaled);
         _gBuffer.Resize(viewScaled);
         _ssao.Framebuffer.AttachedTextures[0].Resize(viewScaled);
         _ssao.BlurFramebuffer.AttachedTextures[0].Resize(viewScaled);

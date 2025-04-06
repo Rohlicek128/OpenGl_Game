@@ -1,4 +1,5 @@
 using OpenGl_Game.Engine.Graphics.Shaders;
+using OpenGl_Game.Engine.Graphics.Shaders.Programs;
 using OpenGl_Game.Engine.Objects;
 using OpenTK.Mathematics;
 
@@ -6,8 +7,8 @@ namespace OpenGl_Game.Game.Buttons;
 
 public class LaserButton : ButtonHandler
 {
-    private ShaderProgram _laserShader;
-    public ShaderProgram LaserShader
+    private LaserShader _laserShader;
+    public LaserShader LaserShader
     {
         get => _laserShader;
         set => _laserShader = value ?? throw new ArgumentNullException(nameof(value));

@@ -19,10 +19,10 @@ public class WindowManager
         
         var ui = EngineObject.CreateEmpty();
         ui.MeshData = MeshConstructor.CreateQuad();
-        UiProgram = new ShaderProgram([
-            new Shader(@"UiShaders\uiShader.vert", ShaderType.VertexShader),
-            new Shader(@"UiShaders\uiShader.frag", ShaderType.FragmentShader)
-        ], [ui], [new VertexAttribute(VertexAttributeType.PosAndTex, 4)]);
+        //UiProgram = new ShaderProgram([
+        //    new Shader(@"UiShaders\uiShader.vert", ShaderType.VertexShader),
+        //    new Shader(@"UiShaders\uiShader.frag", ShaderType.FragmentShader)
+        //], [ui], [new VertexAttribute(VertexAttributeType.PosAndTex, 4)]);
         
         Windows.Add(new UiWindow(UiProgram, "Window #1", new Vector4(0.05f, 0.05f, 0.05f, 0.95f)));
     }
