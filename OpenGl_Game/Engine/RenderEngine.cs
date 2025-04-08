@@ -90,7 +90,7 @@ public class RenderEngine : GameWindow
                 StartFocused = true,
                 API = ContextAPI.OpenGL,
                 Profile = ContextProfile.Core,
-                APIVersion = new Version(4, 2),
+                APIVersion = new Version(4, 6),
                 DepthBits = 24
             }
         )
@@ -187,7 +187,7 @@ public class RenderEngine : GameWindow
         teapot.Material.Shininess = 600f;*/
 
         //var terrain = new Terrain("new-zealand-height-map.jpg", verticesAttribs);
-        _earth = new Earth(new Transform(new Vector3(0f), new Vector3(0f, MathF.PI, 0f), new Vector3(6378 / 4f)), 200, 0.025f);
+        _earth = new Earth(new Transform(new Vector3(0f), new Vector3(0f, MathF.PI, 0f), new Vector3(6378 / 2f)), 200, 0.025f);
         _earth.EarthObject.Transform.Position = new Vector3(0f, -_earth.EarthObject.Transform.Scale[Earth.EarthAxis] * 1.0639f, 0f);
         _earth.CollisionSphere.Transform.Position = _earth.EarthObject.Transform.Position;
         //_earth.EarthObject.Transform.Position = new Vector3(-MathF.Cos(MathHelper.DegreesToRadians(35f)) * _earth.EarthObject.Transform.Scale.X * 1.0639f, MathF.Sin(MathHelper.DegreesToRadians(35f)) * _earth.EarthObject.Transform.Scale.X * 1.0639f, 0f);
@@ -359,6 +359,9 @@ public class RenderEngine : GameWindow
         //_ssao.RenderSsao(_gBuffer, projectionMat, _viewport, _testVal, viewMat);
         
         //Collisions
+        _collisionShader.Draw(_geometryShader.WorldMat, _geometryShader.ViewMat, _viewport);
+        _collisionShader.SetLookingAtUv(_gBuffer.NormalViewTexture.Handle, _postProcessShader, _viewport);
+        
         _outlineShader.RenderSilhouette(_geometryShader.WorldMat, _geometryShader.ViewMat, _collisionShader.LookingAtObject.Id);
         
         GL.Enable(EnableCap.DepthTest);
@@ -373,15 +376,16 @@ public class RenderEngine : GameWindow
         
         GL.Enable(EnableCap.Blend);
         
-        _lightShader.Draw(_geometryShader.ViewMat);
-        _laserShader.Draw(_geometryShader.ViewMat);
+        _lightShader.Draw(_geometryShader.WorldMat, _geometryShader.ViewMat);
+        _laserShader.Draw(_geometryShader.WorldMat, _geometryShader.ViewMat);
         
-        _station.Screens.First().Value.RenderScreen(_geometryShader, _geometryShader.WorldMat, _geometryShader.ViewMat, _viewport, _fonts["Pixel"], _camera.BoostSpeed);
+        _station.Screens.First().Value.RenderScreen(_collisionShader, _geometryShader, _geometryShader.WorldMat, _geometryShader.ViewMat, _viewport, _fonts["Pixel"], _camera.BoostSpeed);
         
         //Post Process
         _postProcessShader.Framebuffer.Unbind();
         GL.Viewport(0, 0, _viewport.X, _viewport.Y);
-        _postProcessShader.Draw(_isPostProcess ? -1 : _outlineShader.Framebuffer.AttachedTextures[0].Handle); //_shadows.TextureHandle : _gBuffer.NormalsTexture.Handle
+        _postProcessShader.Draw(_isPostProcess ? -1 : _gBuffer.NormalViewTexture.Handle); //_shadows.TextureHandle : _gBuffer.NormalsTexture.Handle
+        _postProcessShader.DrawShaders();
         GL.Disable(EnableCap.DepthTest);
 
         //var pixel = ReadPixel(_viewport.X / 2, _viewport.Y / 2);
@@ -399,22 +403,23 @@ public class RenderEngine : GameWindow
             _fonts["Pixel"].DrawText("Boost: " + _camera.BoostSpeed, new Vector2(25f, _viewport.Y - 260f), 0.5f, new Vector4(1f), _viewport);
             _fonts["Pixel"].DrawText("Grayscale: " + _postProcessShader.Grayscale, new Vector2(25f, _viewport.Y - 310f), 0.5f, new Vector4(1f), _viewport);
             _fonts["Pixel"].DrawText("VALUE: Y: " + _camera.Yaw + ", P: " + _camera.Pitch, new Vector2(25f, _viewport.Y - 360f), 0.5f, new Vector4(1f), _viewport);
-            _fonts["Pixel"].DrawText("Altitude: " + Math.Floor(-(_earth.EarthObject.Transform.Scale[Earth.EarthAxis] + _earth.EarthObject.Transform.Position[Earth.EarthAxis]) * 4f) + " km", new Vector2(25f, _viewport.Y - 410f), 0.5f, new Vector4(1f), _viewport);
+            _fonts["Pixel"].DrawText("Altitude: " + Math.Floor(-(_earth.EarthObject.Transform.Scale[Earth.EarthAxis] + _earth.EarthObject.Transform.Position[Earth.EarthAxis]) * 2f) + " km", new Vector2(25f, _viewport.Y - 410f), 0.5f, new Vector4(1f), _viewport);
             
-            var hit = _earth.CollisionSphere.CheckCollision(new Ray(_camera.Transform.Position, _camera.Front));
-            if (!hit.HasHit) _fonts["Pixel"].DrawText("RAY: NO COLLISION", new Vector2(25f, _viewport.Y - 460f), 0.5f, new Vector4(1f), _viewport);
-            else _fonts["Pixel"].DrawText("RAY: HIT, POS: " + hit.HitPos + ", LEN: " + hit.Distance, new Vector2(25f, _viewport.Y - 460f), 0.5f, new Vector4(1f), _viewport);
+            //var hit = _earth.CollisionSphere.CheckCollision(new Ray(_camera.Transform.Position, _camera.Front));
+            //if (!hit.HasHit) _fonts["Pixel"].DrawText("RAY: NO COLLISION", new Vector2(25f, _viewport.Y - 460f), 0.5f, new Vector4(1f), _viewport);
+            //else _fonts["Pixel"].DrawText("RAY: HIT, POS: " + hit.HitPos + ", LEN: " + hit.Distance, new Vector2(25f, _viewport.Y - 460f), 0.5f, new Vector4(1f), _viewport);
+            
+            _fonts["Pixel"].DrawText("LUV: " + _collisionShader.LookingAtUv.X + ", " + _collisionShader.LookingAtUv.Y, new Vector2(25f, _viewport.Y - 460f), 0.5f, new Vector4(1f), _viewport);
             
             _fonts["Pixel"].DrawText(_collisionShader.LookingAtObject.Name + " [" + _collisionShader.LookingAtObject.Id + "]", new Vector2(_viewport.X / 2f + 10f, _viewport.Y / 2f + 10f), 0.4f, new Vector4(1f), _viewport);
         }
-        _fonts["Pixel"].DrawText("FROM ORBIT v0.0.18", new Vector2(_viewport.X - 255f, _viewport.Y - 30f), 0.35f, new Vector4(1f, 1f, 1f, 0.2f), _viewport);
+        _fonts["Pixel"].DrawText("FROM ORBIT v0.1.19", new Vector2(_viewport.X - 255f, _viewport.Y - 30f), 0.35f, new Vector4(1f, 1f, 1f, 0.2f), _viewport);
         
         GL.DepthFunc(DepthFunction.Less);
         
         //UI Windows
         _canvas.Draw(_viewport);
         //_windowManager.DrawWindows(_viewport, _fonts);
-        _collisionShader.Draw(_geometryShader.ViewMat, _viewport, _geometryShader);
         
         Context.SwapBuffers();
         

@@ -1,5 +1,6 @@
 using OpenGl_Game.Engine.Graphics.Buffers;
 using OpenGl_Game.Engine.Graphics.Shaders;
+using OpenGl_Game.Engine.Graphics.Shaders.Programs;
 using OpenGl_Game.Engine.Graphics.Textures;
 using OpenGl_Game.Engine.Graphics.UI.Text;
 using OpenGl_Game.Engine.Objects;
@@ -49,7 +50,7 @@ public abstract class ScreenHandler
         _framebuffer.AttachTexture(new Texture(0, _screenResolution, null, minFilter:(TextureMinFilter)OpenTK.Graphics.OpenGL.Compatibility.TextureMinFilter.Nearest, magFilter:(TextureMagFilter)OpenTK.Graphics.OpenGL.Compatibility.TextureMagFilter.Nearest), FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2d);
     }
 
-    public virtual void RenderScreen(ShaderProgram program, Matrix4 world, Matrix4 view, Vector2i viewport, FontMap font, float boost)
+    public virtual void RenderScreen(CollisionShader collision, ShaderProgram program, Matrix4 world, Matrix4 view, Vector2i viewport, FontMap font, float boost)
     {
         
     } 

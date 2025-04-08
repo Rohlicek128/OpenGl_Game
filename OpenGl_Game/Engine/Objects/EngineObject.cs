@@ -86,7 +86,7 @@ public class EngineObject
     public void DrawObject(ShaderProgram program, int offset, Matrix4 view)
     {
         if (IsInverted) GL.CullFace(TriangleFace.Front);
-        program.SetUniform("vecEoId", (Id / (float)RenderEngine.MaxObjectIds) * 20f);
+        program.SetUniform("vecEoId", Id / (float)RenderEngine.MaxObjectIds);
         
         var model = GetModelMatrix();
         program.SetUniform("model", model);

@@ -14,6 +14,7 @@ public class GBuffer : Framebuffer
     public Texture ColorSpecTexture;
     public Texture PositionViewTexture;
     public Texture NormalViewTexture;
+    public Texture TexCoordsTexture;
     
     public Renderbuffer Renderbuffer;
     public unsafe GBuffer(Vector2i viewport)
@@ -22,19 +23,31 @@ public class GBuffer : Framebuffer
         PositionTexture = new Texture(0, viewport, null, InternalFormat.Rgba16f, PixelType.Float);
         AttachTexture(PositionTexture, FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2d);
         //Normals
-        NormalsTexture = new Texture(1, viewport, null, InternalFormat.Rgba16f, PixelType.Float);
+        NormalsTexture = new Texture(1, viewport, null, InternalFormat.Rgb16f, PixelType.Float);
         AttachTexture(NormalsTexture, FramebufferAttachment.ColorAttachment1, TextureTarget.Texture2d);
         //Color + Spec
         ColorSpecTexture = new Texture(2, viewport, null, InternalFormat.Rgba);
         AttachTexture(ColorSpecTexture, FramebufferAttachment.ColorAttachment2, TextureTarget.Texture2d);
         
-        PositionViewTexture = new Texture(3, viewport, null, InternalFormat.Rgba16f, PixelType.Float);
+        //View
+        PositionViewTexture = new Texture(3, viewport, null, InternalFormat.Rgb16f, PixelType.Float);
         AttachTexture(PositionViewTexture, FramebufferAttachment.ColorAttachment3, TextureTarget.Texture2d);
-        NormalViewTexture = new Texture(4, viewport, null, InternalFormat.Rgba16f, PixelType.Float);
+        NormalViewTexture = new Texture(4, viewport, null, InternalFormat.Rgb16f, PixelType.Float);
         AttachTexture(NormalViewTexture, FramebufferAttachment.ColorAttachment4, TextureTarget.Texture2d);
+        
+        //UV
+        TexCoordsTexture = new Texture(5, viewport, null, InternalFormat.Rgba);
+        AttachTexture(TexCoordsTexture, FramebufferAttachment.ColorAttachment5, TextureTarget.Texture2d);
 
         Bind();
-        GL.DrawBuffers(5, [DrawBufferMode.ColorAttachment0, DrawBufferMode.ColorAttachment1, DrawBufferMode.ColorAttachment2, DrawBufferMode.ColorAttachment3, DrawBufferMode.ColorAttachment4]);
+        GL.DrawBuffers(5, [
+            DrawBufferMode.ColorAttachment0,
+            DrawBufferMode.ColorAttachment1,
+            DrawBufferMode.ColorAttachment2,
+            DrawBufferMode.ColorAttachment3,
+            DrawBufferMode.ColorAttachment4,
+            DrawBufferMode.ColorAttachment5
+        ]);
         Unbind();
         
         Renderbuffer = new Renderbuffer(InternalFormat.DepthComponent24, viewport);
@@ -48,6 +61,7 @@ public class GBuffer : Framebuffer
         ColorSpecTexture.ActiveAndBind(2);
         PositionViewTexture.ActiveAndBind(3);
         NormalViewTexture.ActiveAndBind(4);
+        TexCoordsTexture.ActiveAndBind(5);
     }
     
     public void Resize(Vector2i viewport)
@@ -57,6 +71,7 @@ public class GBuffer : Framebuffer
         ColorSpecTexture.Resize(viewport);
         PositionViewTexture.Resize(viewport);
         NormalViewTexture.Resize(viewport);
+        TexCoordsTexture.Resize(viewport);
         
         Renderbuffer.Delete();
         Renderbuffer = new Renderbuffer(InternalFormat.DepthComponent, viewport);
@@ -72,5 +87,6 @@ public class GBuffer : Framebuffer
         ColorSpecTexture.Delete();
         PositionViewTexture.Delete();
         NormalViewTexture.Delete();
+        TexCoordsTexture.Delete();
     }
 }

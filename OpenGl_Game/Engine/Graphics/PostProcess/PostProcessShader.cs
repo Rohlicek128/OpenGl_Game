@@ -66,7 +66,14 @@ public class PostProcessShader : ShaderProgram
         
         GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
         
+        GL.Enable(EnableCap.DepthTest);
+    }
+
+    public void DrawShaders()
+    {
+        GL.Disable(EnableCap.DepthTest);
         
+        IndexBuffer.Bind();
         ArrayBuffer.Bind();
         foreach (var postProcess in Shaders)
         {

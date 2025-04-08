@@ -21,11 +21,18 @@ public class LightShader : ShaderProgram
         Lights = lights;
     }
 
+    public override void SetUniforms(params object[] param)
+    {
+        SetUniform("world", (Matrix4)param[0]);
+        SetUniform("view", (Matrix4)param[1]);
+    }
+
     public override void Draw(params object[] param)
     {
         BindAll();
+        SetUniforms(param[0], param[1]);
         
-        DrawEachObject((Matrix4)param[0]);
+        DrawEachObject((Matrix4)param[1]);
         
         UnbindAll();
     }

@@ -12,6 +12,7 @@ public class Earth
     public EngineObject EarthObject;
     public CollisionSphere CollisionSphere;
     public const int EarthAxis = 1; 
+    public const int EarthOrientation = -1; 
     
     public Texture ColorMap;
     public Texture RoughnessMap;

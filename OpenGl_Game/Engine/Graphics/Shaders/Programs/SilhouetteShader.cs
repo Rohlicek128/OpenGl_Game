@@ -37,7 +37,7 @@ public class SilhouetteShader : ShaderProgram
         {
             if (engineObject.IsVisible)
             {
-                if (selectedId != -1) SetUniform("isSelected", engineObject.Id == selectedId ? 1 : 0);
+                SetUniform("isSelected", engineObject.IsSelectable && engineObject.Id == selectedId ? 1 : 0);
                 engineObject.DrawObject(this, offset, view);
             }
             offset += engineObject.MeshData.Indices.Length * sizeof(uint);

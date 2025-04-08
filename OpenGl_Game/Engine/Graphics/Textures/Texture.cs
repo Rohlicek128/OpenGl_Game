@@ -79,6 +79,8 @@ public class Texture
 
     public Vector4 SampleTexture(Vector2i coords)
     {
+        if (Image == null) return Vector4.Zero;
+        
         if (coords.X >= Image.Width) coords.X = Image.Width - 1;
         if (coords.Y >= Image.Height) coords.Y = Image.Height - 1;
         

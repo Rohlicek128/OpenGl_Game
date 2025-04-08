@@ -11,11 +11,11 @@ namespace OpenGl_Game.Engine.Graphics.Shaders.Programs;
 
 public class OutlineShader : ShaderProgram
 {
-    private ShaderProgram _silhouetteProgram;
+    private SilhouetteShader _silhouetteProgram;
     private Framebuffer _framebuffer;
     private Renderbuffer _renderbuffer;
 
-    public ShaderProgram SilhouetteProgram
+    public SilhouetteShader SilhouetteProgram
     {
         get => _silhouetteProgram;
         set => _silhouetteProgram = value ?? throw new ArgumentNullException(nameof(value));

@@ -21,14 +21,16 @@ public class LaserShader : ShaderProgram
     public override void SetUniforms(params object[] param)
     {
         SetUniform("laser", Random.Shared.NextSingle() * 0.5f + 0.5f);
+        SetUniform("world", (Matrix4)param[0]);
+        SetUniform("view", (Matrix4)param[1]);
     }
 
     public override void Draw(params object[] param)
     {
         BindAll();
-        SetUniforms();
+        SetUniforms(param[0], param[1]);
         
-        DrawEachObject((Matrix4)param[0]);
+        DrawEachObject((Matrix4)param[1]);
         
         UnbindAll();
     }

@@ -1,9 +1,9 @@
-#version 420 core
+#version 460 core
 
 out vec4 pixelColor;
 
 uniform float vecEoId;
 
 void main(){
-    pixelColor = vec4(1.0);
+    pixelColor = vec4(vecEoId, vecEoId, vecEoId, 1.0);
 }

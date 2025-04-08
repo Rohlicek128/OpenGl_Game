@@ -1,4 +1,4 @@
-#version 420 core
+#version 460 core
 
 struct DirLight {
     vec3 direction;
@@ -57,7 +57,7 @@ float CalcShadow(vec4 fragPosLight, vec3 normal){
     return shadow;
 }
 
-vec3 CalcDirectionLight(DirLight light, vec3 normal, vec3 viewDir, vec3 materialColor, float specMap, vec4 fragPosLight){
+vec3 CalcDirectionLight(DirLight light, vec3 normal, vec3 viewDir, vec3 materialColor, float specMap, vec4 fragPosLight, float emisive){
     //Ambient
     vec3 ambient = light.ambient * materialColor;
 
@@ -71,13 +71,16 @@ vec3 CalcDirectionLight(DirLight light, vec3 normal, vec3 viewDir, vec3 material
 
     //Shadows
     float shadow = CalcShadow(fragPosLight, normal);
+    
+    //Emisive
+    vec3 emi = materialColor * emisive;
 
-    return (ambient + (diffuse + specular) * (1.0 - shadow));
+    return (ambient + (diffuse + specular) * (1.0 - shadow)) * (1 - emisive) + emi;
 }
 
-vec3 CalcPointLight(PointLight light, vec3 normal, vec3 viewDir, vec3 fragPos, vec3 materialColor, float specMap){
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 viewDir, vec3 fragPos, vec3 materialColor, float specMap, float emisive){
     //Ambient
-    vec3 ambient = light.ambient * materialColor;
+    vec3 ambient = light.ambient * materialColor * emisive;
 
     //Diffuse
     vec3 lightDir = normalize(light.position - fragPos);
@@ -94,12 +97,19 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 viewDir, vec3 fragPos, v
     diffuse *= attenuation;
     specular *= attenuation;
 
-    return (ambient + diffuse + specular);
+    //Emisive
+    vec3 emi = materialColor * emisive;
+
+    return (ambient + diffuse + specular) * (1 - emisive) + emi;
 }
 
 void main(){
-    vec3 fragPos = texture(gPosition, vTexCoord).xyz;
+    vec4 posEm = texture(gPosition, vTexCoord).rgba;
+    vec3 fragPos = posEm.xyz;
+    float emisive = posEm.a;
+    
     vec3 normal = texture(gNormal, vTexCoord).rgb;
+    
     vec4 albedoSpec = texture(gAlbedoSpec, vTexCoord);
     vec3 albedo = albedoSpec.rgb;
     float specular = albedoSpec.a;
@@ -108,9 +118,9 @@ void main(){
     vec3 viewDir = normalize(viewPos - fragPos);
     vec4 fragPosLightSpace = vec4(fragPos, 1.0) * lightSpace;
     
-    vec3 result = CalcDirectionLight(dirLight, normal, viewDir, albedo, specular, fragPosLightSpace);
+    vec3 result = CalcDirectionLight(dirLight, normal, viewDir, albedo, specular, fragPosLightSpace, emisive);
     for (int i = 0; i < NR_POINT_LIGHTS; i++){
-        if (pointLight[i].isLighting) result += CalcPointLight(pointLight[i], normal, viewDir, fragPos, albedo, specular);
+        if (pointLight[i].isLighting) result += CalcPointLight(pointLight[i], normal, viewDir, fragPos, albedo, specular, emisive);
     }
 
     //pixelColor = vec4(result * ambientOcclusion, 1.0);
