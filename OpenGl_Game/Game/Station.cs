@@ -33,6 +33,7 @@ public class Station
         StationObject.IsSelectable = false;
         
         Buttons.Add(EngineObject.ObjectIdCounter + 1, new LaserButton());
+        Buttons.Add(EngineObject.ObjectIdCounter + 1, new SliderButton());
         
         Screens.Add(EngineObject.ObjectIdCounter + 1, new ObjectiveScreen(new Vector2i(600, 600)));
         Buttons.Add(EngineObject.ObjectIdCounter + 1, new ScreenPowerButton(Screens.Last().Value));

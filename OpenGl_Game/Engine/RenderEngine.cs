@@ -26,8 +26,8 @@ namespace OpenGl_Game.Engine;
 
 public class RenderEngine : GameWindow
 {
-    //public const string DirectoryPath = @"C:\Files\Code\.NET\OpenGl_Game\OpenGl_Game\";
-    public const string DirectoryPath = @"C:\Users\adam\RiderProjects\OpenGl_Game\OpenGl_Game\";
+    public const string DirectoryPath = @"C:\Files\Code\.NET\OpenGl_Game\OpenGl_Game\";
+    //public const string DirectoryPath = @"C:\Users\adam\RiderProjects\OpenGl_Game\OpenGl_Game\";
     public const uint PrimitiveIndex = uint.MaxValue;
     public const int MaxObjectIds = 255;
 
@@ -187,7 +187,7 @@ public class RenderEngine : GameWindow
         teapot.Material.Shininess = 600f;*/
 
         //var terrain = new Terrain("new-zealand-height-map.jpg", verticesAttribs);
-        _earth = new Earth(new Transform(new Vector3(0f), new Vector3(0f, MathF.PI, 0f), new Vector3(6378 / 2f)), 200, 0.025f);
+        _earth = new Earth(new Transform(new Vector3(0f), new Vector3(0f, MathF.PI, 0f), new Vector3(6378 / 2f)), 400, 0.025f);
         _earth.EarthObject.Transform.Position = new Vector3(0f, -_earth.EarthObject.Transform.Scale[Earth.EarthAxis] * 1.0639f, 0f);
         _earth.CollisionSphere.Transform.Position = _earth.EarthObject.Transform.Position;
         //_earth.EarthObject.Transform.Position = new Vector3(-MathF.Cos(MathHelper.DegreesToRadians(35f)) * _earth.EarthObject.Transform.Scale.X * 1.0639f, MathF.Sin(MathHelper.DegreesToRadians(35f)) * _earth.EarthObject.Transform.Scale.X * 1.0639f, 0f);
@@ -584,6 +584,11 @@ public class RenderEngine : GameWindow
     {
         if (!IsFocused) return;
         
+        if (_station.Buttons.TryGetValue(_collisionShader.LookingAtObject.Id, out var button) && button.Type == ButtonTypes.Continuous)
+        {
+            button.Activate(e.OffsetY);
+        }
+        
         _camera.BoostSpeed = Math.Min(1000f, Math.Max(_camera.BaseSpeed, _camera.BoostSpeed + e.OffsetY * 3f));
     }
     
@@ -594,7 +599,7 @@ public class RenderEngine : GameWindow
 
         if (e.Button == MouseButton.Left)
         {
-            if (_station.Buttons.TryGetValue(_collisionShader.LookingAtObject.Id, out var button))
+            if (_station.Buttons.TryGetValue(_collisionShader.LookingAtObject.Id, out var button) && button.Type == ButtonTypes.Press)
             {
                 button.Activate(false);
             }
@@ -611,7 +616,7 @@ public class RenderEngine : GameWindow
 
         if (e.Button == MouseButton.Left)
         {
-            if (_station.Buttons.TryGetValue(_collisionShader.LookingAtObject.Id, out var button))
+            if (_station.Buttons.TryGetValue(_collisionShader.LookingAtObject.Id, out var button) && button.Type == ButtonTypes.Press)
             {
                 button.Activate(true);
             }

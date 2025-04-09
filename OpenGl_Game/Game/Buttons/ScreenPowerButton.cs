@@ -24,6 +24,7 @@ public class ScreenPowerButton : ButtonHandler
             MeshConstructor.CreateCube(),
             new Material(new Vector3(0f, 0f, 0f))
         );
+        Type = ButtonTypes.Press;
         _screen = screen;
     }
 
@@ -47,7 +48,15 @@ public class ScreenPowerButton : ButtonHandler
         if (param[0] == null) return;
         SetButtonValue((bool)param[0]);
 
-        if (_screen.IsTurnOn && ButtonValue <= 0f) _screen.IsTurnOn = false;
-        else if (!_screen.IsTurnOn && ButtonValue >= 1f) _screen.IsTurnOn = true;
+        if (_screen.IsTurnOn && ButtonValue <= 0f)
+        {
+            _screen.IsTurnOn = false;
+            EngineObject.Material.Color = new Vector3(0f, 0f, 0f);
+        }
+        else if (!_screen.IsTurnOn && ButtonValue >= 1f)
+        {
+            _screen.IsTurnOn = true;
+            EngineObject.Material.Color = new Vector3(1f, 0f, 0f);
+        }
     }
 }

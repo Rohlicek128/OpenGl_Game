@@ -24,6 +24,7 @@ public class LaserButton : ButtonHandler
             MeshConstructor.CreateCube(),
             new Material(new Vector3(1f, 1f, 0f))
         );
+        Type = ButtonTypes.Press;
     }
 
     private void SetButtonValue(bool down)

@@ -19,7 +19,8 @@ public class ObjectiveScreen : ScreenHandler
             MeshConstructor.CreateCube(),
             new TexturesPbr(new Dictionary<TextureTypes, Texture>
             {
-                {TextureTypes.Diffuse, Framebuffer.AttachedTextures[0]}
+                {TextureTypes.Diffuse, Framebuffer.AttachedTextures[0]},
+                {TextureTypes.Overlay, new Texture("white1x1.png", 1)}
             })
         );
         IsTurnOn = false;

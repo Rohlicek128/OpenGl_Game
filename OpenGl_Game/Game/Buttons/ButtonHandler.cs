@@ -18,6 +18,13 @@ public abstract class ButtonHandler
         set => _buttonValue = value;
     }
 
+    private ButtonTypes _type;
+    public ButtonTypes Type
+    {
+        get => _type;
+        set => _type = value;
+    }
+
     public delegate void EventHandler(object sender, params object?[] param);
     public event EventHandler OnEvent;
 
