@@ -63,8 +63,8 @@ public class Earth
         if (keyboard.IsKeyDown(Keys.Q)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitY * deltaTime * 0.5f) * o.Transform.Quaternion;
         if (keyboard.IsKeyDown(Keys.E)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitY * deltaTime * 0.5f) * o.Transform.Quaternion;
         
-        if (keyboard.IsKeyDown(Keys.Space)) EarthObject.Transform.Position[EarthAxis] -= speed * 200f;
-        if (keyboard.IsKeyDown(Keys.LeftControl)) EarthObject.Transform.Position[EarthAxis] += speed * 200f;
+        if (keyboard.IsKeyDown(Keys.Space)) EarthObject.Transform.Position[EarthAxis] -= deltaTime * 50f;
+        if (keyboard.IsKeyDown(Keys.LeftControl)) EarthObject.Transform.Position[EarthAxis] += deltaTime * 50f;
         
         CollisionSphere.Transform.Position = EarthObject.Transform.Position;
     }

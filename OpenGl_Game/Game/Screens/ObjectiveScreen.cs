@@ -14,8 +14,8 @@ public class ObjectiveScreen : ScreenHandler
     {
         EngineObject = new EngineObject(
             "Objective Screen",
-            new Transform(new Vector3(-5.384271f, -0.21974607f, 1.4387347f), new Vector3(-MathF.PI/2f, -0.5290095f, -MathF.PI/2f),
-                new Vector3(0.75f)),
+            new Transform(new Vector3(-2.5346785f, -0.14945818f, -0.8248692f), new Vector3(-MathF.PI/2f, MathHelper.DegreesToRadians(-55), -MathF.PI/2f),
+                new Vector3(0.6f, 0.05f, 0.6f)),
             MeshConstructor.CreateCube(),
             new TexturesPbr(new Dictionary<TextureTypes, Texture>
             {

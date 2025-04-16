@@ -1,3 +1,4 @@
+using OpenGl_Game.Engine.Graphics.Shaders.Programs;
 using OpenGl_Game.Engine.Graphics.Textures;
 using OpenTK.Graphics.OpenGL.Compatibility;
 using OpenTK.Mathematics;
@@ -17,6 +18,7 @@ public class GBuffer : Framebuffer
     public Texture TexCoordsTexture;
     
     public Renderbuffer Renderbuffer;
+    public DepthShader DepthShader;
     public unsafe GBuffer(Vector2i viewport)
     {
         //Position
@@ -52,6 +54,8 @@ public class GBuffer : Framebuffer
         
         Renderbuffer = new Renderbuffer(InternalFormat.DepthComponent24, viewport);
         AttachRenderbuffer(FramebufferAttachment.DepthAttachment, Renderbuffer.Handle);
+
+        DepthShader = new DepthShader(viewport);
     }
 
     public void BindBufferTextures()

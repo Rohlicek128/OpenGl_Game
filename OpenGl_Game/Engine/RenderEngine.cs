@@ -107,7 +107,7 @@ public class RenderEngine : GameWindow
         _timerManager = new TimerManager(150);
         _editorManager = new EditorManager();
         
-        _camera = new Camera(new Vector3(-3.25f, 0.4f, 0f), 3f, 0.09f, 95f);
+        _camera = new Camera(new Vector3(-0.9f, 0.85f, 0f), 1f, 0.09f, 95f);
         _camera.UpdateSensitivityByAspect(_viewport);
     }
 
@@ -254,9 +254,7 @@ public class RenderEngine : GameWindow
         //Geometry Shader
         _geometryShader = new GeometryShader(_objects.ToList(), verticesAttribs);
         //Lighting Shader
-        var screenQuad = EngineObject.CreateEmpty();
-        screenQuad.MeshData.Vertices = MeshConstructor.CreateRenderQuad();
-        _lightingShader = new LightingShader(screenQuad, _lights);
+        _lightingShader = new LightingShader(_lights);
         
         //Light Shader
         _lightShader = new LightShader(_lights, verticesAttribs);
@@ -267,10 +265,7 @@ public class RenderEngine : GameWindow
         //Post Process
         _outlineShader = new OutlineShader(_geometryShader, _viewport);
         
-        screenQuad = EngineObject.CreateEmpty();
-        screenQuad.MeshData.Vertices = MeshConstructor.CreateRenderQuad();
-        
-        _postProcessShader = new PostProcessShader(screenQuad, _viewport / _renderScale);
+        _postProcessShader = new PostProcessShader(_viewport / _renderScale);
         _postProcessShader.Shaders.Add(_outlineShader);
         
         //Collision
@@ -353,6 +348,8 @@ public class RenderEngine : GameWindow
         _geometryShader.Draw();
         _gBuffer.Unbind();
         
+        _gBuffer.DepthShader.Draw(_viewport);
+        
         if (_wireframeMode) GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
         
         //SSAO
@@ -384,7 +381,7 @@ public class RenderEngine : GameWindow
         //Post Process
         _postProcessShader.Framebuffer.Unbind();
         GL.Viewport(0, 0, _viewport.X, _viewport.Y);
-        _postProcessShader.Draw(_isPostProcess ? -1 : _gBuffer.NormalViewTexture.Handle); //_shadows.TextureHandle : _gBuffer.NormalsTexture.Handle
+        _postProcessShader.Draw(_isPostProcess ? -1 : _gBuffer.NormalsTexture.Handle); //_shadows.TextureHandle : _gBuffer.NormalsTexture.Handle
         _postProcessShader.DrawShaders();
         GL.Disable(EnableCap.DepthTest);
 
@@ -401,7 +398,7 @@ public class RenderEngine : GameWindow
             _fonts["Pixel"].DrawText("EARTH  X: "+ (MathF.Floor(_earth.EarthObject.Transform.Position.X * 1000f) / 1000f) + " Y: " + (MathF.Floor(_earth.EarthObject.Transform.Position.Y * 1000f) / 1000f) + " Z: "+ (MathF.Floor(_earth.EarthObject.Transform.Position.Z * 1000f) / 1000f),
                 new Vector2(25f, _viewport.Y - 210f), 0.5f, new Vector4(1f), _viewport);
             _fonts["Pixel"].DrawText("Boost: " + _camera.BoostSpeed, new Vector2(25f, _viewport.Y - 260f), 0.5f, new Vector4(1f), _viewport);
-            _fonts["Pixel"].DrawText("Grayscale: " + _postProcessShader.Grayscale, new Vector2(25f, _viewport.Y - 310f), 0.5f, new Vector4(1f), _viewport);
+            _fonts["Pixel"].DrawText("FOV: " + _camera.Fov + ", Zoom: " + _camera.ZoomFov, new Vector2(25f, _viewport.Y - 310f), 0.5f, new Vector4(1f), _viewport);
             _fonts["Pixel"].DrawText("VALUE: Y: " + _camera.Yaw + ", P: " + _camera.Pitch, new Vector2(25f, _viewport.Y - 360f), 0.5f, new Vector4(1f), _viewport);
             _fonts["Pixel"].DrawText("Altitude: " + Math.Floor(-(_earth.EarthObject.Transform.Scale[Earth.EarthAxis] + _earth.EarthObject.Transform.Position[Earth.EarthAxis]) * 2f) + " km", new Vector2(25f, _viewport.Y - 410f), 0.5f, new Vector4(1f), _viewport);
             
@@ -413,7 +410,7 @@ public class RenderEngine : GameWindow
             
             _fonts["Pixel"].DrawText(_collisionShader.LookingAtObject.Name + " [" + _collisionShader.LookingAtObject.Id + "]", new Vector2(_viewport.X / 2f + 10f, _viewport.Y / 2f + 10f), 0.4f, new Vector4(1f), _viewport);
         }
-        _fonts["Pixel"].DrawText("FROM ORBIT v0.1.19", new Vector2(_viewport.X - 255f, _viewport.Y - 30f), 0.35f, new Vector4(1f, 1f, 1f, 0.2f), _viewport);
+        _fonts["Pixel"].DrawText("FROM ORBIT v0.2.3", new Vector2(_viewport.X - 255f, _viewport.Y - 30f), 0.35f, new Vector4(1f, 1f, 1f, 0.2f), _viewport);
         
         GL.DepthFunc(DepthFunction.Less);
         
@@ -437,7 +434,11 @@ public class RenderEngine : GameWindow
     {
         if (!IsFocused) return;
 
-        if (_moveEarthMode) _earth.MoveEarth(KeyboardState, (float)args.Time, _camera.BoostSpeed, [_lights[LightTypes.Directional][0]]);
+        if (_moveEarthMode)
+        {
+            _earth.MoveEarth(KeyboardState, (float)args.Time, _camera.BoostSpeed, [_lights[LightTypes.Directional][0]]);
+            _lights[LightTypes.Point][1].Transform.Position[Earth.EarthAxis] = _earth.EarthObject.Transform.Position[Earth.EarthAxis] + _earth.EarthObject.Transform.Scale[Earth.EarthAxis] + 3f;
+        }
         else _camera.Move(KeyboardState, (float)args.Time);
 
         //_lights[LightTypes.Directional][0].Transform.Position =
@@ -492,8 +493,8 @@ public class RenderEngine : GameWindow
             ), _geometryShader.Attributes);
             Console.WriteLine("added");
         }
-
-        var eo = _lights[LightTypes.Directional][0]; //_lights[LightTypes.Directional][0] : _station.Screens.First().Value.EngineObject
+        
+        var eo = _station.Buttons.Last().Value.EngineObject; //_lights[LightTypes.Directional][0] : _station.Screens.First().Value.EngineObject
         var sens = (float)args.Time * 0.5f;
         if (KeyboardState.IsKeyDown(Keys.Insert)) eo.Transform.Quaternion = Quaternion.FromEulerAngles(sens, 0f, 0f) * eo.Transform.Quaternion;
         if (KeyboardState.IsKeyDown(Keys.Delete)) eo.Transform.Quaternion = Quaternion.FromEulerAngles(-sens, 0f, 0f) * eo.Transform.Quaternion;
@@ -589,7 +590,16 @@ public class RenderEngine : GameWindow
             button.Activate(e.OffsetY);
         }
         
-        _camera.BoostSpeed = Math.Min(1000f, Math.Max(_camera.BaseSpeed, _camera.BoostSpeed + e.OffsetY * 3f));
+        
+        if (_mouse.IsDown)
+        {
+            _camera.ZoomFov = Math.Min(0.9f, Math.Max(0.1f, _camera.ZoomFov - e.OffsetY / 20f));
+            _camera.Fov = _camera.BaseFov * _camera.ZoomFov;
+        }
+        else
+        {
+            _camera.BoostSpeed = Math.Min(1000f, Math.Max(_camera.BaseSpeed, _camera.BoostSpeed + e.OffsetY * 3f));
+        }
     }
     
     protected override void OnMouseUp(MouseButtonEventArgs e)
@@ -606,7 +616,7 @@ public class RenderEngine : GameWindow
         }
         if (e.Button == MouseButton.Right)
         {
-            _camera.Fov = 95f;
+            _camera.Fov = _camera.BaseFov;
         }
     }
 
@@ -623,7 +633,7 @@ public class RenderEngine : GameWindow
         }
         if (e.Button == MouseButton.Right)
         {
-            _camera.Fov = 50f;
+            _camera.Fov = _camera.BaseFov * _camera.ZoomFov;
         }
     }
 

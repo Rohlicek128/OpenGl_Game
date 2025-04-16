@@ -10,11 +10,11 @@ public class LightingShader : ShaderProgram
 {
     public Dictionary<LightTypes, List<Light>> Lights { get; set; }
     
-    public LightingShader(EngineObject screenQuad, Dictionary<LightTypes, List<Light>> lights) : base(
+    public LightingShader(Dictionary<LightTypes, List<Light>> lights) : base(
         [
             new Shader(@"gLightingShaders\lightingShader.vert", ShaderType.VertexShader),
             new Shader(@"gLightingShaders\lightingShader.frag", ShaderType.FragmentShader)
-        ], [screenQuad], [new VertexAttribute(VertexAttributeType.PosAndTex, 4)]
+        ], [MeshConstructor.CreateScreenQuad()], [new VertexAttribute(VertexAttributeType.PosAndTex, 4)]
     )
     {
         Lights = lights;

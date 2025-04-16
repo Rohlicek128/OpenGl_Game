@@ -19,10 +19,10 @@ public class LaserButton : ButtonHandler
         AddEvent(MyEvent);
         EngineObject = new EngineObject(
             "Laser Button",
-            new Transform(new Vector3(-5.079833f, 1.1671673f, 0.0257724f), new Vector3(0f, 0f, -0.8928769f),
-                new Vector3(0.35f)),
+            new Transform(new Vector3(-1.8652177f, -0.57346725f, 0f), new Vector3(0f, 0f, MathHelper.DegreesToRadians(-10f)),
+                new Vector3(0.175f)),
             MeshConstructor.CreateCube(),
-            new Material(new Vector3(1f, 1f, 0f))
+            new Material(new Vector3(1f, 0f, 0f))
         );
         Type = ButtonTypes.Press;
     }
@@ -38,5 +38,7 @@ public class LaserButton : ButtonHandler
         SetButtonValue((bool)param[0]);
 
         _laserShader.Objects[0].IsVisible = (int)ButtonValue == 1;
+
+        
     }
 }

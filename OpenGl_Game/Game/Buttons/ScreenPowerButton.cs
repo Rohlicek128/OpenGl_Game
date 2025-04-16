@@ -19,8 +19,8 @@ public class ScreenPowerButton : ButtonHandler
         AddEvent(MyEvent);
         EngineObject = new EngineObject(
             "OS Power Button",
-            new Transform(new Vector3(-4.9225183f, -0.3374207f, 0.9792786f), new Vector3(-MathF.PI/2f, -0.5290095f, -MathF.PI/2f),
-                new Vector3(0.08f)),
+            new Transform(new Vector3(-2.3049996f, -0.30045396f, -0.48764002f), new Vector3(-MathF.PI/2f, MathHelper.DegreesToRadians(-55), -MathF.PI/2f),
+                new Vector3(0.05f)),
             MeshConstructor.CreateCube(),
             new Material(new Vector3(0f, 0f, 0f))
         );
@@ -56,7 +56,7 @@ public class ScreenPowerButton : ButtonHandler
         else if (!_screen.IsTurnOn && ButtonValue >= 1f)
         {
             _screen.IsTurnOn = true;
-            EngineObject.Material.Color = new Vector3(1f, 0f, 0f);
+            EngineObject.Material.Color = new Vector3(1f, 1f, 0f);
         }
     }
 }

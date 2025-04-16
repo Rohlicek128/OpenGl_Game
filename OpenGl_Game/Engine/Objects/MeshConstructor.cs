@@ -460,4 +460,11 @@ public class MeshConstructor
         ];
     }
 
+    public static EngineObject CreateScreenQuad()
+    {
+        var result = EngineObject.CreateEmpty();
+        result.MeshData.Vertices = CreateRenderQuad();
+        return result;
+    }
+
 }

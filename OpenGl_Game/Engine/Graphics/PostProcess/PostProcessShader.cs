@@ -20,11 +20,11 @@ public class PostProcessShader : ShaderProgram
     public int Banding;
     public float Grayscale;
 
-    public unsafe PostProcessShader(EngineObject screenQuad, Vector2i viewport) : base(
+    public unsafe PostProcessShader(Vector2i viewport) : base(
         [
             new Shader(@"PostProcessShaders\postProcessShader.vert", ShaderType.VertexShader),
             new Shader(@"PostProcessShaders\postProcessShader.frag", ShaderType.FragmentShader)
-        ], [screenQuad], [new VertexAttribute(VertexAttributeType.PosAndTex, 4)]
+        ], [MeshConstructor.CreateScreenQuad()], [new VertexAttribute(VertexAttributeType.PosAndTex, 4)]
     )
     {
         Banding = -1;

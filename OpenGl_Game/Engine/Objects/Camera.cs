@@ -22,7 +22,9 @@ public class Camera
     
     public float OriginalSensitivity;
     public float Sensitivity;
+    public float BaseFov;
     public float Fov;
+    public float ZoomFov;
     public float NearPlane, FarPlane;
 
     public float Pitch;
@@ -44,7 +46,9 @@ public class Camera
 
         Speed = speed;
         OriginalSensitivity = sensitivity;
+        BaseFov = fov;
         Fov = fov;
+        ZoomFov = 0.5f;
         NearPlane = 0.025f;
         FarPlane = 1000000f;
 

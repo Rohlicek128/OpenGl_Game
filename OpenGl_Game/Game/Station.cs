@@ -22,7 +22,7 @@ public class Station
         StationObject = new EngineObject(
             "Station",
             new Transform(new Vector3(3f), Vector3.Zero, Vector3.One * 1.25f),
-            MeshConstructor.LoadObjFromFileAssimp(@"station\stationV1_1.obj"),
+            MeshConstructor.LoadObjFromFileAssimp(@"station\stationV3_3.obj"),
             new Material(new Vector3(1f))
         );
         StationObject.Material.Shininess = 1f;
