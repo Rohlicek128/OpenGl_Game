@@ -102,6 +102,7 @@ public class EngineObject
         program.SetUniform("material.specularMap", 1);
         program.SetUniform("material.normalMap", 2);
         program.SetUniform("material.overlay", 3);
+        program.SetUniform("material.emissive", 4);
         program.SetUniform("material.hasNormalMap", Textures.ContainsType(TextureTypes.Normal) ? 1 : 0);
         Textures.ActiveAndBindAll();
         

@@ -4,6 +4,7 @@ using OpenGl_Game.Engine.Graphics.Shaders.Programs;
 using OpenGl_Game.Engine.Graphics.Textures;
 using OpenGl_Game.Engine.Graphics.UI.Text;
 using OpenGl_Game.Engine.Objects;
+using OpenGl_Game.Engine.UI;
 using OpenTK.Graphics.OpenGL.Compatibility;
 using OpenTK.Mathematics;
 using TextureMagFilter = OpenTK.Graphics.OpenGL.TextureMagFilter;
@@ -13,6 +14,13 @@ namespace OpenGl_Game.Game.Screens;
 
 public abstract class ScreenHandler
 {
+    private UiGraphics _uiGraphics;
+    public UiGraphics UiGraphics
+    {
+        get => _uiGraphics;
+        set => _uiGraphics = value ?? throw new ArgumentNullException(nameof(value));
+    }
+
     private EngineObject _engineObject;
     public EngineObject EngineObject
     {
@@ -44,13 +52,14 @@ public abstract class ScreenHandler
     protected unsafe ScreenHandler(Vector2i screenResolution)
     {
         _screenResolution = screenResolution;
-        _isTurnOn = true;
-        
+        _isTurnOn = false;
+
+        _uiGraphics = new UiGraphics();
         _framebuffer = new Framebuffer();
         _framebuffer.AttachTexture(new Texture(0, _screenResolution, null, minFilter:(TextureMinFilter)OpenTK.Graphics.OpenGL.Compatibility.TextureMinFilter.Nearest, magFilter:(TextureMagFilter)OpenTK.Graphics.OpenGL.Compatibility.TextureMagFilter.Nearest), FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2d);
     }
 
-    public virtual void RenderScreen(CollisionShader collision, ShaderProgram program, Matrix4 world, Matrix4 view, Vector2i viewport, FontMap font, float boost)
+    public virtual void RenderScreen(CollisionShader collision, Mouse mouse, Vector2i viewport, Dictionary<string, FontMap> fonts)
     {
         
     } 

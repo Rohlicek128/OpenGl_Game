@@ -94,6 +94,11 @@ public class FontMap
         var chars = text.ToCharArray();
         for (var i = 0; i < chars.Length - substract; i++)
         {
+            if (chars[i] > 128)
+            {
+                position.X += 1 * scale;
+                continue;
+            }
             var ch = Characters[chars[i]];
 
             var xpos = position.X + ch.Bearing.X * scale;

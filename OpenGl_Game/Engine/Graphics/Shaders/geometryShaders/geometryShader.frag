@@ -11,6 +11,7 @@ struct Material {
     sampler2D normalMap;
     float shininess;
     
+    sampler2D emissive;
     sampler2D overlay;
 };
 
@@ -32,10 +33,8 @@ uniform Material material;
 uniform mat4 inverseModelView;
 
 void main(){
-    vec3 overTex = texture(material.overlay, vTexCoord).rbg;
-    
     //Position
-    gPosition = vec4(vFragPos, overTex.r);
+    gPosition = vec4(vFragPos, texture(material.emissive, vTexCoord).r);
     gViewPosition = vFragPosView;
     
     //Normal
@@ -50,7 +49,7 @@ void main(){
     gViewNormal = normalize((vTBN * norm) * mat3(inverseModelView)) * material.hasNormalMap + normalize(vNormalView) * (1 - material.hasNormalMap);
     
     //Albedo
-    gAlbedoSpec.rgb = (material.color * texture(material.diffuseMap, vTexCoord).rgb * material.diffuse + overTex * vec3(1.0, 0.84, 0.61));
+    gAlbedoSpec.rgb = material.color * texture(material.diffuseMap, vTexCoord).rgb * material.diffuse + texture(material.overlay, vTexCoord).rbg * vec3(1.0, 0.84, 0.61);
     
     //Specular
     gAlbedoSpec.a = texture(material.specularMap, vTexCoord).r;

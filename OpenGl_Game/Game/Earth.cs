@@ -1,6 +1,7 @@
 using OpenGl_Game.Engine.Graphics.Textures;
 using OpenGl_Game.Engine.Objects;
 using OpenGl_Game.Engine.Objects.Collisions;
+using OpenGl_Game.Game.Targets;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -43,7 +44,8 @@ public class Earth
                 {TextureTypes.Diffuse, ColorMap},
                 {TextureTypes.Specular, RoughnessMap},
                 {TextureTypes.Normal, NormalMap},
-                {TextureTypes.Overlay, CitiesMap}
+                {TextureTypes.Overlay, CitiesMap},
+                {TextureTypes.Emissive, CitiesMap}
             })
         );
         EarthObject.IsSelectable = false;
@@ -56,10 +58,11 @@ public class Earth
         engineObjects.Add(EarthObject);
         var speed = deltaTime * boost / 250f;
         
-        if (keyboard.IsKeyDown(Keys.W) || true) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitZ * speed) * o.Transform.Quaternion;
+        if (keyboard.IsKeyDown(Keys.W)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitZ * speed) * o.Transform.Quaternion;
         if (keyboard.IsKeyDown(Keys.S)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitZ * speed) * o.Transform.Quaternion;
         if (keyboard.IsKeyDown(Keys.A)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitX * speed) * o.Transform.Quaternion;
         if (keyboard.IsKeyDown(Keys.D)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitX * speed) * o.Transform.Quaternion;
+        
         if (keyboard.IsKeyDown(Keys.Q)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitY * deltaTime * 0.5f) * o.Transform.Quaternion;
         if (keyboard.IsKeyDown(Keys.E)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitY * deltaTime * 0.5f) * o.Transform.Quaternion;
         
@@ -67,6 +70,8 @@ public class Earth
         if (keyboard.IsKeyDown(Keys.LeftControl)) EarthObject.Transform.Position[EarthAxis] += deltaTime * 50f;
         
         CollisionSphere.Transform.Position = EarthObject.Transform.Position;
+        
+        Console.WriteLine(EarthObject.Transform.Quaternion.ToEulerAngles() * 180f / MathF.PI);
     }
 
     public MeshData GenerateFaces(int resolution)
@@ -147,7 +152,7 @@ public class Earth
                 meshData.Vertices[meshData.Indices[i * 3 + j] * 8 + 7] = norm.Z;
             }
         }
-
+        
         return meshData;
     }
 

@@ -38,7 +38,5 @@ public class LaserButton : ButtonHandler
         SetButtonValue((bool)param[0]);
 
         _laserShader.Objects[0].IsVisible = (int)ButtonValue == 1;
-
-        
     }
 }

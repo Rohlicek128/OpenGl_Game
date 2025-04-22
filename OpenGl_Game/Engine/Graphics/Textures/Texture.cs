@@ -15,7 +15,7 @@ public class Texture
     public PixelType Type;
     public PixelFormat Pixel;
 
-    public unsafe Texture(uint index, Vector2i size, void* data, InternalFormat format = InternalFormat.Rgba, PixelType type = PixelType.UnsignedByte, PixelFormat pixel = PixelFormat.Rgba, TextureMinFilter minFilter = TextureMinFilter.Nearest, TextureMagFilter magFilter = TextureMagFilter.Nearest)
+    public unsafe Texture(uint index, Vector2i size, void* data, InternalFormat format = InternalFormat.Rgba, PixelType type = PixelType.UnsignedByte, PixelFormat pixel = PixelFormat.Rgba, TextureMinFilter minFilter = TextureMinFilter.Nearest, TextureMagFilter magFilter = TextureMagFilter.Nearest, TextureWrapMode wrapMode = TextureWrapMode.Repeat)
     {
         Handle = GL.GenTexture();
         Index = index;
@@ -25,10 +25,10 @@ public class Texture
         GL.ActiveTexture(TextureUnit.Texture0 + Index);
         Bind();
 
-        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureWrapS, (int) TextureWrapMode.Repeat);
-        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureWrapT, (int) TextureWrapMode.Repeat);
-        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMinFilter, (int) minFilter);
-        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMagFilter, (int) magFilter);
+        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureWrapS, (int)wrapMode);
+        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureWrapT, (int)wrapMode);
+        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMinFilter, (int)minFilter);
+        GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMagFilter, (int)magFilter);
 
         GL.GenerateMipmap(TextureTarget.Texture2d);
         

@@ -32,7 +32,7 @@ public class Camera
     public Vector2 Mouse;
     private Vector2 _lastMouse;
 
-    public Camera(Vector3 startingPos, float speed, float sensitivity, float fov)
+    public Camera(Vector3 startingPos, float speed, float sensitivity, float fov, float nearPlane, float farPlane)
     {
         Transform = new Transform(startingPos);
         Target = Vector3.Zero;
@@ -49,8 +49,8 @@ public class Camera
         BaseFov = fov;
         Fov = fov;
         ZoomFov = 0.5f;
-        NearPlane = 0.025f;
-        FarPlane = 1000000f;
+        NearPlane = nearPlane;
+        FarPlane = farPlane;
 
         _lastMouse = new Vector2(0f, 0f);
         UpdateSensitivityByFov();

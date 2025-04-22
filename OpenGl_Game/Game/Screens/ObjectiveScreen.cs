@@ -1,8 +1,12 @@
+using System.Drawing;
 using OpenGl_Game.Engine.Graphics.Shaders;
 using OpenGl_Game.Engine.Graphics.Shaders.Programs;
 using OpenGl_Game.Engine.Graphics.Textures;
 using OpenGl_Game.Engine.Graphics.UI.Text;
 using OpenGl_Game.Engine.Objects;
+using OpenGl_Game.Engine.UI.Elements;
+using OpenGl_Game.Game.Buttons;
+using OpenGl_Game.Game.Targets;
 using OpenTK.Graphics.OpenGLES2;
 using OpenTK.Mathematics;
 
@@ -10,6 +14,9 @@ namespace OpenGl_Game.Game.Screens;
 
 public class ObjectiveScreen : ScreenHandler
 {
+    public CityTargets Cities { get; set; }
+    public City CurrentCity { get; set; }
+    
     public ObjectiveScreen(Vector2i screenResolution) : base(screenResolution)
     {
         EngineObject = new EngineObject(
@@ -20,31 +27,51 @@ public class ObjectiveScreen : ScreenHandler
             new TexturesPbr(new Dictionary<TextureTypes, Texture>
             {
                 {TextureTypes.Diffuse, Framebuffer.AttachedTextures[0]},
-                {TextureTypes.Overlay, new Texture("white1x1.png", 1)}
+                {TextureTypes.Emissive, new Texture("white1x1.png", 4)}
             })
         );
-        IsTurnOn = false;
+        Cities = new CityTargets();
+        CurrentCity = Cities.CitiesWithPop(1_000_000)[Random.Shared.Next(Cities.CitiesWithPop(1_000_000).Count)];
+        
+        UiGraphics.Elements.Add("b1", new UiButton(new Vector3(0.8f, 0.8f, 0f), Vector3.UnitX, 0.25f, 0.1f));
+        UiGraphics.InitProgram();
     }
 
-    public override void RenderScreen(CollisionShader collision, ShaderProgram program, Matrix4 world, Matrix4 view, Vector2i viewport, FontMap font, float boost)
+    public override void RenderScreen(CollisionShader collision, Mouse mouse, Vector2i viewport, Dictionary<string, FontMap> fonts)
     {
         GL.Viewport(0, 0, ScreenResolution.X, ScreenResolution.Y);
         Framebuffer.Bind();
 
         if (IsTurnOn)
         {
-            var bg = 0.2f;
+            var bg = 0.04f;
             GL.ClearColor(bg, bg, bg, 1f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            
-            //program.DrawGeometryMesh(world, view);
-            font.DrawText("STATION 42", new Vector2(25f, ScreenResolution.Y - 60f), 0.75f, new Vector4(1f), ScreenResolution);
-            font.DrawText("ORBITAL LASER", new Vector2(25f, ScreenResolution.Y - 80f), 0.35f, new Vector4(1f), ScreenResolution);
-            font.DrawText("SPEED: " + boost + "x", new Vector2(25f, ScreenResolution.Y - 150f), 0.8f, new Vector4(1f), ScreenResolution);
 
+            if (((UiButton)UiGraphics.Elements["b1"]).PointCollision(collision.LookingAtUv * 2f - Vector2.One))
+            {
+                ((UiButton)UiGraphics.Elements["b1"]).Activate(mouse.IsDown);
+                ((UiButton)UiGraphics.Elements["b1"]).EngineObject.Material.Color.X = 1f;
+                
+                if (mouse.IsDown) CurrentCity = Cities.CitiesWithPop(1_000_000)[Random.Shared.Next(Cities.CitiesWithPop(1_000_000).Count)];
+            }
+            else
+            {
+                ((UiButton)UiGraphics.Elements["b1"]).EngineObject.Material.Color.X = 0.25f;
+            }
+            
+            UiGraphics.GraphicsProgram.Draw(viewport.ToVector2());
+            
+            fonts["Pixel"].DrawText("STATION 42", new Vector2(25f, ScreenResolution.Y - 60f), 0.75f, new Vector4(1f), ScreenResolution);
+            fonts["Pixel"].DrawText("ORBITAL LASER", new Vector2(25f, ScreenResolution.Y - 80f), 0.35f, new Vector4(1f), ScreenResolution);
+            //fonts["Pixel"].DrawText("SPEED: " + boost + "x", new Vector2(25f, ScreenResolution.Y - 150f), 0.8f, new Vector4(1f), ScreenResolution);
+            fonts["Pixel"].DrawText("TARGET: " + CurrentCity.Name + ", " + CurrentCity.Country.Name + " [" + CurrentCity.Coordinates + "], (" +  CurrentCity.Population + ")", new Vector2(25f, ScreenResolution.Y - 110f), 0.30f, new Vector4(1f), ScreenResolution);
+            
             if (collision.LookingAtObject.Id == EngineObject.Id)
             {
-                font.DrawText("o", collision.LookingAtUv * ScreenResolution, 0.3f, new Vector4(1f), ScreenResolution);
+                fonts["Pixel"].DrawText("o", collision.LookingAtUv * ScreenResolution, 0.3f, new Vector4(1f), ScreenResolution);
+                //UiGraphics.Elements[0].GetEngineObject().Transform.Position.X = collision.LookingAtUv.X * 2f - 1f;
+                //UiGraphics.Elements[0].GetEngineObject().Transform.Position.Y = collision.LookingAtUv.Y * 2f - 1f;
             }
         }
         else

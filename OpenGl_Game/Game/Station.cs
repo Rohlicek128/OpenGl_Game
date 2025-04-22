@@ -10,15 +10,18 @@ namespace OpenGl_Game.Game;
 
 public class Station
 {
-    public EngineObject StationObject;
+    public EngineObject StationObject { get; set; }
 
-    public Dictionary<int, ButtonHandler> Buttons;
-    public Dictionary<int, ScreenHandler> Screens;
+    public Dictionary<int, ButtonHandler> Buttons { get; set; }
+    public Dictionary<int, ScreenHandler> Screens { get; set; }
+    
+    public static float BatteryPercentage { get; set; }
     
     public Station()
     {
         Buttons = [];
         Screens = [];
+        BatteryPercentage = 0.5f;
         StationObject = new EngineObject(
             "Station",
             new Transform(new Vector3(3f), Vector3.Zero, Vector3.One * 1.25f),
@@ -36,7 +39,18 @@ public class Station
         Buttons.Add(EngineObject.ObjectIdCounter + 1, new SliderButton());
         
         Screens.Add(EngineObject.ObjectIdCounter + 1, new ObjectiveScreen(new Vector2i(600, 600)));
-        Buttons.Add(EngineObject.ObjectIdCounter + 1, new ScreenPowerButton(Screens.Last().Value));
+        Buttons.Add(EngineObject.ObjectIdCounter + 1, new ScreenPowerButton(Screens.Last().Value, new Transform(
+            new Vector3(-2.3049996f, -0.30045396f, -0.48764002f),
+            new Vector3(-MathF.PI/2f, MathHelper.DegreesToRadians(-55), -MathF.PI/2f),
+            new Vector3(0.05f)
+        )));
+        
+        Screens.Add(EngineObject.ObjectIdCounter + 1, new BatteryScreen(new Vector2i(600, 600)));
+        //Buttons.Add(EngineObject.ObjectIdCounter + 1, new ScreenPowerButton(Screens.Last().Value, new Transform(
+        //    new Vector3(-2.3049996f, -0.30045396f, 0.68764002f),
+        //    new Vector3(-MathF.PI/2f, MathHelper.DegreesToRadians(-55), -MathF.PI/2f),
+        //    new Vector3(0.05f)
+        //)));
     }
     
 }

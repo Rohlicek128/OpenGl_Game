@@ -14,13 +14,12 @@ public class ScreenPowerButton : ButtonHandler
         set => _screen = value ?? throw new ArgumentNullException(nameof(value));
     }
 
-    public ScreenPowerButton(ScreenHandler screen)
+    public ScreenPowerButton(ScreenHandler screen, Transform transform)
     {
         AddEvent(MyEvent);
         EngineObject = new EngineObject(
             "OS Power Button",
-            new Transform(new Vector3(-2.3049996f, -0.30045396f, -0.48764002f), new Vector3(-MathF.PI/2f, MathHelper.DegreesToRadians(-55), -MathF.PI/2f),
-                new Vector3(0.05f)),
+            transform,
             MeshConstructor.CreateCube(),
             new Material(new Vector3(0f, 0f, 0f))
         );
@@ -40,7 +39,6 @@ public class ScreenPowerButton : ButtonHandler
             if (Math.Abs(ButtonValue - 0.6f) < 0.001f) ButtonValue = 0f;
             else if (Math.Abs(ButtonValue - 0.4f) < 0.001f) ButtonValue = 1f;
         }
-        
     }
 
     private protected override void MyEvent(object sender, params object?[] param)
@@ -56,7 +54,7 @@ public class ScreenPowerButton : ButtonHandler
         else if (!_screen.IsTurnOn && ButtonValue >= 1f)
         {
             _screen.IsTurnOn = true;
-            EngineObject.Material.Color = new Vector3(1f, 1f, 0f);
+            EngineObject.Material.Color = new Vector3(1f, 0f, 0f);
         }
     }
 }

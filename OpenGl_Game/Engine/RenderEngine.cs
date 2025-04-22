@@ -10,6 +10,7 @@ using OpenGl_Game.Engine.Graphics.UI.Text;
 using OpenGl_Game.Engine.Objects;
 using OpenGl_Game.Engine.Objects.Collisions;
 using OpenGl_Game.Engine.UI;
+using OpenGl_Game.Engine.UI.Obsolete;
 using OpenGl_Game.Game;
 using OpenGl_Game.Game.Buttons;
 using OpenGl_Game.Shaders;
@@ -41,7 +42,7 @@ public class RenderEngine : GameWindow
     private bool _isPostProcess = true;
     private bool _moveEarthMode = true;
     private bool _isFullscreen = false;
-    private bool _debugMode = true;
+    private bool _debugMode = false;
 
     private Mouse _mouse;
     private Vector2i _viewport;
@@ -107,7 +108,7 @@ public class RenderEngine : GameWindow
         _timerManager = new TimerManager(150);
         _editorManager = new EditorManager();
         
-        _camera = new Camera(new Vector3(-0.9f, 0.85f, 0f), 1f, 0.09f, 95f);
+        _camera = new Camera(new Vector3(-0.9f, 0.85f, 0f), 1f, 0.09f, 95f, 0.025f, 1_500_000f);
         _camera.UpdateSensitivityByAspect(_viewport);
     }
 
@@ -121,8 +122,6 @@ public class RenderEngine : GameWindow
 
     protected override void OnLoad()
     {
-        IsVisible = true;
-        
         VertexAttribute[] verticesAttribs = [
             new(VertexAttributeType.Position, 3), 
             new(VertexAttributeType.TextureCoords, 2), 
@@ -197,7 +196,7 @@ public class RenderEngine : GameWindow
             "Laser",
             new Transform(Vector3.Zero, new Vector3(0f, MathF.PI / 2f, 0f), new Vector3(1f, 1f, 1f)),
             MeshConstructor.LoadObjFromFileAssimp(@"Station\laserCylinder.obj"),
-            new Material(new Vector3(10f, 0f, 0f))
+            new Material(new Vector3(20f, 0f, 0f))
         );
         laser.Transform.Scale[Earth.EarthAxis] = 200f;
         laser.Transform.Position[Earth.EarthAxis] = -100;
@@ -219,11 +218,11 @@ public class RenderEngine : GameWindow
         //dirLight.IsVisible = false;
         var pointLight = new Light(
             "Point light", 
-            new Transform(new Vector3(-4f, 5f, 0f)), 
+            new Transform(new Vector3(-1.9560018f, 2.9544713f, 0f)), 
             MeshConstructor.CreateCube(),
-            new Material(new Vector3(1f, 0.95f, 0.81f)),
+            new Material(new Vector3(1f)), //1f, 0.95f, 0.81f
             new Vector3(0.25f, 1f, 1f),
-            new Vector3(1.0f, 0.45f, 0.075f),
+            new Vector3(1.0f, 0.45f, 0.75f),
             LightTypes.Point
         );
         pointLight.Transform.Scale *= 0.2f;
@@ -305,7 +304,11 @@ public class RenderEngine : GameWindow
         GL.Enable(EnableCap.PrimitiveRestart);
         GL.PrimitiveRestartIndex(PrimitiveIndex);
         
+        //GL.Enable(EnableCap.ProgramPointSize);
+        //GL.PointSize(10f);
+
         Console.WriteLine("start");
+        IsVisible = true;
     }
 
     protected override void OnUnload()
@@ -376,10 +379,10 @@ public class RenderEngine : GameWindow
         _lightShader.Draw(_geometryShader.WorldMat, _geometryShader.ViewMat);
         _laserShader.Draw(_geometryShader.WorldMat, _geometryShader.ViewMat);
         
-        _station.Screens.First().Value.RenderScreen(_collisionShader, _geometryShader, _geometryShader.WorldMat, _geometryShader.ViewMat, _viewport, _fonts["Pixel"], _camera.BoostSpeed);
-        
         //Post Process
         _postProcessShader.Framebuffer.Unbind();
+        foreach (var screen in _station.Screens) screen.Value.RenderScreen(_collisionShader, _mouse, _viewport, _fonts);
+        
         GL.Viewport(0, 0, _viewport.X, _viewport.Y);
         _postProcessShader.Draw(_isPostProcess ? -1 : _gBuffer.NormalsTexture.Handle); //_shadows.TextureHandle : _gBuffer.NormalsTexture.Handle
         _postProcessShader.DrawShaders();
@@ -397,7 +400,7 @@ public class RenderEngine : GameWindow
                 new Vector2(25f, _viewport.Y - 160f), 0.5f, new Vector4(1f), _viewport);
             _fonts["Pixel"].DrawText("EARTH  X: "+ (MathF.Floor(_earth.EarthObject.Transform.Position.X * 1000f) / 1000f) + " Y: " + (MathF.Floor(_earth.EarthObject.Transform.Position.Y * 1000f) / 1000f) + " Z: "+ (MathF.Floor(_earth.EarthObject.Transform.Position.Z * 1000f) / 1000f),
                 new Vector2(25f, _viewport.Y - 210f), 0.5f, new Vector4(1f), _viewport);
-            _fonts["Pixel"].DrawText("Boost: " + _camera.BoostSpeed, new Vector2(25f, _viewport.Y - 260f), 0.5f, new Vector4(1f), _viewport);
+            _fonts["Pixel"].DrawText("Boost: " + _postProcessShader.Banding, new Vector2(25f, _viewport.Y - 260f), 0.5f, new Vector4(1f), _viewport);
             _fonts["Pixel"].DrawText("FOV: " + _camera.Fov + ", Zoom: " + _camera.ZoomFov, new Vector2(25f, _viewport.Y - 310f), 0.5f, new Vector4(1f), _viewport);
             _fonts["Pixel"].DrawText("VALUE: Y: " + _camera.Yaw + ", P: " + _camera.Pitch, new Vector2(25f, _viewport.Y - 360f), 0.5f, new Vector4(1f), _viewport);
             _fonts["Pixel"].DrawText("Altitude: " + Math.Floor(-(_earth.EarthObject.Transform.Scale[Earth.EarthAxis] + _earth.EarthObject.Transform.Position[Earth.EarthAxis]) * 2f) + " km", new Vector2(25f, _viewport.Y - 410f), 0.5f, new Vector4(1f), _viewport);
@@ -410,7 +413,7 @@ public class RenderEngine : GameWindow
             
             _fonts["Pixel"].DrawText(_collisionShader.LookingAtObject.Name + " [" + _collisionShader.LookingAtObject.Id + "]", new Vector2(_viewport.X / 2f + 10f, _viewport.Y / 2f + 10f), 0.4f, new Vector4(1f), _viewport);
         }
-        _fonts["Pixel"].DrawText("FROM ORBIT v0.2.3", new Vector2(_viewport.X - 255f, _viewport.Y - 30f), 0.35f, new Vector4(1f, 1f, 1f, 0.2f), _viewport);
+        _fonts["Pixel"].DrawText("FROM ORBIT v0.2.4", new Vector2(_viewport.X - 255f, _viewport.Y - 30f), 0.35f, new Vector4(1f, 1f, 1f, 0.2f), _viewport);
         
         GL.DepthFunc(DepthFunction.Less);
         
@@ -433,7 +436,7 @@ public class RenderEngine : GameWindow
     protected override void OnUpdateFrame(FrameEventArgs args)
     {
         if (!IsFocused) return;
-
+        
         if (_moveEarthMode)
         {
             _earth.MoveEarth(KeyboardState, (float)args.Time, _camera.BoostSpeed, [_lights[LightTypes.Directional][0]]);
@@ -446,9 +449,9 @@ public class RenderEngine : GameWindow
         //    _earth.EarthObject.Transform.Scale.X;
 
         _lights[LightTypes.Directional][0].Transform.Position = Vector3.Transform(
-            -Vector3.One,
+            Vector3.One,
             _lights[LightTypes.Directional][0].Transform.Quaternion
-            ) * _earth.EarthObject.Transform.Scale[Earth.EarthAxis] / 2f - new Vector3(_earth.EarthObject.Transform.Scale[Earth.EarthAxis] / 2f);
+        ) * -(_earth.EarthObject.Transform.Scale[Earth.EarthAxis]) - new Vector3(_earth.EarthObject.Transform.Scale[Earth.EarthAxis]);
         
         if (KeyboardState.IsKeyDown(Keys.LeftShift)) _camera.SpeedBoost = true;
         if (KeyboardState.IsKeyReleased(Keys.LeftShift)) _camera.SpeedBoost = false;
@@ -494,7 +497,7 @@ public class RenderEngine : GameWindow
             Console.WriteLine("added");
         }
         
-        var eo = _station.Buttons.Last().Value.EngineObject; //_lights[LightTypes.Directional][0] : _station.Screens.First().Value.EngineObject
+        var eo = _lights[LightTypes.Directional][0]; //_lights[LightTypes.Directional][0] : _station.Screens.First().Value.EngineObject
         var sens = (float)args.Time * 0.5f;
         if (KeyboardState.IsKeyDown(Keys.Insert)) eo.Transform.Quaternion = Quaternion.FromEulerAngles(sens, 0f, 0f) * eo.Transform.Quaternion;
         if (KeyboardState.IsKeyDown(Keys.Delete)) eo.Transform.Quaternion = Quaternion.FromEulerAngles(-sens, 0f, 0f) * eo.Transform.Quaternion;
@@ -539,8 +542,8 @@ public class RenderEngine : GameWindow
             _lights[LightTypes.Point][1].Transform.Position.Z = (Random.Shared.NextSingle() * 2f - 1f) / 2f;
         }
 
-        if (_timerManager.CheckTimer("I", (float)args.Time, KeyboardState.IsKeyDown(Keys.I))) _postProcessShader.Grayscale += 1f;
-        if (_timerManager.CheckTimer("O", (float)args.Time, KeyboardState.IsKeyDown(Keys.O))) _postProcessShader.Grayscale -= 1f;
+        if (_timerManager.CheckTimer("I", (float)args.Time, KeyboardState.IsKeyDown(Keys.I))) _postProcessShader.Banding += 1;
+        if (_timerManager.CheckTimer("O", (float)args.Time, KeyboardState.IsKeyDown(Keys.O))) _postProcessShader.Banding -= 1;
         
         _camera.UpdateCameraFront();
         if (_mouse.IsDown) _mouse.PressLenght++;

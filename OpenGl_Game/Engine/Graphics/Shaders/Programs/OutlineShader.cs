@@ -37,7 +37,7 @@ public class OutlineShader : ShaderProgram
         _silhouetteProgram = new SilhouetteShader(geometryShader);
         
         _framebuffer = new Framebuffer();
-        _framebuffer.AttachTexture(new Texture(0, viewport, null), FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2d);
+        _framebuffer.AttachTexture(new Texture(0, viewport, null, wrapMode:TextureWrapMode.ClampToEdge), FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2d);
         
         _renderbuffer = new Renderbuffer(InternalFormat.DepthComponent, viewport);
         _framebuffer.AttachRenderbuffer((FramebufferAttachment)OpenTK.Graphics.OpenGL.FramebufferAttachment.DepthAttachment, _renderbuffer.Handle);
