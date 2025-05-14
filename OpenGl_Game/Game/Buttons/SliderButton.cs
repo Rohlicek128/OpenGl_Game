@@ -32,6 +32,6 @@ public class SliderButton : ButtonHandler
         SetButtonValue(value);
 
         EngineObject.Transform.Quaternion = Quaternion.FromAxisAngle(EngineObject.Transform.Rotation, value / 10f * MathF.PI * 2f) * EngineObject.Transform.Quaternion;
-        Console.WriteLine(ButtonValue);
+        //Console.WriteLine(ButtonValue);
     }
 }

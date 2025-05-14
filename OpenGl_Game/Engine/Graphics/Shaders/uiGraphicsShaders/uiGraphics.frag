@@ -2,6 +2,7 @@
 
 struct Material {
     vec3 color;
+    sampler2D diffuseMap;
 };
 
 in vec2 vTexCoord;
@@ -15,5 +16,5 @@ void main(){
     //vec2 pixel = fract(viewport * vTexCoord / 30.0) * 30.0;
     //pixelColor = vec4(vTexCoord - fract(vTexCoord * viewport / 3.0), 0.0, 1.0);
     
-    pixelColor = vec4(material.color, 1.0);
+    pixelColor = vec4(material.color * texture(material.diffuseMap, vTexCoord).rgb, 1.0);
 }

@@ -45,6 +45,13 @@ public class Station
             new Vector3(0.05f)
         )));
         
+        Screens.Add(EngineObject.ObjectIdCounter + 1, new NavigationScreen(new Vector2i(300, 300)));
+        Buttons.Add(EngineObject.ObjectIdCounter + 1, new ScreenPowerButton(Screens.Last().Value, new Transform(
+            new Vector3(-2.3049996f, -0.30045396f, -1.48764002f),
+            new Vector3(-MathF.PI/2f, MathHelper.DegreesToRadians(-55), -MathF.PI/2f),
+            new Vector3(0.05f)
+        )));
+        
         Screens.Add(EngineObject.ObjectIdCounter + 1, new BatteryScreen(new Vector2i(600, 600)));
         //Buttons.Add(EngineObject.ObjectIdCounter + 1, new ScreenPowerButton(Screens.Last().Value, new Transform(
         //    new Vector3(-2.3049996f, -0.30045396f, 0.68764002f),

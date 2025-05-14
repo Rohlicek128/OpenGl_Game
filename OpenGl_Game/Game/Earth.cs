@@ -49,6 +49,7 @@ public class Earth
             })
         );
         EarthObject.IsSelectable = false;
+        EarthObject.IsShadowVisible = false;
 
         CollisionSphere = new CollisionSphere(transform, transform.Scale.X);
     }
@@ -58,7 +59,7 @@ public class Earth
         engineObjects.Add(EarthObject);
         var speed = deltaTime * boost / 250f;
         
-        if (keyboard.IsKeyDown(Keys.W)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitZ * speed) * o.Transform.Quaternion;
+        if (keyboard.IsKeyDown(Keys.W) || true) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitZ * speed) * o.Transform.Quaternion;
         if (keyboard.IsKeyDown(Keys.S)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitZ * speed) * o.Transform.Quaternion;
         if (keyboard.IsKeyDown(Keys.A)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitX * speed) * o.Transform.Quaternion;
         if (keyboard.IsKeyDown(Keys.D)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitX * speed) * o.Transform.Quaternion;
@@ -70,8 +71,6 @@ public class Earth
         if (keyboard.IsKeyDown(Keys.LeftControl)) EarthObject.Transform.Position[EarthAxis] += deltaTime * 50f;
         
         CollisionSphere.Transform.Position = EarthObject.Transform.Position;
-        
-        Console.WriteLine(EarthObject.Transform.Quaternion.ToEulerAngles() * 180f / MathF.PI);
     }
 
     public MeshData GenerateFaces(int resolution)
@@ -171,6 +170,32 @@ public class Earth
         var lat = MathF.Asin(s.Y);
         var lon = MathF.Atan2(s.X, s.Z);
         return new Vector2(lon, lat) * (180f / MathF.PI);
+    }
+
+    public static Vector2 QuaternionToGpsCoords(Quaternion q)
+    {
+        var rv = Vector3.Transform(Vector3.UnitY, q.Inverted());
+
+        //var r = rv.Length;
+        var t = MathF.Asin(rv.Y);
+        var p = MathF.Atan2(rv.X, rv.Z);
+
+        return new Vector2(MathHelper.RadiansToDegrees(t), MathHelper.RadiansToDegrees(p));
+    }
+    
+    public static Quaternion LookRotation(Vector3 forward, Vector3 up)
+    {
+        forward = Vector3.Normalize(forward);
+        var right = Vector3.Normalize(Vector3.Cross(up, forward));
+        var newUp = Vector3.Cross(forward, right);
+        
+        var rotationMatrix = new Matrix3(
+            right.X, newUp.X, forward.X,
+            right.Y, newUp.Y, forward.Y,
+            right.Z, newUp.Z, forward.Z
+        );
+
+        return Quaternion.FromMatrix(rotationMatrix);
     }
     
 }

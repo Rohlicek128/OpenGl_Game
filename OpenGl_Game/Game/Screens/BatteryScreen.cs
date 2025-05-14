@@ -50,8 +50,8 @@ public class BatteryScreen : ScreenHandler
 
             var resNorm = ScreenResolution / EngineObject.Transform.Scale.Zx.Normalized();
             fonts["Pixel"].DrawText("0 W", new Vector2(150f, 100f), 1f, new Vector4(0f, 0f, 0f, 1f), resNorm);
-            fonts["Pixel"].DrawText("50 PW", new Vector2(70f, resNorm.Y / 2f - 25f), 1f, new Vector4(0f, 0f, 0f, 1f), resNorm);
-            fonts["Pixel"].DrawText("100 PW", new Vector2(55f, resNorm.Y - 150f), 1f, new Vector4(0f, 0f, 0f, 1f), resNorm);
+            fonts["Pixel"].DrawText("1 TWh", new Vector2(70f, resNorm.Y / 2f - 25f), 1f, new Vector4(0f, 0f, 0f, 1f), resNorm);
+            fonts["Pixel"].DrawText("50 TWh", new Vector2(55f, resNorm.Y - 150f), 1f, new Vector4(0f, 0f, 0f, 1f), resNorm);
         }
         else
         {

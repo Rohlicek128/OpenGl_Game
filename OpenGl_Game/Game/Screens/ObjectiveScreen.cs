@@ -9,6 +9,7 @@ using OpenGl_Game.Game.Buttons;
 using OpenGl_Game.Game.Targets;
 using OpenTK.Graphics.OpenGLES2;
 using OpenTK.Mathematics;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace OpenGl_Game.Game.Screens;
 
@@ -50,10 +51,10 @@ public class ObjectiveScreen : ScreenHandler
 
             if (((UiButton)UiGraphics.Elements["b1"]).PointCollision(collision.LookingAtUv * 2f - Vector2.One))
             {
-                ((UiButton)UiGraphics.Elements["b1"]).Activate(mouse.IsDown);
+                ((UiButton)UiGraphics.Elements["b1"]).Activate(mouse.IsDown && mouse.DownButton == MouseButton.Left);
                 ((UiButton)UiGraphics.Elements["b1"]).EngineObject.Material.Color.X = 1f;
                 
-                if (mouse.IsDown) CurrentCity = Cities.CitiesWithPop(1_000_000)[Random.Shared.Next(Cities.CitiesWithPop(1_000_000).Count)];
+                if (mouse.IsDown && mouse.DownButton == MouseButton.Left) CurrentCity = Cities.CitiesWithPop(10_000_000)[Random.Shared.Next(Cities.CitiesWithPop(10_000_000).Count)];
             }
             else
             {
@@ -62,7 +63,7 @@ public class ObjectiveScreen : ScreenHandler
             
             UiGraphics.GraphicsProgram.Draw(viewport.ToVector2());
             
-            fonts["Pixel"].DrawText("STATION 42", new Vector2(25f, ScreenResolution.Y - 60f), 0.75f, new Vector4(1f), ScreenResolution);
+            fonts["Brigends"].DrawText("STATION 42", new Vector2(25f, ScreenResolution.Y - 60f), 0.75f, new Vector4(1f), ScreenResolution);
             fonts["Pixel"].DrawText("ORBITAL LASER", new Vector2(25f, ScreenResolution.Y - 80f), 0.35f, new Vector4(1f), ScreenResolution);
             //fonts["Pixel"].DrawText("SPEED: " + boost + "x", new Vector2(25f, ScreenResolution.Y - 150f), 0.8f, new Vector4(1f), ScreenResolution);
             fonts["Pixel"].DrawText("TARGET: " + CurrentCity.Name + ", " + CurrentCity.Country.Name + " [" + CurrentCity.Coordinates + "], (" +  CurrentCity.Population + ")", new Vector2(25f, ScreenResolution.Y - 110f), 0.30f, new Vector4(1f), ScreenResolution);

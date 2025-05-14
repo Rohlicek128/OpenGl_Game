@@ -81,15 +81,22 @@ public class Camera
 
         Yaw += deltaX * Sensitivity;
         Pitch += deltaY * Sensitivity;
-        if (Pitch > 89f) Pitch = 89f;
-        else if (Pitch < -89f) Pitch = -89f;
+        
+        SetPitchYaw(Pitch, Yaw);
+    }
 
-        Front.X = (float)Math.Cos(MathHelper.DegreesToRadians(Pitch)) * (float)Math.Cos(MathHelper.DegreesToRadians(Yaw));
-        Front.Y = (float)Math.Sin(MathHelper.DegreesToRadians(Pitch));
-        Front.Z = (float)Math.Cos(MathHelper.DegreesToRadians(Pitch)) * (float)Math.Sin(MathHelper.DegreesToRadians(Yaw));
+    public void SetPitchYaw(float pitch, float yaw)
+    {
+        if (pitch > 89f) pitch = 89f;
+        else if (pitch < -89f) pitch = -89f;
+
+        Pitch = pitch;
+        Yaw = yaw;
+
+        Front.X = (float)Math.Cos(MathHelper.DegreesToRadians(pitch)) * (float)Math.Cos(MathHelper.DegreesToRadians(yaw));
+        Front.Y = (float)Math.Sin(MathHelper.DegreesToRadians(pitch));
+        Front.Z = (float)Math.Cos(MathHelper.DegreesToRadians(pitch)) * (float)Math.Sin(MathHelper.DegreesToRadians(yaw));
         Front = Vector3.Normalize(Front);
-
-        //Quaternion = Quaternion.FromEulerAngles(Yaw, Pitch, 0f) * Quaternion;
         
         Right = Vector3.Normalize(Vector3.Cross(Up, Front));
     }
