@@ -10,6 +10,7 @@ namespace OpenGl_Game.Game.Screens;
 
 public class BatteryScreen : ScreenHandler
 {
+    
     public BatteryScreen(Vector2i screenResolution) : base(screenResolution)
     {
         EngineObject = new EngineObject(

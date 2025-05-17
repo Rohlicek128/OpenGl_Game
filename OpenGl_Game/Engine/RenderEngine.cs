@@ -28,8 +28,8 @@ namespace OpenGl_Game.Engine;
 
 public class RenderEngine : GameWindow
 {
-    public const string DirectoryPath = @"C:\Files\Code\.NET\OpenGl_Game\OpenGl_Game\";
-    //public const string DirectoryPath = @"C:\Users\adam\RiderProjects\OpenGl_Game\OpenGl_Game\";
+    //public const string DirectoryPath = @"C:\Files\Code\.NET\OpenGl_Game\OpenGl_Game\";
+    public const string DirectoryPath = @"C:\Users\adam\RiderProjects\OpenGl_Game\OpenGl_Game\";
     public const uint PrimitiveIndex = uint.MaxValue;
     public const int MaxObjectIds = 255;
 
@@ -342,11 +342,11 @@ public class RenderEngine : GameWindow
             Resize(_viewport, _renderScale);
         }
         
-        //Scene
         //Shadows
         GL.Enable(EnableCap.DepthTest);
         _shadows.Draw(_lights[LightTypes.Directional][0], _mainCamera, _viewport, _geometryShader);
         
+        //Scene
         DrawScene(_testBool ? nav.AimCamera : _mainCamera, _viewport, _renderScale, _postProcessShader.Framebuffer);
         _postProcessShader.Draw(_isPostProcess ? -1 : _gBuffer.NormalsTexture.Handle); //_shadows.TextureHandle : _gBuffer.NormalsTexture.Handle
         _postProcessShader.DrawShaders();
@@ -401,7 +401,7 @@ public class RenderEngine : GameWindow
             _fpsTimer = 0;
         }
     }
-
+    
     public void DrawScene(Camera camera, Vector2i resolution, int scale, Framebuffer framebuffer)
     {
         if (_wireframeMode) GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Line);
@@ -556,6 +556,7 @@ public class RenderEngine : GameWindow
         }
 
         if (!_mouse.IsDown) _laserShader.Objects[0].IsVisible = KeyboardState.IsKeyDown(Keys.L);
+        if (KeyboardState.IsKeyDown(Keys.L)) Station.BatteryPercentage -= 0.001f;
         
         _lights[LightTypes.Point][1].IsLighting = _laserShader.Objects[0].IsVisible;
         if (_lights[LightTypes.Point][1].IsLighting)

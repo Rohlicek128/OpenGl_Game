@@ -10,7 +10,7 @@ namespace OpenGl_Game.Engine.Graphics.Shaders;
 
 public abstract class ShaderProgram
 {
-    public readonly int Handle;
+    public int Handle;
 
     public VertexBuffer VertexBuffer;
     public IndexBuffer IndexBuffer;
@@ -19,8 +19,8 @@ public abstract class ShaderProgram
     public List<EngineObject> Objects;
     public VertexAttribute[] Attributes;
     
-    public readonly ShaderAttribute[] ShaderAttributes;
-    public readonly ShaderUniform[] ShaderUniforms;
+    public ShaderAttribute[] ShaderAttributes;
+    public ShaderUniform[] ShaderUniforms;
 
     public ShaderProgram(Shader[] shaders, List<EngineObject> objects, VertexAttribute[] attributes, BufferUsage hint = BufferUsage.StaticDraw, bool addTangent = false)
     {
@@ -34,44 +34,25 @@ public abstract class ShaderProgram
         IndexBuffer = new IndexBuffer(meshData.Indices);
         ArrayBuffer = new VertexArrayBuffer(VertexBuffer);
         
-        Handle = GL.CreateProgram();
-
-        foreach (var shader in shaders) GL.AttachShader(Handle, shader.Handle);
-        GL.LinkProgram(Handle);
-
-        foreach (var shader in shaders)
-        {
-            GL.DetachShader(Handle, shader.Handle);
-            GL.DeleteShader(shader.Handle);
-        }
-
-        ShaderAttributes = CreateAttributeList();
-        ShaderUniforms = CreateUniformList();
+        Setup(shaders);
     }
     
-    public ShaderProgram(Shader[] shaders, ShaderProgram otherProgram)
+    public ShaderProgram(Shader[] shaders, ShaderProgram other)
     {
-        Objects = otherProgram.Objects;
-        VertexBuffer = otherProgram.VertexBuffer;
-        IndexBuffer = otherProgram.IndexBuffer;
-        ArrayBuffer = otherProgram.ArrayBuffer;
+        Objects = other.Objects;
+        VertexBuffer = other.VertexBuffer;
+        IndexBuffer = other.IndexBuffer;
+        ArrayBuffer = other.ArrayBuffer;
         
-        Handle = GL.CreateProgram();
-
-        foreach (var shader in shaders) GL.AttachShader(Handle, shader.Handle);
-        GL.LinkProgram(Handle);
-
-        foreach (var shader in shaders)
-        {
-            GL.DetachShader(Handle, shader.Handle);
-            GL.DeleteShader(shader.Handle);
-        }
-
-        ShaderAttributes = CreateAttributeList();
-        ShaderUniforms = CreateUniformList();
+        Setup(shaders);
     }
     
     public ShaderProgram(Shader[] shaders)
+    {
+        Setup(shaders);
+    }
+
+    public void Setup(Shader[] shaders)
     {
         Handle = GL.CreateProgram();
 
