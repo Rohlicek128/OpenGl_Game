@@ -1,23 +1,25 @@
-using OpenGl_Game.Engine.Graphics.Buffers;
-using OpenTK;
 using OpenTK.Graphics.OpenGL;
-using Buffer = OpenTK.Graphics.OpenGL.Buffer;
 
-namespace OpenGl_Game.Buffers;
+namespace OpenGl_Game.Engine.Graphics.Buffers;
 
 public class VertexBuffer
 {
-    public readonly int Handle;
+    public int Handle;
     
     public float[] Data;
     public readonly VertexAttribute[] Attributes;
     public readonly int Stride;
+    public BufferUsage Hint;
+
+    public int AddedLenght;
+    public int FilledLenght;
 
     public VertexBuffer(float[] data, VertexAttribute[] attributes, BufferUsage hint)
     {
         Data = data;
         Attributes = attributes;
         Stride = Attributes.Sum(attrib => attrib.Size);
+        Hint = hint;
         
         Handle = GL.GenBuffer();
         Bind();
@@ -25,12 +27,26 @@ public class VertexBuffer
         Unbind();
     }
 
-    public void Add(float[] data)
+    public void ChangeData(float[] data, int offset)
     {
         Bind();
-        GL.BufferSubData(BufferTarget.ArrayBuffer, Data.Length * sizeof(float), data.Length * sizeof(float), data);
+        GL.BufferSubData(BufferTarget.ArrayBuffer, offset * sizeof(float), data.Length * sizeof(float), data);
         Unbind();
-        Data = Data.Concat(data).ToArray();
+        //data.CopyTo(Data, offset);
+
+        FilledLenght += Math.Max(0, offset - Data.Length);
+    }
+
+    public void Enlarge(int lenght, float[]? data = null)
+    {
+        Delete();
+        Handle = GL.GenBuffer();
+        Bind();
+        GL.BufferData(BufferTarget.ArrayBuffer, (Data.Length + lenght) * sizeof(float), data != null ? Data.Concat(data).ToArray() : Data, Hint);
+        Unbind();
+
+        AddedLenght += lenght;
+        FilledLenght += data?.Length ?? 0;
     }
 
     public void Bind()

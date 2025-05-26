@@ -34,7 +34,7 @@ public class GeometryShader : ShaderProgram
         BindAll();
         SetUniforms();
         
-        DrawEachObject(ViewMat);
+        DrawEachObject(ViewMat, (int)param[0]);
         
         UnbindAll();
     }

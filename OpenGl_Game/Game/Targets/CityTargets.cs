@@ -5,19 +5,44 @@ namespace OpenGl_Game.Game.Targets;
 
 public class CityTargets
 {
+    private static CityTargets _instance;
+    public static CityTargets Instance
+    {
+        get
+        {
+            if (_instance == null) _instance = new CityTargets();
+            return _instance;
+        }
+    }
+    
     public List<City> Cities { get; set; }
     public List<Country> Countries { get; set; }
+
+    private Dictionary<int, List<City>> _cachedCitiesByPop;
 
     public CityTargets()
     {
         Cities = [];
         Countries = [];
+        _cachedCitiesByPop = [];
         LoadCities(RenderEngine.DirectoryPath + @"Assets\Dataset\worldcities.csv");
     }
 
     public List<City> CitiesWithPop(int minimumPop)
     {
-        return Cities.Where(c => c.Population >= minimumPop).ToList();
+        _cachedCitiesByPop.TryGetValue(minimumPop, out var result);
+        
+        result ??= Cities.Where(c => c.Population >= minimumPop).ToList();
+        
+        _cachedCitiesByPop.TryAdd(minimumPop, result);
+        return result;
+    }
+
+    public City FindCityOnCoords(Vector2 coords, float size, int minimumPop, bool popScaling = false)
+    {
+        var cities = CitiesWithPop(minimumPop);
+        
+        return cities.Find(c => (coords - c.Coordinates).Length <= size * (popScaling ? c.Population / (37732000f - minimumPop) * 2f + 1f : 1f));
     }
 
     private void LoadCities(string path)

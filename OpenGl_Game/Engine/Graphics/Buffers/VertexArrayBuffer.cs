@@ -1,3 +1,4 @@
+using OpenGl_Game.Engine.Graphics.Buffers;
 using OpenTK.Graphics.OpenGL;
 
 namespace OpenGl_Game.Buffers;

@@ -69,13 +69,13 @@ public abstract class ShaderProgram
         ShaderUniforms = CreateUniformList();
     }
 
-    public void AddEngineObject(EngineObject eo, VertexAttribute[] attributes)
+    public void AddData(MeshData data, int addVertexLenght, int addIndexLenght)
     {
-        eo.MeshData = AddTangents(eo.MeshData, ref attributes);
-        Objects.Add(eo);
+        if (VertexBuffer.AddedLenght <= 0) VertexBuffer.Enlarge(addVertexLenght, data.Vertices);
+        if (IndexBuffer.AddedLenght <= 0) IndexBuffer.Enlarge(addIndexLenght, data.Indices);
         
-        VertexBuffer.Add(eo.MeshData.Vertices);
-        IndexBuffer.Add(eo.MeshData.Indices);
+        VertexBuffer.ChangeData(data.Vertices, VertexBuffer.Data.Length + VertexBuffer.FilledLenght);
+        IndexBuffer.ChangeData(data.Indices, IndexBuffer.Data.Length + IndexBuffer.FilledLenght);
     }
     
     public MeshData AddTangents(MeshData meshData, ref VertexAttribute[] attributes)
@@ -135,12 +135,12 @@ public abstract class ShaderProgram
         
     }
 
-    protected void DrawEachObject(Matrix4 view)
+    protected void DrawEachObject(Matrix4 view, int visibleForId = 0)
     {
         var offset = 0;
         foreach (var engineObject in Objects)
         {
-            if (engineObject.IsVisible)
+            if (engineObject.IsVisible && engineObject.VisibleForId >= visibleForId)
             {
                 engineObject.DrawObject(this, offset, view);
             }

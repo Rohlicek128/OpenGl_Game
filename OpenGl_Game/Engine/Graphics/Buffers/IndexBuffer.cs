@@ -1,43 +1,72 @@
-using OpenGl_Game.Engine;
 using OpenTK.Graphics.OpenGL;
 
-namespace OpenGl_Game.Buffers;
+namespace OpenGl_Game.Engine.Graphics.Buffers;
 
 public class IndexBuffer
 {
-    public readonly int Handle;
+    public int Handle;
     
     public uint[] Data;
 
     public int TriangleCount;
+    public BufferUsage Hint;
+    
+    public int AddedLenght;
+    public int FilledLenght;
 
     public IndexBuffer(uint[] data, bool isStatic = true)
     {
         Data = data;
-        var hint = isStatic ? BufferUsage.StaticDraw : BufferUsage.StreamDraw;
+        Hint = isStatic ? BufferUsage.StaticDraw : BufferUsage.StreamDraw;
         
         Handle = GL.GenBuffer();
         Bind();
-        GL.BufferData(BufferTarget.ElementArrayBuffer, data.Length * sizeof(uint), data, hint);
+        GL.BufferData(BufferTarget.ElementArrayBuffer, data.Length * sizeof(uint), data, Hint);
         Unbind();
 
         TriangleCount = data.Length / 3;
     }
     
-    public void Add(uint[] data)
+    public void ChangeData(uint[] data, int offset, bool atEnd = false)
     {
-        var offset = Data.Max() + 1;
-        for (var i = 0; i < data.Length; i++)
+        if (atEnd)
         {
-            if (data[i] == RenderEngine.PrimitiveIndex) continue;
-            data[i] += offset;
-            if (data[i] == 0) Console.WriteLine("ZERO FOUND");
+            var max = data.Max() + 1;
+            for (int i = 0; i < data.Length; i++)
+            {
+                if (data[i] == RenderEngine.PrimitiveIndex) continue;
+                data[i] += max;
+            }
         }
         
         Bind();
-        GL.BufferSubData(BufferTarget.ElementArrayBuffer, Data.Length * sizeof(float), data.Length * sizeof(float), data);
+        GL.BufferSubData(BufferTarget.ElementArrayBuffer, offset * sizeof(float), data.Length * sizeof(float), data);
         Unbind();
-        Data = Data.Concat(data).ToArray();
+        //data.CopyTo(Data, offset);
+        
+        FilledLenght += Math.Max(0, offset - Data.Length);
+    }
+
+    public void Enlarge(int lenght, uint[]? data = null, bool atEnd = false)
+    {
+        if (atEnd && data != null)
+        {
+            var max = data.Max() + 1;
+            for (int i = 0; i < data.Length; i++)
+            {
+                if (data[i] == RenderEngine.PrimitiveIndex) continue;
+                data[i] += max;
+            }
+        }
+        
+        Delete();
+        Handle = GL.GenBuffer();
+        Bind();
+        GL.BufferData(BufferTarget.ElementArrayBuffer, (Data.Length + lenght) * sizeof(float), data != null ? Data.Concat(data).ToArray() : Data, Hint);
+        Unbind();
+        
+        AddedLenght += lenght;
+        FilledLenght += data?.Length ?? 0;
     }
 
     public void Bind()

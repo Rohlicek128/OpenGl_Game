@@ -41,7 +41,7 @@ public class Camera
         Quaternion = Quaternion.Identity;
 
         Up = Vector3.UnitY;
-        Front = new Vector3(0f, 0f, 1f);
+        Front = new Vector3(-1f, 0f, 0f);
         Right = Vector3.Normalize(Vector3.Cross(Up, Direction));
 
         Speed = speed;
@@ -82,6 +82,8 @@ public class Camera
         Yaw += deltaX * Sensitivity;
         Pitch += deltaY * Sensitivity;
         
+        if (Yaw > 315f) Yaw = 315f;
+        else if (Yaw < 45f) Yaw = 45f;
         SetPitchYaw(Pitch, Yaw);
     }
 

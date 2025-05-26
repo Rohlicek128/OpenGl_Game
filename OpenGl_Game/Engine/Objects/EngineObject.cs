@@ -26,8 +26,11 @@ public class EngineObject
     public bool IsSelectable;
     public bool IsShadowVisible;
     public bool IsInverted;
+    public int VisibleForId;
+    
+    public float PointSize;
 
-    public EngineObject(string name, Transform transform, MeshData meshData, TexturesPbr textures)
+    public EngineObject(string name, Transform transform, MeshData meshData, TexturesPbr textures, bool hasId = true, float pointSize = 1f)
     {
         Name = name;
         Transform = transform;
@@ -43,12 +46,18 @@ public class EngineObject
         IsSelectable = true;
         IsShadowVisible = true;
         IsInverted = false;
+        VisibleForId = 0;
 
-        ObjectIdCounter++;
-        Id = ObjectIdCounter;
+        PointSize = pointSize;
+
+        if (hasId)
+        {
+            ObjectIdCounter++;
+            Id = ObjectIdCounter;
+        }
     }
-    
-    public EngineObject(string name, Transform transform, MeshData meshData, Material material)
+
+    public EngineObject(string name, Transform transform, MeshData meshData, Material material, bool hasId = true, float pointSize = 1f)
     {
         Name = name;
         Transform = transform;
@@ -60,9 +69,15 @@ public class EngineObject
         IsSelectable = true;
         IsShadowVisible = true;
         IsInverted = false;
+        VisibleForId = 0;
         
-        ObjectIdCounter++;
-        Id = ObjectIdCounter;
+        PointSize = pointSize;
+
+        if (hasId)
+        {
+            ObjectIdCounter++;
+            Id = ObjectIdCounter;
+        }
     }
 
     public static EngineObject CreateEmpty()
@@ -78,7 +93,11 @@ public class EngineObject
     public Matrix4 GetModelMatrix()
     {
         //var model = Matrix4.CreateRotationX(Transform.Rotation.X) * Matrix4.CreateRotationY(Transform.Rotation.Y) * Matrix4.CreateRotationZ(Transform.Rotation.Z);
-        var model = Matrix4.CreateScale(Transform.Scale) * Matrix4.CreateFromQuaternion(Transform.Quaternion) * Matrix4.CreateTranslation(Transform.Position);
+        var model =
+            Matrix4.CreateScale(Transform.Scale) *
+            Matrix4.CreateTranslation(Transform.Origin) *
+            Matrix4.CreateFromQuaternion(Transform.Quaternion) *
+            Matrix4.CreateTranslation(Transform.Position);
         return model;
     }
 
@@ -114,6 +133,7 @@ public class EngineObject
 
     public void Draw(int offset)
     {
+        GL.PointSize(PointSize);
         GL.DrawElements(MeshData.PrimitiveType, MeshData.Indices.Length, DrawElementsType.UnsignedInt, offset);
     }
 

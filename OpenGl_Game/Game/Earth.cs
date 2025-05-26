@@ -13,7 +13,8 @@ public class Earth
     public EngineObject EarthObject;
     public CollisionSphere CollisionSphere;
     public const int EarthAxis = 1; 
-    public const int EarthOrientation = -1; 
+    public const int EarthOrientation = -1;
+    public const float Circumference = 40_075f;
     
     public Texture ColorMap;
     public Texture RoughnessMap;
@@ -50,27 +51,40 @@ public class Earth
         );
         EarthObject.IsSelectable = false;
         EarthObject.IsShadowVisible = false;
+        EarthObject.VisibleForId = 1;
 
         CollisionSphere = new CollisionSphere(transform, transform.Scale.X);
     }
 
-    public void MoveEarth(KeyboardState keyboard, float deltaTime, float boost, List<EngineObject> engineObjects)
+    public void MoveEarth(KeyboardState keyboard, float deltaTime, float boost, List<EngineObject> engineObjects, bool debug = false)
     {
         engineObjects.Add(EarthObject);
-        var speed = deltaTime * boost / 250f;
+        var speed = deltaTime * boost;
         
         if (keyboard.IsKeyDown(Keys.W) || true) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitZ * speed) * o.Transform.Quaternion;
-        if (keyboard.IsKeyDown(Keys.S)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitZ * speed) * o.Transform.Quaternion;
-        if (keyboard.IsKeyDown(Keys.A)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitX * speed) * o.Transform.Quaternion;
-        if (keyboard.IsKeyDown(Keys.D)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitX * speed) * o.Transform.Quaternion;
+
+        if (debug)
+        {
+            if (keyboard.IsKeyDown(Keys.S)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitZ * speed) * o.Transform.Quaternion;
+            if (keyboard.IsKeyDown(Keys.A)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitX * speed) * o.Transform.Quaternion;
+            if (keyboard.IsKeyDown(Keys.D)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitX * speed) * o.Transform.Quaternion;
         
-        if (keyboard.IsKeyDown(Keys.Q)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitY * deltaTime * 0.5f) * o.Transform.Quaternion;
-        if (keyboard.IsKeyDown(Keys.E)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitY * deltaTime * 0.5f) * o.Transform.Quaternion;
+            if (keyboard.IsKeyDown(Keys.Q)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitY * deltaTime * 0.5f) * o.Transform.Quaternion;
+            if (keyboard.IsKeyDown(Keys.E)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitY * deltaTime * 0.5f) * o.Transform.Quaternion;
+        }
         
         if (keyboard.IsKeyDown(Keys.Space)) EarthObject.Transform.Position[EarthAxis] -= deltaTime * 50f;
         if (keyboard.IsKeyDown(Keys.LeftControl)) EarthObject.Transform.Position[EarthAxis] += deltaTime * 50f;
         
         CollisionSphere.Transform.Position = EarthObject.Transform.Position;
+    }
+
+    public void RotateEarth(float deltaTime, float amount, List<EngineObject> engineObjects)
+    {
+        if (amount == 0f) return;
+        engineObjects.Add(EarthObject);
+        
+        foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitY * deltaTime * amount) * o.Transform.Quaternion;
     }
 
     public MeshData GenerateFaces(int resolution)
@@ -153,6 +167,22 @@ public class Earth
         }
         
         return meshData;
+    }
+
+    public void SetEarthToCoords(Vector2 coords)
+    {
+        coords *= MathF.PI / 180f;
+        EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(0f, coords.Y, coords.X).Inverted();
+    }
+
+    public float GetHeightOnEarth(Vector2 coords)
+    {
+        coords.X += 180f;
+        coords.X /= 360f;
+        coords.Y += 90f;
+        coords.Y /= 180f;
+        
+        return HeightMap.SampleTexture(new Vector2i((int)(coords.Y * HeightMap.Image.Width), (int)(coords.X * HeightMap.Image.Height))).X / 255f;
     }
 
     public static Vector3 GpsToSphereCoords(Vector2 gps)

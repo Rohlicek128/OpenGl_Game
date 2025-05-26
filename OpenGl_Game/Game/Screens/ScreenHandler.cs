@@ -14,11 +14,18 @@ namespace OpenGl_Game.Game.Screens;
 
 public abstract class ScreenHandler
 {
-    private UiGraphics _uiGraphics;
-    public UiGraphics UiGraphics
+    private List<ScreenPage> _pages;
+    public List<ScreenPage> Pages
     {
-        get => _uiGraphics;
-        set => _uiGraphics = value ?? throw new ArgumentNullException(nameof(value));
+        get => _pages;
+        set => _pages = value ?? throw new ArgumentNullException(nameof(value));
+    }
+
+    private int _pageIndex;
+    public int PageIndex
+    {
+        get => _pageIndex;
+        set => _pageIndex = value;
     }
 
     private EngineObject _engineObject;
@@ -53,14 +60,35 @@ public abstract class ScreenHandler
     {
         _screenResolution = screenResolution;
         _isTurnOn = false;
-
-        _uiGraphics = new UiGraphics();
+        _pages = [];
+        _pageIndex = 0;
+        
         _framebuffer = new Framebuffer();
         _framebuffer.AttachTexture(new Texture(0, _screenResolution, null, minFilter:(TextureMinFilter)OpenTK.Graphics.OpenGL.Compatibility.TextureMinFilter.Nearest, magFilter:(TextureMagFilter)OpenTK.Graphics.OpenGL.Compatibility.TextureMagFilter.Nearest), FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2d);
     }
 
-    public virtual void RenderScreen(CollisionShader collision, Mouse mouse, Vector2i viewport, Dictionary<string, FontMap> fonts)
+    public void RenderScreen(CollisionShader collision, Mouse mouse, Vector2i viewport, Dictionary<string, FontMap> fonts, float deltaTime)
     {
+        GL.Viewport(0, 0, ScreenResolution.X, ScreenResolution.Y);
+        Framebuffer.Bind();
         
+        if (IsTurnOn)
+        {
+            if (_pageIndex < 0 || _pageIndex >= _pages.Count)
+            {
+                GL.ClearColor(0f, 0f, 0f, 1f);
+                GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+                fonts["Pixel"].DrawText("PAGE NOT FOUND", new Vector2(100f, _screenResolution.Y / 2f - 30f), 0.25f, new Vector4(1f), _screenResolution);
+            }
+            else _pages[_pageIndex].RenderScreen(collision, mouse, viewport, fonts, deltaTime);
+        }
+        else
+        {
+            GL.ClearColor(0f, 0f, 0f, 1f);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        }
+        
+        Framebuffer.Unbind();
+        GL.Viewport(0, 0, viewport.X, viewport.Y);
     } 
 }

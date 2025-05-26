@@ -45,8 +45,8 @@ public class UiButton : ButtonHandler, UiElement
         if (param[0] == null) return;
         SetButtonValue((bool)param[0]);
 
-        if (ButtonValue >= 1f) EngineObject.Material.Color.Y = 1f;
-        else if (ButtonValue <= 0f) EngineObject.Material.Color.Y = 0f;
+        //if (ButtonValue >= 1f) EngineObject.Material.Color.Y = 1f;
+        //else if (ButtonValue <= 0f) EngineObject.Material.Color.Y = 0f;
     }
 
     public EngineObject GetEngineObject()

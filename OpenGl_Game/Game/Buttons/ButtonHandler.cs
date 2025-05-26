@@ -1,9 +1,20 @@
+using OpenGl_Game.Engine.Graphics.UI.Text;
 using OpenGl_Game.Engine.Objects;
 
 namespace OpenGl_Game.Game.Buttons;
 
 public abstract class ButtonHandler
 {
+    private static TimerManager _timerManager;
+    public static TimerManager TimerManager
+    {
+        get
+        {
+            if (_timerManager == null) _timerManager = new TimerManager(150);
+            return _timerManager;
+        }
+    }
+    
     private EngineObject _engineObject;
     public EngineObject EngineObject
     {

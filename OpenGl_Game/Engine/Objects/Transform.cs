@@ -8,6 +8,7 @@ public struct Transform
     public Vector3 Rotation;
     public Quaternion Quaternion;
     public Vector3 Scale;
+    public Vector3 Origin;
 
     public Transform(Vector3 position)
     {
@@ -15,6 +16,7 @@ public struct Transform
         Rotation = new Vector3(0f);
         Scale = new Vector3(1f);
         Quaternion = Quaternion.Identity;
+        Origin = Vector3.Zero;
     }
     
     public Transform(Vector3 position, Vector3 rotation)
@@ -23,6 +25,7 @@ public struct Transform
         Rotation = rotation;
         Scale = new Vector3(1f);;
         Quaternion = Quaternion.FromEulerAngles(rotation);
+        Origin = Vector3.Zero;
     }
 
     public Transform(Vector3 position, Vector3 rotation, Vector3 scale)
@@ -31,6 +34,16 @@ public struct Transform
         Rotation = rotation;
         Scale = scale;
         Quaternion = Quaternion.FromEulerAngles(rotation);
+        Origin = Vector3.Zero;
+    }
+    
+    public Transform(Vector3 position, Vector3 rotation, Vector3 scale, Vector3 origin)
+    {
+        Position = position;
+        Rotation = rotation;
+        Scale = scale;
+        Quaternion = Quaternion.FromEulerAngles(rotation);
+        Origin = origin;
     }
 
     public void SetRotationByPosition(Vector3 origin)

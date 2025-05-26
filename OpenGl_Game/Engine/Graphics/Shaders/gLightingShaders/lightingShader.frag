@@ -72,10 +72,11 @@ vec3 CalcDirectionLight(DirLight light, vec3 normal, vec3 viewDir, vec3 material
     //Shadows
     float shadow = CalcShadow(fragPosLight, normal);
     
-    //Emisive
-    vec3 emi = materialColor * emisive;
+    //Shadows + Emisive
+    diffuse *= 1.0 - shadow * (1.0 - emisive);
+    specular *= 1.0 - shadow;
 
-    return (ambient + (diffuse + specular) * (1.0 - shadow)) * (1 - emisive) + emi;
+    return ambient + diffuse + specular;
 }
 
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 viewDir, vec3 fragPos, vec3 materialColor, float specMap, float emisive){

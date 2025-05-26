@@ -7,20 +7,16 @@ namespace OpenGl_Game.Game.Buttons;
 
 public class LaserButton : ButtonHandler
 {
-    private LaserShader _laserShader;
-    public LaserShader LaserShader
-    {
-        get => _laserShader;
-        set => _laserShader = value ?? throw new ArgumentNullException(nameof(value));
-    }
-
+    public LaserShader LaserShader { get; set; }
+    public static bool IsShooting { get; set; }
+    
     public LaserButton()
     {
         AddEvent(MyEvent);
         EngineObject = new EngineObject(
             "Laser Button",
-            new Transform(new Vector3(-1.8652177f, -0.57346725f, 0f), new Vector3(0f, 0f, MathHelper.DegreesToRadians(-10f)),
-                new Vector3(0.175f)),
+            new Transform(new Vector3(-0.9776639f, 0.6197455f, -0.34537253f), new Vector3(0f, 0f, 0f),
+                new Vector3(0.075f)),
             MeshConstructor.CreateCube(),
             new Material(new Vector3(1f, 0f, 0f))
         );
@@ -34,9 +30,10 @@ public class LaserButton : ButtonHandler
 
     private protected override void MyEvent(object sender, params object?[] param)
     {
-        if (param[0] == null) return;
+        if (param[0] == null || param[1] == null || Station.BatteryPercentage <= 0f) return;
         SetButtonValue((bool)param[0]);
 
-        _laserShader.Objects[0].IsVisible = (int)ButtonValue == 1;
+        LaserShader.Objects[0].IsVisible = (int)ButtonValue == 1;
+        IsShooting = LaserShader.Objects[0].IsVisible;
     }
 }

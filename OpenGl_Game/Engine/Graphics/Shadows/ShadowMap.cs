@@ -113,9 +113,9 @@ public class ShadowMap : ShaderProgram
 
     public Matrix4 GetLightSpaceMatrix(Light dirLight, Camera camera)
     {
-        //var aspect =  (float)ShadowSize.X / ShadowSize.Y;
+        //var aspect = (float)ShadowSize.X / ShadowSize.Y;
         //var frustumSize = 1000f;
-        //var lightProjection = Matrix4.CreateOrthographic(frustumSize / 2f,  frustumSize / 2f, 0.01f, 250f);
+        //var lightProjection = Matrix4.CreateOrthographic(frustumSize / 2f, frustumSize / 2f, 0.01f, 250f);
         
         var lightProjection = Matrix4.CreateOrthographic(MaxDistance, MaxDistance, PlaneDims.X, PlaneDims.Y);
         var lightView = Matrix4.LookAt(

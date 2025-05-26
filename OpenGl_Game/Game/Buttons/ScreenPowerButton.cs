@@ -14,11 +14,11 @@ public class ScreenPowerButton : ButtonHandler
         set => _screen = value ?? throw new ArgumentNullException(nameof(value));
     }
 
-    public ScreenPowerButton(ScreenHandler screen, Transform transform)
+    public ScreenPowerButton(ScreenHandler screen, Transform transform, string name = "Power")
     {
         AddEvent(MyEvent);
         EngineObject = new EngineObject(
-            "OS Power Button",
+            name,
             transform,
             MeshConstructor.CreateCube(),
             new Material(new Vector3(0f, 0f, 0f))
