@@ -26,7 +26,7 @@ uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedoSpec;
 
-#define NR_POINT_LIGHTS 2
+#define NR_POINT_LIGHTS 4
 
 uniform DirLight dirLight;
 uniform PointLight pointLight[NR_POINT_LIGHTS];
@@ -63,7 +63,7 @@ vec3 CalcDirectionLight(DirLight light, vec3 normal, vec3 viewDir, vec3 material
 
     //Diffuse
     vec3 lightDir = normalize(-light.direction);
-    vec3 diffuse = (max(dot(normal, lightDir), 0.0) * materialColor) * light.diffuse;
+    vec3 diffuse = (max(dot(normal, lightDir), 0.0) * materialColor) * light.diffuse * (1.0 - emisive) + materialColor * light.diffuse * emisive;
 
     //Specular
     float spec = pow(max(dot(normal, normalize(lightDir + viewDir)), 0.0), 32.0);
@@ -101,7 +101,7 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 viewDir, vec3 fragPos, v
     //Emisive
     vec3 emi = materialColor * emisive;
 
-    return (ambient + diffuse + specular) * (1 - emisive) + emi;
+    return (ambient + (diffuse + specular) * (1 - emisive)) + emi;
 }
 
 void main(){

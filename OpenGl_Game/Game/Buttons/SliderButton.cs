@@ -10,7 +10,7 @@ public class SliderButton : ButtonHandler
         AddEvent(MyEvent);
         EngineObject = new EngineObject(
             "Slider",
-            new Transform(new Vector3(-1.5116646f, 1.0680302f, 0.20367911f), new Vector3(-MathF.PI/2f, MathHelper.DegreesToRadians(-40f), -MathF.PI),
+            new Transform(new Vector3(-1.2517788f, 0.76516974f, 0.3373942f), new Vector3(-MathF.PI/2f, MathHelper.DegreesToRadians(-40f), -MathF.PI),
                 new Vector3(0.04f, 0.02f, 0.02f), new Vector3(-0.04f, 0f, 0f)),
             MeshConstructor.LoadObjFromFileAssimp(@"Station\laserCylinder.obj"),
             new Material(new Vector3(0.2f, 0.1f, 1f))

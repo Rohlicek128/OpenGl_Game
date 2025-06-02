@@ -72,7 +72,7 @@ public class Camera
         //return Matrix4.LookAt(Transform.Position, Transform.Position + Quaternion.ToEulerAngles(), Up);
     }
 
-    public void UpdateCameraFront()
+    public void UpdateCameraFront(bool lockYaw = false)
     {
         var deltaX = Mouse.X - _lastMouse.X;
         var deltaY = Mouse.Y - _lastMouse.Y;
@@ -82,8 +82,8 @@ public class Camera
         Yaw += deltaX * Sensitivity;
         Pitch += deltaY * Sensitivity;
         
-        if (Yaw > 315f) Yaw = 315f;
-        else if (Yaw < 45f) Yaw = 45f;
+        if (Yaw > 315f && lockYaw) Yaw = 315f;
+        else if (Yaw < 45f && lockYaw) Yaw = 45f;
         SetPitchYaw(Pitch, Yaw);
     }
 

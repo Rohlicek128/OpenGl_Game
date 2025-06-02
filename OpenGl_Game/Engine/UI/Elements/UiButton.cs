@@ -8,7 +8,7 @@ public class UiButton : ButtonHandler, UiElement
 {
     public UiRectangle UiShape { get; set; }
     
-    public UiButton(Vector3 position, Vector3 color, float width, float height, EventHandler e = null)
+    public UiButton(Vector3 position, Vector4 color, float width, float height, EventHandler e = null)
     {
         if (e == null) AddEvent(MyEvent);
         else AddEvent(e);

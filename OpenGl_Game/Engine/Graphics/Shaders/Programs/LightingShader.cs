@@ -54,7 +54,7 @@ public class LightingShader : ShaderProgram
             if (lightList.Key == LightTypes.Directional) lightList.Value[0].SetUniformsForDirectional(this);
             else if (lightList.Key == LightTypes.Point)
             {
-                for (int i = 0; i < lightList.Value.Count; i++) lightList.Value[i].SetUniformsForPoint(this, i);
+                for (int i = 0; i < lightList.Value.Count; i++) lightList.Value[i].SetUniformsForPoint(this, i, (int)param[3]);
             }
         }
         

@@ -15,7 +15,7 @@ public class FontMap
 
     private FontShader _fontProgram; 
     
-    public unsafe FontMap(string fontPath, FontShader program)
+    public unsafe FontMap(string fontPath, FontShader program, uint pixelHeight = 70)
     {
         Characters = new Dictionary<char, FontCharacter>();
         _fontProgram = program;
@@ -32,7 +32,7 @@ public class FontMap
         }
         else
         {
-            FT.FT_Set_Pixel_Sizes(face, 0, 70);
+            FT.FT_Set_Pixel_Sizes(face, 0, pixelHeight);
         
             GL.PixelStorei(PixelStoreParameter.UnpackAlignment, 1);
         

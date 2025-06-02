@@ -33,7 +33,7 @@ public class Canvas : ShaderProgram
         var offset = 0;
         foreach (var engineObject in Objects.Where(o => o.IsVisible))
         {
-            SetUniform("color", new Vector4(engineObject.Material.Color, 0.75f));
+            SetUniform("color", engineObject.Material.Color);
             SetUniform("radius", new Vector3(0.5f, 0.5f, 1f));
             SetUniform("model", Matrix4.CreateScale(engineObject.Transform.Scale) * Matrix4.CreateTranslation(engineObject.Transform.Position));
             

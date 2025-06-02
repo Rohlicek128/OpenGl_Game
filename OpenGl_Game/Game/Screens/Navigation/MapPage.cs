@@ -6,7 +6,8 @@ using OpenGl_Game.Engine.Graphics.Textures;
 using OpenGl_Game.Engine.Graphics.UI.Text;
 using OpenGl_Game.Engine.Objects;
 using OpenGl_Game.Engine.UI.Elements;
-using OpenGl_Game.Game.Targets;
+using OpenGl_Game.Game.Objectives.Targets;
+using OpenGl_Game.Game.Objectives.Targets;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -29,7 +30,7 @@ public class MapPage : ScreenPage
     public float Zoom;
 
     private int _earthHeldLenght;
-    private Vector2 _earthAngle;
+    public Vector2 EarthAngle;
     private Vector2 _currentPos;
     private Vector2 _lastPos;
 
@@ -41,6 +42,8 @@ public class MapPage : ScreenPage
         _cities = CityTargets.Instance;
         LoadMap(RenderEngine.DirectoryPath + @"Assets\Earth\borders.csv");
 
+        Reset();
+        
         MapStation = CreateStation();
         MapTarget = CreateTarget();
         MapHitmarks = CreateHitmark();
@@ -48,65 +51,77 @@ public class MapPage : ScreenPage
         _mapCountries = CreateEarthMap(_countryShapes);
         MapShader = new MapShader([_mapCountries, _mapCities, MapStation, MapTarget]);
         
-        Zoom = 0.5f;
-        _earthHeldLenght = 0;
-        _earthAngle = _cities.CitiesWithPop(1_000_000)[Random.Shared.Next(0, _cities.CitiesWithPop(1_000_000).Count - 1)].Coordinates.Yx
-            * MathF.PI / 180f * new Vector2(-1f, 1f);
-        _currentPos = _earthAngle;
-        _lastPos = _earthAngle;
+        UiGraphics.Elements.Add("bUp", new UiButton(new Vector3(0.8f, -0.65f, 0f), new Vector4(1f, 0f, 1f, 1f), 0.1f, 0.1f));
+        UiGraphics.Elements.Add("bDown", new UiButton(new Vector3(0.8f, -0.8f, 0f), new Vector4(1f, 0f, 1f, 1f), 0.1f, 0.1f));
         
-        UiGraphics.Elements.Add("bUp", new UiButton(new Vector3(0.8f, -0.65f, 0f), Vector3.UnitX, 0.1f, 0.1f));
-        UiGraphics.Elements.Add("bDown", new UiButton(new Vector3(0.8f, -0.8f, 0f), Vector3.UnitX, 0.1f, 0.1f));
-        
-        UiGraphics.Elements.Add("reticuleX", new UiRectangle(new Vector3(0f), new Vector3(1f), 0.1f, 0.0075f));
-        UiGraphics.Elements.Add("reticuleY", new UiRectangle(new Vector3(0f), new Vector3(1f), 0.0075f, 0.1f));
+        UiGraphics.Elements.Add("reticuleX", new UiRectangle(new Vector3(0f), new Vector4(1f), 0.1f, 0.0075f));
+        UiGraphics.Elements.Add("reticuleY", new UiRectangle(new Vector3(0f), new Vector4(1f), 0.0075f, 0.1f));
         
         UiGraphics.Elements.Add("cursor", new UiRectangle(new Vector3(0f), new Texture("pointer.png", 0), 0.075f, 0.075f));
         UiGraphics.Elements.Add("hand", new UiRectangle(new Vector3(0f), new Texture("handCursor.png", 0), 0.075f, 0.075f));
         UiGraphics.InitProgram();
     }
 
-    public override void RenderScreen(CollisionShader collision, Mouse mouse, Vector2i viewport, Dictionary<string, FontMap> fonts, float deltaTime)
+    public void SetCoords(Vector2 coords)
     {
-        _mapCities.Material.Color = new Vector3(38f / 255f, 81 / 255f, 181f / 255f);
-        
-        var bg = 0.04f;
-        GL.ClearColor(bg, bg, bg, 1f);
-        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-        
-        var button = (UiButton)UiGraphics.Elements["bUp"];
-        if (button.PointCollision(collision.LookingAtUv * 2f - Vector2.One))
-        {
-            button.Activate(mouse.IsDown && mouse.DownButton == MouseButton.Left);
-            button.EngineObject.Material.Color.X = 1f;
-                
-            if (mouse.IsDown && mouse.DownButton == MouseButton.Left) Zoom = MathF.Max(0.05f, Zoom / 1.005f);
-        }
-        else button.EngineObject.Material.Color.X = 0.25f;
-            
-        button = (UiButton)UiGraphics.Elements["bDown"];
-        if (button.PointCollision(collision.LookingAtUv * 2f - Vector2.One))
-        {
-            button.Activate(mouse.IsDown && mouse.DownButton == MouseButton.Left);
-            button.EngineObject.Material.Color.X = 1f;
-                
-            if (mouse.IsDown && mouse.DownButton == MouseButton.Left) Zoom = MathF.Min(3f, Zoom * 1.005f);
-        }
-        else button.EngineObject.Material.Color.X = 0.25f;
-        
-        
-        if (mouse.IsDown && mouse.DownButton == MouseButton.Left && collision.LookingAtObject.Id == ScreenObjectId)
-        {
-            _earthHeldLenght++;
-            const float dpi = 1.75f;
-            var xi = Zoom * dpi;
-            var yi = Zoom * dpi;
-            _earthAngle.X = -((_currentPos.X - collision.LookingAtUv.X) * xi - _lastPos.X);
-            _earthAngle.Y = MathF.Max(-MathF.PI / 2f * 0.9888f, MathF.Min(MathF.PI / 2f * 0.9888f, (_currentPos.Y - collision.LookingAtUv.Y) * yi + _lastPos.Y));
-            //_earthMap.Transform.Quaternion = Quaternion.FromEulerAngles(new Vector3(-_earthAngle.Y, _earthAngle.X, 0f));
+        EarthAngle = coords * MathF.PI / 180f;
+        _currentPos = coords * MathF.PI / 180f;
+        _lastPos = coords * MathF.PI / 180f;
+    }
 
-            if (_earthAngle.X <= -MathF.PI) _earthAngle.X += 2f * MathF.PI;
-            if (_earthAngle.X >= MathF.PI) _earthAngle.X -= 2f * MathF.PI;
+    public override void RenderPage(CollisionShader collision, Mouse mouse, Vector2i viewport, Dictionary<string, FontMap> fonts, float deltaTime)
+    {
+        _mapCities.Material.Color = new Vector4(38f / 255f, 81 / 255f, 181f / 255f, 1f);
+        
+        GL.ClearColor(ScreenHandler.LcdBlack.X, ScreenHandler.LcdBlack.Y, ScreenHandler.LcdBlack.Z, 1f);
+        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+        if (collision.LookingAtObject.Id == ScreenObjectId)
+        {
+            var button = (UiButton)UiGraphics.Elements["bUp"];
+            if (button.PointCollision(collision.LookingAtUv * 2f - Vector2.One))
+            {
+                button.Activate(mouse.IsDown && mouse.DownButton == MouseButton.Left);
+                button.EngineObject.Material.Color.X = 1f;
+                button.EngineObject.Material.Color.Z = 1f;
+                
+                if (mouse.IsDown && mouse.DownButton == MouseButton.Left) Zoom = MathF.Max(0.05f, Zoom / (deltaTime * 1.4f + 1f));
+            }
+            else
+            {
+                button.EngineObject.Material.Color.X = 0.15f;
+                button.EngineObject.Material.Color.Z = 0.15f;
+            }
+            
+            button = (UiButton)UiGraphics.Elements["bDown"];
+            if (button.PointCollision(collision.LookingAtUv * 2f - Vector2.One))
+            {
+                button.Activate(mouse.IsDown && mouse.DownButton == MouseButton.Left);
+                button.EngineObject.Material.Color.X = 1f;
+                button.EngineObject.Material.Color.Z = 1f;
+                
+                if (mouse.IsDown && mouse.DownButton == MouseButton.Left) Zoom = MathF.Min(3f, Zoom * (deltaTime * 1.4f + 1f));
+            }
+            else
+            {
+                button.EngineObject.Material.Color.X = 0.15f;
+                button.EngineObject.Material.Color.Z = 0.15f;
+            }
+        
+        
+            if (mouse.IsDown && mouse.DownButton == MouseButton.Left && collision.LookingAtObject.Id == ScreenObjectId)
+            {
+                _earthHeldLenght++;
+                const float dpi = 1.75f;
+                var xi = Zoom * dpi;
+                var yi = Zoom * dpi;
+                EarthAngle.X = -((_currentPos.X - collision.LookingAtUv.X) * xi - _lastPos.X);
+                EarthAngle.Y = MathF.Max(-MathF.PI / 2f * 0.9888f, MathF.Min(MathF.PI / 2f * 0.9888f, (_currentPos.Y - collision.LookingAtUv.Y) * yi + _lastPos.Y));
+                //_earthMap.Transform.Quaternion = Quaternion.FromEulerAngles(new Vector3(-_earthAngle.Y, _earthAngle.X, 0f));
+
+                if (EarthAngle.X <= -MathF.PI) EarthAngle.X += 2f * MathF.PI;
+                if (EarthAngle.X >= MathF.PI) EarthAngle.X -= 2f * MathF.PI;
+            }
         }
 
         _mapCountries.PointSize = MathF.Max(1f, 1f / Zoom);
@@ -116,7 +131,7 @@ public class MapPage : ScreenPage
         ((UiRectangle)UiGraphics.Elements["reticuleX"]).EngineObject.Transform.Scale.X = MathF.Min(0.5f, MathF.Max(0.02f, 0.05f / Zoom));
         ((UiRectangle)UiGraphics.Elements["reticuleY"]).EngineObject.Transform.Scale.Y = MathF.Min(0.5f, MathF.Max(0.02f, 0.05f / Zoom));
 
-        var cameraPos = Earth.GpsToSphereCoords(new Vector2(_earthAngle.X * 180f / MathF.PI, _earthAngle.Y * 180f / MathF.PI)) * 10f;
+        var cameraPos = Earth.GpsToSphereCoords(new Vector2(EarthAngle.X * 180f / MathF.PI, EarthAngle.Y * 180f / MathF.PI)) * 10f;
         _mapView = Matrix4.LookAt(
             cameraPos,
             Vector3.Zero, 
@@ -150,19 +165,23 @@ public class MapPage : ScreenPage
         if (_earthHeldLenght > 0 && (!mouse.IsDown || collision.LookingAtObject.Id != ScreenObjectId))
         {
             _earthHeldLenght = 0;
-            _lastPos = _earthAngle;
+            _lastPos = EarthAngle;
         }
         
         UiGraphics.GraphicsProgram.Draw(viewport.ToVector2());
         
+        fonts["Pixel"].DrawText("+", (UiGraphics.Elements["bUp"].GetEngineObject().Transform.Position.Xy / 2f + new Vector2(0.5f)) * ScreenResolution - new Vector2(9f, 15f), 0.7f, new Vector4(0.55f), ScreenResolution);
+        fonts["Pixel"].DrawText("-", (UiGraphics.Elements["bDown"].GetEngineObject().Transform.Position.Xy / 2f + new Vector2(0.5f)) * ScreenResolution - new Vector2(9f, 15f), 0.7f, new Vector4(0.55f), ScreenResolution);
+        
         fonts["Pixel"].DrawText("MAP", new Vector2(25f, ScreenResolution.Y - 45f), 0.4f, new Vector4(1f), ScreenResolution);
         fonts["Pixel"].DrawText(MathF.Round(Zoom * 100f) / 100f + "x", new Vector2(25f, ScreenResolution.Y - 75f), 0.4f, new Vector4(1f), ScreenResolution);
-        fonts["Pixel"].DrawText("ANG  X: " + MathF.Floor(MathHelper.RadiansToDegrees(-_earthAngle.X) * 1000f) / 1000f + " Y: " + MathF.Floor(MathHelper.RadiansToDegrees(_earthAngle.Y) * 1000f) / 1000f, new Vector2(25f, ScreenResolution.Y - 105f), 0.4f, new Vector4(1f), ScreenResolution);
-        //fonts["Pixel"].DrawText("CUR  X: " + MathF.Floor(MathHelper.RadiansToDegrees(_currentPos.X) * 1000f) / 1000f + " Y: " + MathF.Floor(MathHelper.RadiansToDegrees(_currentPos.Y) * 1000f) / 1000f, new Vector2(25f, ScreenResolution.Y - 135f), 0.4f, new Vector4(1f), ScreenResolution);
-        //fonts["Pixel"].DrawText("LAS  X: " + MathF.Floor(MathHelper.RadiansToDegrees(_lastPos.X) * 1000f) / 1000f + " Y: " + MathF.Floor(MathHelper.RadiansToDegrees(_lastPos.Y) * 1000f) / 1000f, new Vector2(25f, ScreenResolution.Y - 165f), 0.4f, new Vector4(1f), ScreenResolution);
-
-        var currentCity = _cities.FindCityOnCoords(_earthAngle.Yx * new Vector2(1f, -1f) * 180f / MathF.PI, 0.15f, Settings.Instance.MapCitiesMinPop);
-        fonts["Pixel"].DrawText(currentCity.Name ?? "---", new Vector2(25f, 75f), 0.4f, new Vector4(1f), ScreenResolution);
+        fonts["Pixel"].DrawText("LON: " + MathF.Floor(MathHelper.RadiansToDegrees(-EarthAngle.X) * 1000f) / 1000f, new Vector2(25f, ScreenResolution.Y - 105f), 0.4f, new Vector4(1f), ScreenResolution);
+        fonts["Pixel"].DrawText("LAT: " + MathF.Floor(MathHelper.RadiansToDegrees(EarthAngle.Y) * 1000f) / 1000f, new Vector2(25f, ScreenResolution.Y - 135f), 0.4f, new Vector4(1f), ScreenResolution);
+        
+        var currentCity = _cities.FindCityOnCoords(EarthAngle.Yx * new Vector2(1f, -1f) * 180f / MathF.PI, 15.5f, Settings.Instance.MapCitiesMinPop);
+        fonts["Pixel"].DrawText(currentCity.Country.Name != null! ? Station.LaserRadius + "/" + MathF.Ceiling(CityTargets.PopToRadius(currentCity.Population) * 100f) / 100f + " km" : "", new Vector2(25f, 145f), 0.45f, new Vector4(1f), ScreenResolution);
+        fonts["Pixel"].DrawText(currentCity.Name + (currentCity.Capital == Capital.Primary ? " (Capital)" : ""), new Vector2(25f, 105f), 0.45f, new Vector4(1f, currentCity.IsDestroyed ? 0f : 1f, currentCity.IsDestroyed ? 0f : 1f, 1f), ScreenResolution);
+        fonts["Pixel"].DrawText(currentCity.Country.Name != null! ? currentCity.Country.Name + ", " + currentCity.Region : "---", new Vector2(25f, 78f), 0.3f, new Vector4(1f), ScreenResolution);
         fonts["Pixel"].DrawText("POP: " + currentCity.Population.ToString("N0"), new Vector2(25f, 45f), 0.4f, new Vector4(1f), ScreenResolution);
     }
 
@@ -174,6 +193,16 @@ public class MapPage : ScreenPage
         MapShader.VertexBuffer.Bind();
         GL.BufferSubData(BufferTarget.ArrayBuffer, (MapShader.VertexBuffer.Data.Length - offset) * sizeof(float), 3 * sizeof(float), d);
         MapShader.VertexBuffer.Unbind();
+    }
+
+    public void Reset()
+    {
+        Zoom = 1.5f;
+        _earthHeldLenght = 0;
+        
+        EarthAngle = _cities.CitiesWithPop(1_000_000)[Random.Shared.Next(0, _cities.CitiesWithPop(1_000_000).Count - 1)].Coordinates.Yx * MathF.PI / 180f * new Vector2(-1f, 1f);
+        _currentPos = EarthAngle;
+        _lastPos = EarthAngle;
     }
 
     private void LoadMap(string path)

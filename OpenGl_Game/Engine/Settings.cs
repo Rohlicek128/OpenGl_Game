@@ -14,9 +14,11 @@ public class Settings
         }
     }
     
+    public int WindowMode { get; set; }
     public float PlayerFov { get; set; }
     public float PlayerSensitivity { get; set; }
     public int EarthResolution { get; set; }
+    public int TextureQuality { get; set; }
     public int MapCitiesMinPop { get; set; }
 
     private static Settings LoadSettings()

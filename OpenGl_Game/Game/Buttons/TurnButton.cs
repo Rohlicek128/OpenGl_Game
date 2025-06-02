@@ -35,7 +35,7 @@ public class TurnButton : ButtonHandler
 
         if (_timerManager.CheckTimer("turn " + TurnAmount, (float)param[1], (bool)param[0]))
         {
-            _turnPage.TurnDegrees = MathF.Min(5f, MathF.Max(-5f, _turnPage.TurnDegrees + TurnAmount));
+            _turnPage.TurnDegrees = MathF.Min(TurnGauge.MaxTurn, MathF.Max(-TurnGauge.MaxTurn, _turnPage.TurnDegrees + TurnAmount));
         }
     }
 }

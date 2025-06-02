@@ -10,19 +10,21 @@ public class Light : EngineObject
     public Vector3 AttenuationParams;
     public LightTypes Type;
     public bool IsLighting;
+    public int LightForId;
 
     public Vector3 PbrParams;
     
     public Light(string name, Transform transform, MeshData meshData, Material material, Vector3 pbrParams, Vector3 attenParams, LightTypes type)
         : base(name, transform, meshData, material)
     {
-        Material.Ambient = Material.Color * pbrParams.X;
-        Material.Diffuse = Material.Color * pbrParams.Y;
-        Material.Specular = Material.Color * pbrParams.Z;
+        Material.Ambient = Material.Color.Xyz * pbrParams.X;
+        Material.Diffuse = Material.Color.Xyz * pbrParams.Y;
+        Material.Specular = Material.Color.Xyz * pbrParams.Z;
         AttenuationParams = attenParams;
         Type = type;
         PbrParams = pbrParams;
         IsLighting = true;
+        LightForId = 0;
     }
 
     public void SetUniformsForDirectional(ShaderProgram program)
@@ -33,14 +35,14 @@ public class Light : EngineObject
         program.SetUniform("dirLight.specular", Material.Specular);
     }
     
-    public void SetUniformsForPoint(ShaderProgram program, int index)
+    public void SetUniformsForPoint(ShaderProgram program, int index, int lightForId = 0)
     {
         program.SetUniform($"pointLight[{index}].position", Transform.Position);
-        program.SetUniform($"pointLight[{index}].ambient", Material.Color * PbrParams.X);
-        program.SetUniform($"pointLight[{index}].diffuse", Material.Color * PbrParams.Y);
-        program.SetUniform($"pointLight[{index}].specular", Material.Color * PbrParams.Z);
+        program.SetUniform($"pointLight[{index}].ambient", Material.Color.Xyz * PbrParams.X);
+        program.SetUniform($"pointLight[{index}].diffuse", Material.Color.Xyz * PbrParams.Y);
+        program.SetUniform($"pointLight[{index}].specular", Material.Color.Xyz * PbrParams.Z);
         program.SetUniform($"pointLight[{index}].attenParams", AttenuationParams);
-        program.SetUniform($"pointLight[{index}].isLighting", IsLighting ? 1 : 0);
+        program.SetUniform($"pointLight[{index}].isLighting", IsLighting && LightForId >= lightForId ? 1 : 0);
     }
 
     public static List<Light> LightsDicToList(Dictionary<LightTypes, List<Light>> lights)
@@ -104,5 +106,25 @@ public class Light : EngineObject
         var b = bPrime + m;
 
         return new Vector3(Math.Clamp(r, 0, 1), Math.Clamp(g, 0, 1), Math.Clamp(b, 0, 1));
+    }
+
+    public static Vector3 NormalizeRgb(float r, float g, float b)
+    {
+        return new Vector3(r / 255f, g / 255f, b / 255f);
+    }
+
+    public static Vector3 NormalizeRgb(Vector3 rgb)
+    {
+        return rgb / 255f;
+    }
+    
+    public static Vector4 NormalizeRgba(float r, float g, float b, float a)
+    {
+        return new Vector4(r / 255f, g / 255f, b / 255f, a / 100f);
+    }
+
+    public static Vector4 NormalizeRgba(Vector4 rgba)
+    {
+        return new Vector4(rgba.Xyz / 255f, rgba.W / 100f);
     }
 }

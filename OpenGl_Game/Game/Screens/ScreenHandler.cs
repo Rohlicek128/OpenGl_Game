@@ -14,6 +14,8 @@ namespace OpenGl_Game.Game.Screens;
 
 public abstract class ScreenHandler
 {
+    public static Vector3 LcdBlack = new(0.02f);
+    
     private List<ScreenPage> _pages;
     public List<ScreenPage> Pages
     {
@@ -80,7 +82,7 @@ public abstract class ScreenHandler
                 GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
                 fonts["Pixel"].DrawText("PAGE NOT FOUND", new Vector2(100f, _screenResolution.Y / 2f - 30f), 0.25f, new Vector4(1f), _screenResolution);
             }
-            else _pages[_pageIndex].RenderScreen(collision, mouse, viewport, fonts, deltaTime);
+            else _pages[_pageIndex].RenderPage(collision, mouse, viewport, fonts, deltaTime);
         }
         else
         {
@@ -90,5 +92,5 @@ public abstract class ScreenHandler
         
         Framebuffer.Unbind();
         GL.Viewport(0, 0, viewport.X, viewport.Y);
-    } 
+    }
 }

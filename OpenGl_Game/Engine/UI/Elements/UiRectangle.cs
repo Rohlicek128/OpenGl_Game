@@ -8,7 +8,7 @@ public class UiRectangle : UiElement
 {
     public EngineObject EngineObject { get; set; }
     
-    public UiRectangle(Vector3 position, Vector3 color, float width, float height)
+    public UiRectangle(Vector3 position, Vector4 color, float width, float height)
     {
         EngineObject = new EngineObject(
             "Rectangle #" + (EngineObject.ObjectIdCounter + 1),

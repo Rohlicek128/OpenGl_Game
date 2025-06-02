@@ -112,6 +112,7 @@ public class EngineObject
         program.SetUniform("inverseModelView", (model * view).Inverted().Transposed());
         program.SetUniform("textureScaling", Textures.Scaling);
         
+        program.SetUniform("material.color", Material.Color.Xyz);
         program.SetUniform("material.color", Material.Color);
         program.SetUniform("material.diffuse", Material.Diffuse);
         program.SetUniform("material.specular", Material.Specular);

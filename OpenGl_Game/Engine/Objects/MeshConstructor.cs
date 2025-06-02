@@ -427,17 +427,17 @@ public class MeshConstructor
         return new MeshData(vertices, indices);
     }
     
-    public static MeshData CreateQuad(float texScaling = 1f)
+    public static MeshData CreateQuad(float mw = -1f, float mh = -1f, float w = 1f, float h = 1f, float texScaling = 1f)
     {
         float[] vertices =
         [
-            1f,  1f,  0.0f, 0.0f,
-            1f, -1f,  texScaling, 0.0f,
-            -1f, -1f,  texScaling, texScaling,
+            w,  h,  0.0f, 0.0f,
+            w, mh,  texScaling, 0.0f,
+            mw, mh,  texScaling, texScaling,
             
-            1f,  1f,  0.0f, 0.0f,
-            -1f, -1f,  texScaling, texScaling,
-            -1f,  1f,  0.0f, texScaling
+            w,  h,  0.0f, 0.0f,
+            mw, mh,  texScaling, texScaling,
+            mw,  h,  0.0f, texScaling
         ];
         uint[] indices =
         [

@@ -1,7 +1,8 @@
+using OpenGl_Game.Engine;
+using OpenGl_Game.Engine.Graphics.Shaders.Programs;
 using OpenGl_Game.Engine.Graphics.Textures;
 using OpenGl_Game.Engine.Objects;
 using OpenGl_Game.Engine.Objects.Collisions;
-using OpenGl_Game.Game.Targets;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -24,16 +25,28 @@ public class Earth
     public Texture HeightMap;
     public float Scale;
     public float MidLevel;
+
+    public BurnEffect BurnEffect;
     
     public Earth(Transform transform, int resolution, float scale, float midLevel = 1f)
     {
-        ColorMap = new Texture("Earth\\earth_color_mar.png", 0, TextureMinFilter.Linear, TextureMagFilter.Linear);
+        if (Settings.Instance.TextureQuality == 1) // High
+        {
+            ColorMap = new Texture("Earth\\earth_color_may.png", 0, TextureMinFilter.Linear, TextureMagFilter.Linear);
+            NormalMap = new Texture("Earth\\earth_normal_high2.png", 2, TextureMinFilter.Linear, TextureMagFilter.Linear);
+        }
+        if (Settings.Instance.TextureQuality == 0) // Low
+        {
+            ColorMap = new Texture("Earth\\earth_color_may_low.png", 0, TextureMinFilter.Linear, TextureMagFilter.Linear);
+            NormalMap = new Texture("Earth\\earth_normal.png", 2, TextureMinFilter.Linear, TextureMagFilter.Linear);
+        }
         RoughnessMap = new Texture("Earth\\earth_specular.png", 1, TextureMinFilter.Linear, TextureMagFilter.Linear);
-        NormalMap = new Texture("Earth\\earth_normal_high2.png", 2, TextureMinFilter.Linear, TextureMagFilter.Linear);
         HeightMap = new Texture("Earth\\earth_height_water.png", 0, TextureMinFilter.Linear, TextureMagFilter.Linear);
         CitiesMap = new Texture("Earth\\earth_cities.png", 3, TextureMinFilter.Linear, TextureMagFilter.Linear);
         Scale = scale;
         MidLevel = midLevel;
+        
+        BurnEffect = new BurnEffect(ColorMap!, new Vector2i(ColorMap!.Image.Width, ColorMap.Image.Height));
         
         EarthObject = new EngineObject(
             "Earth",
@@ -42,7 +55,7 @@ public class Earth
             //new Material(new Vector3(1f, 0f, 1f))
             new TexturesPbr(new Dictionary<TextureTypes, Texture>
             {
-                {TextureTypes.Diffuse, ColorMap},
+                {TextureTypes.Diffuse, BurnEffect.Framebuffer.AttachedTextures[0]},
                 {TextureTypes.Specular, RoughnessMap},
                 {TextureTypes.Normal, NormalMap},
                 {TextureTypes.Overlay, CitiesMap},
@@ -54,6 +67,11 @@ public class Earth
         EarthObject.VisibleForId = 1;
 
         CollisionSphere = new CollisionSphere(transform, transform.Scale.X);
+    }
+
+    public void Delete()
+    {
+        EarthObject.Textures.DeleteAll();
     }
 
     public void MoveEarth(KeyboardState keyboard, float deltaTime, float boost, List<EngineObject> engineObjects, bool debug = false)
@@ -71,10 +89,10 @@ public class Earth
         
             if (keyboard.IsKeyDown(Keys.Q)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(-Vector3.UnitY * deltaTime * 0.5f) * o.Transform.Quaternion;
             if (keyboard.IsKeyDown(Keys.E)) foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitY * deltaTime * 0.5f) * o.Transform.Quaternion;
+            
+            if (keyboard.IsKeyDown(Keys.Space)) EarthObject.Transform.Position[EarthAxis] -= deltaTime * 50f;
+            if (keyboard.IsKeyDown(Keys.LeftControl)) EarthObject.Transform.Position[EarthAxis] += deltaTime * 50f;
         }
-        
-        if (keyboard.IsKeyDown(Keys.Space)) EarthObject.Transform.Position[EarthAxis] -= deltaTime * 50f;
-        if (keyboard.IsKeyDown(Keys.LeftControl)) EarthObject.Transform.Position[EarthAxis] += deltaTime * 50f;
         
         CollisionSphere.Transform.Position = EarthObject.Transform.Position;
     }
@@ -169,20 +187,25 @@ public class Earth
         return meshData;
     }
 
-    public void SetEarthToCoords(Vector2 coords)
+    public void SetRandomCoords(float landThreshold = 0f)
     {
-        coords *= MathF.PI / 180f;
-        EarthObject.Transform.Quaternion = Quaternion.FromEulerAngles(0f, coords.Y, coords.X).Inverted();
+        if (landThreshold > 0f) Console.WriteLine("start finding spawn");
+        Vector2 coords;
+        do
+        {
+            coords = new Vector2(Random.Shared.NextSingle() * 360f - 180f, Random.Shared.NextSingle() * 180f - 90f);
+            EarthObject.Transform.Quaternion = GpsCoordsToQuaternion(coords, Random.Shared.NextSingle() * 360f);
+        }
+        while (landThreshold > 0f && RoughnessMap.SampleTexture(new Vector2i((int)((coords.X + 180f) / 360f * RoughnessMap.Image.Width), (int)((coords.Y + 90f) / 180f * RoughnessMap.Image.Width))).X / 255f > landThreshold);
+        if (landThreshold > 0f) Console.WriteLine("end finding spawn");
     }
 
     public float GetHeightOnEarth(Vector2 coords)
     {
-        coords.X += 180f;
-        coords.X /= 360f;
-        coords.Y += 90f;
-        coords.Y /= 180f;
-        
-        return HeightMap.SampleTexture(new Vector2i((int)(coords.Y * HeightMap.Image.Width), (int)(coords.X * HeightMap.Image.Height))).X / 255f;
+        return HeightMap.SampleTexture(new Vector2i(
+            (int)((coords.Y + 180f) / 360f * HeightMap.Image.Width),
+            (int)((coords.X + 90) / 180f * HeightMap.Image.Height)
+        )).X / 255f;
     }
 
     public static Vector3 GpsToSphereCoords(Vector2 gps)
@@ -202,15 +225,48 @@ public class Earth
         return new Vector2(lon, lat) * (180f / MathF.PI);
     }
 
+    /// <summary>
+    /// ChatGPT
+    /// </summary>
+    /// <param name="q"></param>
+    /// <returns></returns>
     public static Vector2 QuaternionToGpsCoords(Quaternion q)
     {
         var rv = Vector3.Transform(Vector3.UnitY, q.Inverted());
-
-        //var r = rv.Length;
+        
         var t = MathF.Asin(rv.Y);
         var p = MathF.Atan2(rv.X, rv.Z);
 
         return new Vector2(MathHelper.RadiansToDegrees(t), MathHelper.RadiansToDegrees(p));
+    }
+    
+    /// <summary>
+    /// ChatGPT
+    /// </summary>
+    /// <param name="gps"></param>
+    /// <param name="rotationDeg"></param>
+    /// <returns></returns>
+    public static Quaternion GpsCoordsToQuaternion(Vector2 gps, float rotationDeg = 0f)
+    {
+        var tilt = MathHelper.DegreesToRadians(gps.Y);
+        var pan = MathHelper.DegreesToRadians(gps.X + 180f);
+
+        var dir = new Vector3(
+            MathF.Sin(pan) * MathF.Cos(tilt),
+            MathF.Sin(tilt),
+            MathF.Cos(pan) * MathF.Cos(tilt)
+        );
+
+        dir = dir.Normalized();
+
+        if (dir == Vector3.UnitY) return Quaternion.Identity;
+
+        if (dir == -Vector3.UnitY) return Quaternion.FromAxisAngle(Vector3.UnitX, MathF.PI);
+
+        var axis = Vector3.Cross(Vector3.UnitY, dir).Normalized();
+        var angle = MathF.Acos(Vector3.Dot(Vector3.UnitY, dir));
+
+        return Quaternion.FromEulerAngles(Vector3.UnitY * MathHelper.DegreesToRadians(rotationDeg)) * Quaternion.FromAxisAngle(axis, angle);
     }
     
     public static Quaternion LookRotation(Vector3 forward, Vector3 up)

@@ -49,12 +49,12 @@ public class ScreenPowerButton : ButtonHandler
         if (_screen.IsTurnOn && ButtonValue <= 0f)
         {
             _screen.IsTurnOn = false;
-            EngineObject.Material.Color = new Vector3(0f, 0f, 0f);
+            EngineObject.Material.Color = new Vector4(0f, 0f, 0f, 1f);
         }
         else if (!_screen.IsTurnOn && ButtonValue >= 1f)
         {
             _screen.IsTurnOn = true;
-            EngineObject.Material.Color = new Vector3(1f, 0f, 0f);
+            EngineObject.Material.Color = new Vector4(1f, 0f, 0f, 1f);
         }
     }
 }

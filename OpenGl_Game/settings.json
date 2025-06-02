@@ -1,6 +1,8 @@
 {
-  "PlayerFov": 85.0,
+  "WindowMode": 1,
+  "PlayerFov": 80.0,
   "PlayerSensitivity": 7.0,
   "EarthResolution": 400,
+  "TextureQuality": 1,
   "MapCitiesMinPop": 280000
 }

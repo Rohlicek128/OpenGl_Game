@@ -13,6 +13,7 @@ namespace OpenGl_Game.Game.Gauges.Speed;
 
 public class SpeedGauge : ScreenHandler
 {
+    public static float MaxSpeed { get; set; }
     public SpeedGauge(Vector2i screenResolution) : base(screenResolution)
     {
         EngineObject = new EngineObject(
@@ -37,41 +38,39 @@ public class SpeedPage : ScreenPage
     public float ActualSpeed { get; set; }
     public float ChangeSpeed { get; set; }
     
-    public float MaxSpeed { get; set; }
     public float MinSpeed { get; set; }
     private Vector2 _normRes;
     public SpeedPage(Vector2 screenResolution, int screenObjectId) : base(new Vector2i((int)screenResolution.X, (int)screenResolution.Y), screenObjectId)
     {
         _normRes = screenResolution;
-        TargetSpeed = 50f;
-        ActualSpeed = 180f;
+        TargetSpeed = 70f;
+        ActualSpeed = 80f;
         ChangeSpeed = 0.5f;
-
-        MaxSpeed = 180f;
+        
         MinSpeed = 25f;
 
-        UiGraphics.Elements.Add("Bg", new UiRectangle(new Vector3(0f), new Vector3(0.95f), 1.70f, 1.80f));
-        UiGraphics.Elements.Add("Line", new UiRectangle(new Vector3(0f, 0.18f, 0f), new Vector3(0f), 0.03f, 0.9f));
+        UiGraphics.Elements.Add("Bg", new UiRectangle(new Vector3(0f), new Vector4(0.95f, 0.95f, 0.95f, 1f), 1.70f, 1.80f));
+        UiGraphics.Elements.Add("Line", new UiRectangle(new Vector3(0f, 0.18f, 0f), new Vector4(0f, 0f, 0f, 1f), 0.03f, 0.9f));
         UiGraphics.InitProgram();
     }
 
-    public override void RenderScreen(CollisionShader collision, Mouse mouse, Vector2i viewport, Dictionary<string, FontMap> fonts, float deltaTime)
+    public override void RenderPage(CollisionShader collision, Mouse mouse, Vector2i viewport, Dictionary<string, FontMap> fonts, float deltaTime)
     {
         var bg = 0.1f;
         GL.ClearColor(bg, bg, bg, 1f);
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-        TargetSpeed = MathF.Max(MinSpeed, MathF.Min(MaxSpeed, TargetSpeed));
+        TargetSpeed = MathF.Max(MinSpeed, MathF.Min(SpeedGauge.MaxSpeed, TargetSpeed));
         ChangeSpeed = 0.35f;
         if (ActualSpeed < TargetSpeed) ActualSpeed += MathF.Max(1f, TargetSpeed - ActualSpeed) * deltaTime * ChangeSpeed;
         else if (ActualSpeed > TargetSpeed) ActualSpeed -= MathF.Max(1f, ActualSpeed - TargetSpeed) * deltaTime * ChangeSpeed;
 
         UiGraphics.GraphicsProgram.Draw(viewport.ToVector2());
 
-        var red = MathF.Max(0f, (TargetSpeed - 100f) / (MaxSpeed - 100f));
+        var red = MathF.Max(0f, (TargetSpeed - 100f) / (SpeedGauge.MaxSpeed - 100f));
         fonts["Pixel"].DrawText((int)Math.Floor(TargetSpeed) + "", new Vector2(_normRes.X / 2f - 160f, _normRes.Y / 2f - 10f), 1.2f, new Vector4(red, 0f, 0f, 1f), _normRes);
-        red = MathF.Max(0f, (ActualSpeed - 100f) / (MaxSpeed - 100f));
-        fonts["Pixel"].DrawText((int)Math.Floor(ActualSpeed) + "", new Vector2(_normRes.X / 2f + 28f, _normRes.Y / 2f - 10f), 1.2f, new Vector4(red, 0f, 0f, 1f), _normRes);
+        red = MathF.Max(0f, (ActualSpeed - 100f) / (SpeedGauge.MaxSpeed - 100f));
+        fonts["Pixel"].DrawText((int)Math.Floor(ActualSpeed) + "", new Vector2(_normRes.X / 2f + 15f, _normRes.Y / 2f - 10f), 1.2f, new Vector4(red, 0f, 0f, 1f), _normRes);
         fonts["Pixel"].DrawText("km/s", new Vector2(_normRes.X / 2f - 75f, _normRes.Y / 2f - 65f), 0.8f, new Vector4(0f, 0f, 0f, 1f), _normRes);
     }
 }

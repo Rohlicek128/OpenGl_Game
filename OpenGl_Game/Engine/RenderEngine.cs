@@ -8,34 +8,43 @@ using OpenGl_Game.Engine.Graphics.Shadows;
 using OpenGl_Game.Engine.Graphics.Textures;
 using OpenGl_Game.Engine.Graphics.UI;
 using OpenGl_Game.Engine.Graphics.UI.Text;
+using OpenGl_Game.Engine.Menus;
+using OpenGl_Game.Engine.Menus.Cycle;
+using OpenGl_Game.Engine.Menus.Main;
+using OpenGl_Game.Engine.Menus.Pause;
 using OpenGl_Game.Engine.Objects;
 using OpenGl_Game.Engine.Objects.Collisions;
 using OpenGl_Game.Engine.UI;
 using OpenGl_Game.Engine.UI.Obsolete;
 using OpenGl_Game.Game;
 using OpenGl_Game.Game.Buttons;
+using OpenGl_Game.Game.Buttons.LaserParams;
 using OpenGl_Game.Game.Gauges;
+using OpenGl_Game.Game.Gauges.Battery;
 using OpenGl_Game.Game.Gauges.Speed;
 using OpenGl_Game.Game.Gauges.Turn;
+using OpenGl_Game.Game.Gauges.Warnings;
+using OpenGl_Game.Game.Objectives;
 using OpenGl_Game.Game.Screens;
 using OpenGl_Game.Game.Screens.Navigation;
 using OpenGl_Game.Game.Screens.Objective;
 using OpenGl_Game.Shaders;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Mathematics;
+using OpenTK.Platform;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Common.Input;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using StbImageSharp;
 using FontMap = OpenGl_Game.Engine.Graphics.UI.Text.FontMap;
+using MouseButton = OpenTK.Windowing.GraphicsLibraryFramework.MouseButton;
+using MouseMoveEventArgs = OpenTK.Windowing.Common.MouseMoveEventArgs;
 
 namespace OpenGl_Game.Engine;
 
 public class RenderEngine : GameWindow
 {
-    //public const string DirectoryPath = @"C:\Files\Code\.NET\OpenGl_Game\OpenGl_Game\";
-    //public const string DirectoryPath = @"C:\Users\adam\RiderProjects\OpenGl_Game\OpenGl_Game\";
     public static readonly string DirectoryPath = AppDomain.CurrentDomain.BaseDirectory.Replace(@"bin\Debug\net8.0\", "");
     public const uint PrimitiveIndex = uint.MaxValue;
     public const int MaxObjectIds = 255;
@@ -47,16 +56,16 @@ public class RenderEngine : GameWindow
     private int _fpsCount, _fpsDisplay;
     private float _deltaTime;
     
-    private bool _isRotation = true;
     private bool _isMouseGrabbed = true;
     private bool _wireframeMode = false;
     private bool _isPostProcess = true;
     private bool _moveEarthMode = true;
     private bool _isFullscreen = false;
+    private bool _beenResized = false;
+    private bool _mainMenuChanged = false;
     private bool _debugMode = false;
     private bool _testBool = false;
-
-    private Thread _renderThread;
+    
     private int _renderAim;
 
     private Mouse _mouse;
@@ -79,21 +88,23 @@ public class RenderEngine : GameWindow
 
     private ShadowMap _shadows;
     private Ssao _ssao;
-
-    private List<TexturesPbr> _textures;
+    
     private CubeMap _skybox;
 
     private EngineObject[] _objects;
     private Dictionary<LightTypes, List<Light>> _lights;
 
     private TimerManager _timerManager;
-    private WindowManager _windowManager;
-    private EditorManager _editorManager;
 
     private float _testVal = 1f;
     
     private Earth _earth;
     private Station _station;
+
+    //Menus
+    private MainMenu _mainMenu;
+    private PauseMenu _pauseMenu;
+    private DayMenu _dayMenu;
     
     public RenderEngine(int width, int height, string title) : base(
             GameWindowSettings.Default, 
@@ -118,12 +129,12 @@ public class RenderEngine : GameWindow
         CenterWindow();
         
         _settings = Settings.Instance;
-        
-        _textures = [];
 
         _fonts = new Dictionary<string, FontMap>();
         _timerManager = new TimerManager(150);
-        _editorManager = new EditorManager();
+
+        _mainMenu = new MainMenu(this) { IsVisible = true };
+        _pauseMenu = new PauseMenu(this, _mainMenu);
         
         _mainCamera = new Camera(new Vector3(-0.52f, 1.15f, 0f), 1f, _settings.PlayerSensitivity / 100f, _settings.PlayerFov, 0.025f, 2_000_000f);
         _mainCamera.UpdateSensitivityByAspect(_viewport);
@@ -146,82 +157,50 @@ public class RenderEngine : GameWindow
         ];
         
         //Texture
-        _skybox = new CubeMap("black1x1.png", false);
-        
-        _textures.Add(new TexturesPbr());
-        _textures[0].AddTexture(TextureTypes.Diffuse, new Texture("container.png", 0));
-        _textures[0].AddTexture(TextureTypes.Specular, new Texture("white1x1.png", 1));
-        _textures[0].AddTexture(TextureTypes.Normal, new Texture("normal_test.jpg", 2));
-        
-        _textures.Add(new TexturesPbr());
-        _textures[1].AddTexture(TextureTypes.Diffuse, new Texture("concrete_pavers_diff_2k.jpg", 0));
-        _textures[1].AddTexture(TextureTypes.Specular, new Texture("concrete_pavers_rough_2k.jpg", 1));
+        _skybox = new CubeMap("white1x1.png", false);
         
         //Fonts
         var text = EngineObject.CreateEmpty();
         text.MeshData.Vertices = new float[6 * 4];
         _fontShader = new FontShader(text);
         
-        _fonts.Add("Cascadia", new FontMap("CascadiaCode.ttf", _fontShader));
         _fonts.Add("ATName", new FontMap("ATNameSansTextTrial-ExtraBold.otf", _fontShader));
         _fonts.Add("Pixel", new FontMap("04B_03_.TTF", _fontShader));
-        _fonts.Add("Wide", new FontMap("Vipnagorgialla Bd.otf", _fontShader));
-        _fonts.Add("Brigends", new FontMap("brigends.ttf", _fontShader));
-        
-        //Materials
-        var material1 = new Material(new Vector3(1f, 0f, 0f));
-        var material2 = new Material(
-            new Vector3(0.2f, 0.1f, 1f),
-            new Vector3(1f, 0.8f, 0.65f),
-            new Vector3(0.5f, 0.3f, 0.1f),
-            256f
-        );
+        _fonts.Add("Brigends", new FontMap("brigends.ttf", _fontShader, 100));
         
         //Objects
-        var cube = new EngineObject(
-            "Chill Cube", 
-            new Transform(new Vector3(0f, 0f, 0f)), 
-            MeshConstructor.CreateCube(),
-            material1
-        );
-        cube.Material.Color = new Vector3(1f, 1f, 0f);
-        var floor = new EngineObject(
+        /*var floor = new EngineObject(
             "Floor", 
             new Transform(new Vector3(0f, -0.501f, 0f)), 
             MeshConstructor.CreatePlane(),
-            _textures[1]
+            new Material(new Vector4(1f))
         );
         floor.Material.Shininess = 32f;
         floor.Material.Specular = new Vector3(0.5f);
         floor.Transform.Scale *= 20f;
-        floor.Textures.Scaling = 0.5f;
+        floor.Textures.Scaling = 0.5f;*/
         
-        /*var teapot = MeshConstructor.LoadFromFile(@"rungholt\house.obj", verticesAttribs);
-        teapot.Transform.Scale /= 80f;
-        teapot.Transform.Position *= teapot.Transform.Scale;
-        teapot.Transform.Position.Z += 3f;
-        teapot.Material.Color = new Vector3(0.8f, 0.05f, 0.2f);
-        teapot.Material.Shininess = 600f;*/
-
-        //var terrain = new Terrain("new-zealand-height-map.jpg", verticesAttribs);
+        
         _earth = new Earth(new Transform(new Vector3(0f), new Vector3(0f, MathF.PI, 0f), new Vector3(6378 / 2f)), _settings.EarthResolution, 0.025f);
         _earth.EarthObject.Transform.Position = new Vector3(0f, -_earth.EarthObject.Transform.Scale[Earth.EarthAxis] * (300f / 6378f + 1f), 0f);
         _earth.CollisionSphere.Transform.Position = _earth.EarthObject.Transform.Position;
-        //_earth.EarthObject.Transform.Position = new Vector3(-MathF.Cos(MathHelper.DegreesToRadians(35f)) * _earth.EarthObject.Transform.Scale.X * 1.0639f, MathF.Sin(MathHelper.DegreesToRadians(35f)) * _earth.EarthObject.Transform.Scale.X * 1.0639f, 0f);
+        
         _station = new Station();
+        
+        _dayMenu = new DayMenu(this, ((ObjectivePage)_station.Screens.Values.ToArray()[0].Pages[0]).Objectives);
         
         var laser = new EngineObject(
             "Laser",
             new Transform(Vector3.Zero, new Vector3(0f, MathF.PI / 2f, 0f), new Vector3(1f, 1f, 1f)),
             MeshConstructor.LoadObjFromFileAssimp(@"Station\laserCylinder.obj"),
-            new Material(new Vector3(40f, 0f, 0f))
+            new Material(new Vector3(40f, 1f, 1f))
         );
         laser.Transform.Scale[Earth.EarthAxis] = 200f;
         laser.Transform.Position[Earth.EarthAxis] = -100;
         //laser.Transform.Quaternion = Quaternion.FromEulerAngles(12f, 0f, 0f) * laser.Transform.Quaternion;
         
         //lights
-        var dirLight = new Light(
+        var sun = new Light(
             "Dir light", 
             new Transform(Vector3.UnitY * 12f, new Vector3(MathHelper.DegreesToRadians(100f), 0f, MathHelper.DegreesToRadians(45f))), 
             MeshConstructor.CreateCube(),
@@ -230,8 +209,8 @@ public class RenderEngine : GameWindow
             new Vector3(1.0f, 0.045f * 10, 0.0075f * 10),
             LightTypes.Directional
         );
-        dirLight.Transform.Scale *= 20f;
-        
+        sun.Transform.Scale *= 20f;
+        sun.LightForId = 1;
         
         var pointLight = new Light(
             "Point light", 
@@ -253,6 +232,7 @@ public class RenderEngine : GameWindow
         );
         laserLight.IsVisible = false;
         laserLight.Transform.Position[Earth.EarthAxis] = _earth.EarthObject.Transform.Position[Earth.EarthAxis] + _earth.EarthObject.Transform.Scale[Earth.EarthAxis];
+        laserLight.LightForId = 1;
         
         _objects = [
             _earth.EarthObject, _station.StationObject,
@@ -262,8 +242,8 @@ public class RenderEngine : GameWindow
         
         _lights = new Dictionary<LightTypes, List<Light>>
         {
-            { LightTypes.Directional, [dirLight] },
-            { LightTypes.Point, [pointLight, laserLight] }
+            { LightTypes.Directional, [sun] },
+            { LightTypes.Point, [pointLight, laserLight, ..((WarningPage)_station.Screens.Values.ToArray()[5].Pages[0])._warningLights] }
         };
         
         //Geometry Shader
@@ -303,9 +283,10 @@ public class RenderEngine : GameWindow
         var reticule = EngineObject.CreateEmpty();
         reticule.MeshData = MeshConstructor.CreateQuad();
         reticule.Transform.Scale *= 0.005f;
+        reticule.Material.Color.W = 0.75f;
         _canvas = new Canvas(reticule);
         
-        _windowManager = new WindowManager();
+        Reset(true);
         
         GL.Enable(EnableCap.DepthTest);
         GL.DepthFunc(DepthFunction.Less);
@@ -324,6 +305,8 @@ public class RenderEngine : GameWindow
         GL.PointSize(3f);
 
         Console.WriteLine("start");
+        _isFullscreen = _settings.WindowMode == 0;
+        WindowState = _isFullscreen ? WindowState.Fullscreen : WindowState.Normal;
         IsVisible = true;
     }
 
@@ -337,57 +320,70 @@ public class RenderEngine : GameWindow
         _shadows.DeleteAll();
         _gBuffer.DeleteGBuffer();
         _ssao.Delete();
-        foreach (var textures in _textures) textures.DeleteAll();
         foreach (var font in _fonts) font.Value.Delete();
-        //_windowManager.Delete();
+        
+        _station.Delete();
+        _earth.Delete();
         
         Console.WriteLine("end");
     }
     
     protected override void OnRenderFrame(FrameEventArgs args)
     {
-        //Aim
-        var nav = (NavigationScreen)_station.Screens.Values.ToList()[1];
+        var nav = (NavigationScreen)_station.Screens.Values.ToArray()[1];
         var page = (AimPage)nav.Pages[1];
-        if (_renderAim >= 1 && nav.IsTurnOn && nav.PageIndex == 1)
+        if (!_pauseMenu.IsVisible || _beenResized)
         {
-            Resize(page.ScreenResolution, 1);
-            DrawScene(page.AimCamera, page.ScreenResolution, 1, page.SceneFramebuffer, 1);
-            Resize(_viewport, _renderScale);
-            _renderAim = -1;
+            //Aim
+            if (_renderAim >= 0 && nav.IsTurnOn && nav.PageIndex == 1 && !_mainMenu.IsVisible)
+            {
+                ResizeGame(page.ScreenResolution, 1);
+                DrawScene(page.AimCamera, page.ScreenResolution, 1, page.SceneFramebuffer, 1);
+                ResizeGame(_viewport, _renderScale);
+                _renderAim = -1;
+            }
+            _renderAim++;
+        
+            //Shadows
+            GL.Enable(EnableCap.DepthTest);
+            _shadows.Draw(_lights[LightTypes.Directional][0], _mainCamera, _viewport, _geometryShader);
+         
+            //Scene
+            DrawScene(_mainMenu.IsVisible ? _mainMenu.Camera : _mainCamera, _viewport, _renderScale, _postProcessShader.Framebuffer, _mainMenu.IsVisible ? 1 : 0);
+            if (_beenResized) _beenResized = false;
         }
-        _renderAim++;
-        
-        //Shadows
-        GL.Enable(EnableCap.DepthTest);
-        _shadows.Draw(_lights[LightTypes.Directional][0], _mainCamera, _viewport, _geometryShader);
-        
-        //Scene
-        DrawScene(_testBool ? page.AimCamera : _mainCamera, _viewport, _renderScale, _postProcessShader.Framebuffer);
-        _postProcessShader.Draw(_isPostProcess ? -1 : _gBuffer.NormalViewTexture.Handle); //_shadows.TextureHandle : _gBuffer.NormalsTexture.Handle
-        _postProcessShader.DrawShaders();
+        _postProcessShader.Draw(_isPostProcess ? -1 : _gBuffer.ColorSpecTexture.Handle); //_shadows.TextureHandle : _gBuffer.NormalsTexture.Handle
+        if (!_mainMenu.IsVisible)
+        {
+            _postProcessShader.DrawShaders();
+
+            if (_mainMenuChanged) DayMenu.Opacity = 1f;
+            _dayMenu.IsVisible = DayMenu.Opacity > 0f;
+        }
+        _mainMenuChanged = _mainMenu.IsVisible;
         GL.Disable(EnableCap.DepthTest);
         var q = Quaternion.FromEulerAngles(MathHelper.DegreesToRadians(-_station.Coordrinates.Y), 0f, MathHelper.DegreesToRadians(_station.Coordrinates.X));
         q.Xyz = _earth.EarthObject.Transform.Quaternion.Inverted().Xyz;
         q.W = _earth.EarthObject.Transform.Quaternion.Inverted().W;
         ((MapPage)nav.Pages[0]).SetTargetPosition(_station.Coordrinates.Yx, 6);
-        foreach (var screen in _station.Screens) screen.Value.RenderScreen(_collisionShader, _mouse, _viewport / _renderScale, _fonts, _deltaTime);
+        if (!DayMenu.StayBlack) foreach (var screen in _station.Screens) screen.Value.RenderScreen(_collisionShader, _mouse, _viewport / _renderScale, _fonts, _deltaTime);
         
         
         //var pixel = ReadPixel(_viewport.X / 2, _viewport.Y / 2);
         //Console.WriteLine(pixel[0] + ", " + pixel[1] + ", " + pixel[2] + ", " + pixel[3]);
         
         //Text
-        _fonts["Brigends"].DrawText(_fpsDisplay + " fps (" + MathF.Round(_deltaTime * 10000) / 10000 + "ms)", new Vector2(25f, _viewport.Y - 60f), 0.75f, new Vector4(1f), _viewport);
-        _fonts["Pixel"].DrawText(_mainCamera.Fov + " fov", new Vector2(25f, _viewport.Y - 110f), 0.75f, new Vector4(1f), _viewport);
-        if (_debugMode)
+        if (!_mainMenu.IsVisible) _fonts["Brigends"].DrawText(_fpsDisplay + " fps" + (_debugMode ? " (" + MathF.Round(_deltaTime * 10000f) / 10f + "ms)" : ""), new Vector2(25f, _viewport.Y - 60f), 0.5f, new Vector4(1f), _viewport);
+        if (_debugMode && !_mainMenu.IsVisible)
         {
+            _fonts["Pixel"].DrawText(_mainCamera.Fov + " fov", new Vector2(25f, _viewport.Y - 110f), 0.75f, new Vector4(1f), _viewport);
+            
             var tempCam = _testBool ? page.AimCamera : _mainCamera;
             _fonts["Pixel"].DrawText("PLAYER X: "+ (MathF.Floor(tempCam.Transform.Position.X * 1000f) / 1000f) + " Y: " + (MathF.Floor(tempCam.Transform.Position.Y * 1000f) / 1000f) + " Z: "+ (MathF.Floor(tempCam.Transform.Position.Z * 1000f) / 1000f),
                 new Vector2(25f, _viewport.Y - 160f), 0.5f, new Vector4(1f), _viewport);
-            _fonts["Pixel"].DrawText("FRONT  X: "+ (MathF.Floor(tempCam.Front.X * 1000f) / 1000f) + " Y: " + (MathF.Floor(tempCam.Front.Y * 1000f) / 1000f) + " Z: "+ (MathF.Floor(tempCam.Front.Z * 1000f) / 1000f),
+            _fonts["Pixel"].DrawText("FRONT  X: "+ (MathF.Floor(tempCam.Front.X * 1000f) / 1000f) + " Y: " + (MathF.Floor(tempCam.Front.Y * 1000f) / 1000f) + " Z: "+ (MathF.Floor(tempCam.Front.Z * 1000f) / 1000f) + " P: "+ (MathF.Floor(tempCam.Pitch * 1000f) / 1000f) + " Y: "+ (MathF.Floor(tempCam.Yaw * 1000f) / 1000f),
                 new Vector2(25f, _viewport.Y - 210f), 0.5f, new Vector4(1f), _viewport);
-            _fonts["Pixel"].DrawText("Boost: " + _mainCamera.BoostSpeed + ", Speed: " + ((SpeedPage)_station.Screens.Last().Value.Pages[0]).ActualSpeed +  " km/s", new Vector2(25f, _viewport.Y - 260f), 0.5f, new Vector4(1f), _viewport);
+            _fonts["Pixel"].DrawText("Boost: " + _mainCamera.BoostSpeed + ", Speed: " + ((SpeedPage)_station.Screens.Values.ToArray()[3].Pages[0]).ActualSpeed +  " km/s", new Vector2(25f, _viewport.Y - 260f), 0.5f, new Vector4(1f), _viewport);
             _fonts["Pixel"].DrawText("FOV: " + _mainCamera.Fov + ", Zoom: " + _mainCamera.ZoomFov, new Vector2(25f, _viewport.Y - 310f), 0.5f, new Vector4(1f), _viewport);
             _fonts["Pixel"].DrawText("VALUE: Y: " + _mainCamera.Yaw + ", P: " + _mainCamera.Pitch, new Vector2(25f, _viewport.Y - 360f), 0.5f, new Vector4(1f), _viewport);
             _fonts["Pixel"].DrawText("Altitude: " + Math.Floor(-(_earth.EarthObject.Transform.Scale[Earth.EarthAxis] + _earth.EarthObject.Transform.Position[Earth.EarthAxis]) * 2f) + " km", new Vector2(25f, _viewport.Y - 410f), 0.5f, new Vector4(1f), _viewport);
@@ -397,22 +393,27 @@ public class RenderEngine : GameWindow
             //else _fonts["Pixel"].DrawText("RAY: HIT, POS: " + hit.HitPos + ", LEN: " + hit.Distance, new Vector2(25f, _viewport.Y - 460f), 0.5f, new Vector4(1f), _viewport);
             
             _fonts["Pixel"].DrawText("LUV: " + _collisionShader.LookingAtUv.X + ", " + _collisionShader.LookingAtUv.Y, new Vector2(25f, _viewport.Y - 460f), 0.5f, new Vector4(1f), _viewport);
-            _fonts["Pixel"].DrawText("Coords: " + _station.Coordrinates, new Vector2(25f, _viewport.Y - 510f), 0.5f, new Vector4(1f), _viewport);
+            _fonts["Pixel"].DrawText("Coords: " + _station.Coordrinates.Yx, new Vector2(25f, _viewport.Y - 510f), 0.5f, new Vector4(1f), _viewport);
             _fonts["Pixel"].DrawText("TESTBOOL: " + _testBool, new Vector2(25f, _viewport.Y - 560f), 0.5f, new Vector4(1f), _viewport);
             
             _fonts["Pixel"].DrawText(_collisionShader.LookingAtObject.Name + " [" + _collisionShader.LookingAtObject.Id + "]", new Vector2(_viewport.X / 2f + 10f, _viewport.Y / 2f + 10f), 0.4f, new Vector4(1f), _viewport);
         }
-        else if (_station.Buttons.ContainsKey(_collisionShader.LookingAtObject.Id))
+        else if (_station.Buttons.ContainsKey(_collisionShader.LookingAtObject.Id) && !_mainMenu.IsVisible)
         {
             _fonts["Pixel"].DrawText(_collisionShader.LookingAtObject.Name, new Vector2(_viewport.X / 2f + 10f, _viewport.Y / 2f + 10f), 0.4f, new Vector4(1f), _viewport);
         }
-        _fonts["Pixel"].DrawText("FROM ORBIT v0.3.5", new Vector2(_viewport.X - 255f, _viewport.Y - 30f), 0.35f, new Vector4(1f, 1f, 1f, 0.2f), _viewport);
+        _fonts["Pixel"].DrawText("FROM ORBIT v0.3.6", new Vector2(_viewport.X - 255f, _viewport.Y - 30f), 0.35f, new Vector4(1f, 1f, 1f, 0.2f), _viewport);
         
         GL.DepthFunc(DepthFunction.Less);
         
         //UI Windows
-        _canvas.Draw(_viewport);
-        //_windowManager.DrawWindows(_viewport, _fonts);
+        if (!_mainMenu.IsVisible) _canvas.Draw(_viewport);
+        
+        //Menus
+        _dayMenu.RenderMenu(_mouse, _viewport, _fonts, (float)args.Time);
+        _pauseMenu.RenderMenu(_mouse, _viewport, _fonts, (float)args.Time);
+        _mainMenu.RenderMenu(_mouse, _viewport, _fonts, (float)args.Time);
+        
         
         Context.SwapBuffers();
         
@@ -463,13 +464,21 @@ public class RenderEngine : GameWindow
             GL.Enable(EnableCap.DepthTest);
             _gBuffer.SetDefaultDepth(resolution);
             GL.DepthFunc(DepthFunction.Lequal);
+
+            if (LaserButton.IsShooting)
+            {
+                _earth.BurnEffect.Draw();
+                GL.Viewport(0, 0, resolution.X / scale, resolution.Y / scale);
+            }
         }
+        _earth.BurnEffect.Draw();
+        GL.Viewport(0, 0, resolution.X / scale, resolution.Y / scale);
         
         //Lighting Pass
         framebuffer.Bind();
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
         _gBuffer.BindBufferTextures();
-        _lightingShader.Draw(camera, _shadows, _ssao.BlurFramebuffer.AttachedTextures[0].Handle);
+        _lightingShader.Draw(camera, _shadows, _ssao.BlurFramebuffer.AttachedTextures[0].Handle, visibleForId);
         
         GL.Enable(EnableCap.Blend);
         
@@ -484,28 +493,26 @@ public class RenderEngine : GameWindow
     protected override void OnUpdateFrame(FrameEventArgs args)
     {
         if (!IsFocused) return;
-        _deltaTime = (float)args.Time;
+        _deltaTime = _pauseMenu.IsVisible ? 0f : (float)args.Time;
         
-        if (_moveEarthMode)
+        if (_moveEarthMode || _mainMenu.IsVisible)
         {
-            _earth.MoveEarth(KeyboardState, (float)args.Time,
-                ((SpeedPage)_station.Screens.Last().Value.Pages[0]).ActualSpeed / Earth.Circumference * MathF.PI * 2f, 
+            var speed = _mainMenu.IsVisible ? 60f : ((SpeedPage)_station.Screens.Values.ToArray()[3].Pages[0]).ActualSpeed;
+            _earth.MoveEarth(KeyboardState, _deltaTime,
+                speed / Earth.Circumference * MathF.PI * 2f *
+                (_debugMode ? _mainCamera.BoostSpeed : 1f),
                 [_lights[LightTypes.Directional][0]], _debugMode);
-            _earth.RotateEarth((float)args.Time, MathHelper.DegreesToRadians(((TurnPage)_station.Screens.Values.ToArray()[3].Pages[0]).TurnDegrees), [_lights[LightTypes.Directional][0]]);
+            _earth.RotateEarth(_mainMenu.IsVisible ? 0f : _deltaTime, MathHelper.DegreesToRadians(((TurnPage)_station.Screens.Values.ToArray()[2].Pages[0]).TurnDegrees), [_lights[LightTypes.Directional][0]]);
             
             _station.Coordrinates = Earth.QuaternionToGpsCoords(_earth.EarthObject.Transform.Quaternion);
             ((ObjectiveScreen)_station.Screens.Values.ToList()[0]).SetCoords(_station.Coordrinates);
 
             _lights[LightTypes.Point][1].Transform.Position[Earth.EarthAxis] =
                 _earth.EarthObject.Transform.Position[Earth.EarthAxis] +
-                _earth.EarthObject.Transform.Scale[Earth.EarthAxis] + 3f;
-                //_earth.GetHeightOnEarth(_station.Coordrinates) * 2f;
+                _earth.EarthObject.Transform.Scale[Earth.EarthAxis] + 3f +
+                MathF.Max(0f, _earth.GetHeightOnEarth(_station.Coordrinates) - 0.5f) * (40f + Station.LaserRadius);
         }
-        else _mainCamera.Move(KeyboardState, (float)args.Time);
-
-        //_lights[LightTypes.Directional][0].Transform.Position =
-        //    -_lights[LightTypes.Directional][0].Transform.Quaternion.ToEulerAngles() *
-        //    _earth.EarthObject.Transform.Scale.X;
+        else _mainCamera.Move(KeyboardState, _deltaTime);
 
         _lights[LightTypes.Directional][0].Transform.Position = Vector3.Transform(
             -Vector3.UnitY,
@@ -521,49 +528,59 @@ public class RenderEngine : GameWindow
             }
         }
         
+        if (_timerManager.CheckTimer("F11", (float)args.Time, KeyboardState.IsKeyDown(Keys.F11)))
+        {
+            _isFullscreen = !_isFullscreen;
+            WindowState = _isFullscreen ? WindowState.Fullscreen : WindowState.Normal;
+
+            if (!_isFullscreen && WindowState != WindowState.Fullscreen)
+            {
+                ClientSize = new Vector2i(1200, 800);
+                CenterWindow();
+            }
+        }
+        if (_timerManager.CheckTimer("CTRL_R", _deltaTime, KeyboardState.IsKeyDown(Keys.LeftControl) && KeyboardState.IsKeyDown(Keys.R)))
+        {
+            Reset();
+            //_earth.SetRandomCoords();
+            //_lights[LightTypes.Directional][0].Transform.Quaternion = Quaternion.FromEulerAngles(new Vector3(MathHelper.DegreesToRadians(90f), 0f, MathHelper.DegreesToRadians(Random.Shared.NextSingle() * 360f)));
+        }
+        if (_mouse.IsDown) _mouse.PressLenght++;
+
+
+        if (_mainMenu.IsVisible)
+        {
+            _debugMode = false;
+            return;
+        }
+        
         
         if (KeyboardState.IsKeyDown(Keys.LeftShift)) _mainCamera.SpeedBoost = true;
         if (KeyboardState.IsKeyReleased(Keys.LeftShift)) _mainCamera.SpeedBoost = false;
 
         if (_timerManager.CheckTimer("Esc", (float)args.Time, KeyboardState.IsKeyDown(Keys.Escape)))
         {
-            _isMouseGrabbed = !_isMouseGrabbed;
+            _pauseMenu.IsVisible = !_pauseMenu.IsVisible && !_mainMenu.IsVisible;
         }
-        if (_timerManager.CheckTimer("M", (float)args.Time, KeyboardState.IsKeyDown(Keys.M)))
-        {
-            _isRotation = !_isRotation;
-        }
-        if (_timerManager.CheckTimer("V", (float)args.Time, KeyboardState.IsKeyDown(Keys.V)))
+        if (_timerManager.CheckTimer("V", _deltaTime, KeyboardState.IsKeyDown(Keys.V)))
         {
             _wireframeMode = !_wireframeMode;
         }
-        if (_timerManager.CheckTimer("P", (float)args.Time, KeyboardState.IsKeyDown(Keys.P)))
+        if (_timerManager.CheckTimer("P", _deltaTime, KeyboardState.IsKeyDown(Keys.P)))
         {
             _isPostProcess = !_isPostProcess;
         }
-        if (_timerManager.CheckTimer("B", (float)args.Time, KeyboardState.IsKeyDown(Keys.B)))
+        if (_timerManager.CheckTimer("B", _deltaTime, KeyboardState.IsKeyDown(Keys.B)))
         {
             _moveEarthMode = !_moveEarthMode;
         }
-        if (_timerManager.CheckTimer("F11", (float)args.Time, KeyboardState.IsKeyDown(Keys.F11)))
-        {
-            _isFullscreen = !_isFullscreen;
-            WindowState = _isFullscreen ? WindowState.Fullscreen : WindowState.Normal;
-        }
-        if (_timerManager.CheckTimer("F3", (float)args.Time, KeyboardState.IsKeyDown(Keys.F3)))
+        if (_timerManager.CheckTimer("F3", _deltaTime, KeyboardState.IsKeyDown(Keys.F3)))
         {
             _debugMode = !_debugMode;
         }
         
-        if (_timerManager.CheckTimer("K", (float)args.Time, KeyboardState.IsKeyDown(Keys.K)))
-        {
-            //((MapPage)_station.Screens.Values.ToList()[1].Pages[0]).MapShader.VertexBuffer.Enlarge(6, [1f, 1f, 0f,  0f, 0f, 0f]);
-            //((MapPage)_station.Screens.Values.ToList()[1].Pages[0]).MapShader.IndexBuffer.Enlarge(2, [0, 1]);
-            //Console.WriteLine("Added");
-        }
-        
-        var eo = _station.Buttons[50].EngineObject; //_lights[LightTypes.Directional][0] : _station.Screens.Values.ToArray()[1].EngineObject
-        var sens = (float)args.Time * 0.1f;
+        var eo = _lights[LightTypes.Directional][0]; //_lights[LightTypes.Directional][0] : _station.Screens.Values.ToArray()[1].EngineObject
+        var sens = (float)args.Time * 0.5f;
         if (KeyboardState.IsKeyDown(Keys.Insert)) eo.Transform.Quaternion = Quaternion.FromEulerAngles(sens, 0f, 0f) * eo.Transform.Quaternion;
         if (KeyboardState.IsKeyDown(Keys.Delete)) eo.Transform.Quaternion = Quaternion.FromEulerAngles(-sens, 0f, 0f) * eo.Transform.Quaternion;
         if (KeyboardState.IsKeyDown(Keys.Home)) eo.Transform.Quaternion = Quaternion.FromEulerAngles(0f, sens, 0f) * eo.Transform.Quaternion;
@@ -576,27 +593,27 @@ public class RenderEngine : GameWindow
         if (KeyboardState.IsKeyDown(Keys.Left)) eo.Transform.Position.Z += sens;
         if (KeyboardState.IsKeyDown(Keys.Right)) eo.Transform.Position.Z -= sens;
         if (KeyboardState.IsKeyDown(Keys.RightShift)) eo.Transform.Position.Y += sens;
-        if (KeyboardState.IsKeyDown(Keys.RightAlt)) eo.Transform.Position.Y -= sens;
+        if (KeyboardState.IsKeyDown(Keys.RightControl)) eo.Transform.Position.Y -= sens;
         
         if (KeyboardState.IsKeyDown(Keys.Enter))
         {
             Console.WriteLine(eo.Transform.Position + ", " + eo.Transform.Quaternion.ToEulerAngles());
-            //_station.Screens.Values.ToArray()[1].EngineObject.Transform.Quaternion = Quaternion.FromEulerAngles(
-            //    new Vector3(MathHelper.DegreesToRadians(65 - 180f), -MathF.PI/16f, MathHelper.DegreesToRadians(25))
-            //);
         }
         
-        if (_timerManager.CheckTimer("+", (float)args.Time, KeyboardState.IsKeyDown(Keys.KeyPadAdd)))
+        if (_timerManager.CheckTimer("+", _deltaTime, KeyboardState.IsKeyDown(Keys.KeyPadAdd)))
         {
-            ((MapPage)_station.Screens.Values.ToList()[1].Pages[0]).SetTargetPosition(new Vector2(-122.330441f, 47.610715f), 3); //SE -122.330441f, 47.610715f, AU 174.765252f, -36.849042f
-            //((LogPage)_station.Screens.Values.ToList()[0].Pages[1]).CurrentHitIndex++;
+            var map = (MapPage)_station.Screens.Values.ToList()[1].Pages[0];
+            map.SetTargetPosition(map.EarthAngle * 180f / MathF.PI * new Vector2(-1f, 1f), 3); //SE -122.330441f, 47.610715f, AU 174.765252f, -36.849042f
         }
-        if (_timerManager.CheckTimer("-", (float)args.Time, KeyboardState.IsKeyDown(Keys.KeyPadSubtract)))
+        if (_timerManager.CheckTimer("-", _deltaTime, KeyboardState.IsKeyDown(Keys.KeyPadSubtract)))
         {
-            //((LogPage)_station.Screens.Values.ToList()[0].Pages[1]).CurrentHitIndex--;
         }
 
-        if (!_mouse.IsDown) _laserShader.Objects[0].IsVisible = KeyboardState.IsKeyDown(Keys.L);
+        if (!_mouse.IsDown)
+        {
+            _laserShader.Objects[0].IsVisible = KeyboardState.IsKeyDown(Keys.L);
+            _lights[LightTypes.Point][1].Material.Color.X = MathF.Pow(Station.LaserRadius + 1f, 2.5f);
+        }
         
         _lights[LightTypes.Point][1].IsLighting = _laserShader.Objects[0].IsVisible;
         if (_lights[LightTypes.Point][1].IsLighting)
@@ -604,26 +621,37 @@ public class RenderEngine : GameWindow
             _lights[LightTypes.Point][1].Transform.Position.X = (Random.Shared.NextSingle() * 2f - 1f) / 2f;
             _lights[LightTypes.Point][1].Transform.Position.Z = (Random.Shared.NextSingle() * 2f - 1f) / 2f;
         }
-
+        
         if (LaserButton.IsShooting)
         {
-            Station.BatteryPercentage -= _deltaTime / 7.5f;
+            _lights[LightTypes.Point][1].Material.Color.X = MathF.Pow(Station.LaserRadius + 1f, 2.5f);
+            
+            Station.AllocationPercentage -= _deltaTime * (Station.BatteryMax / Station.AllocatedMax) * MathF.Pow(Station.LaserRadius, 0.5f) / 3f;
+            _station.Buttons.Values.ToArray()[13].EngineObject.Material.Color = Vector4.Zero;
+            _station.Buttons.Values.ToArray()[13].ButtonValue = 0f;
         }
+        if (PrimeButton.IsPrimed)
+        {
+            Station.AllocationPercentage -= _deltaTime * (Station.BatteryMax / Station.AllocatedMax) / 750f;
+        }
+        if (AllocateButton.IsAllocating) AllocationGauge.AllocateBattery(_deltaTime, button: (AllocateButton)_station.Buttons.Values.ToArray()[19]);
 
-        ((LogPage)_station.Screens.Values.ToArray()[0].Pages[1]).LogHits(LaserButton.IsShooting);
+        //_laserShader.Objects[0].Transform.Position[Earth.EarthAxis] = -100f / Station.LaserRadius * 5f;
+        ((LogPage)_station.Screens.Values.ToArray()[0].Pages[2]).LogHits(LaserButton.IsShooting);
 
-        if (_timerManager.CheckTimer("I", (float)args.Time, KeyboardState.IsKeyDown(Keys.I))) _station.Screens.Values.ToList()[1].PageIndex += 1;
-        if (_timerManager.CheckTimer("O", (float)args.Time, KeyboardState.IsKeyDown(Keys.O))) _station.Screens.Values.ToList()[1].PageIndex -= 1;
-        if (_timerManager.CheckTimer("Backspace", (float)args.Time, KeyboardState.IsKeyDown(Keys.Backspace))) _testBool = !_testBool;
-        if (_timerManager.CheckTimer("R", (float)args.Time, KeyboardState.IsKeyDown(Keys.R)))
+        if (_timerManager.CheckTimer("I", _deltaTime, KeyboardState.IsKeyDown(Keys.I))) _station.Screens.Values.ToList()[1].PageIndex += 1;
+        if (_timerManager.CheckTimer("O", _deltaTime, KeyboardState.IsKeyDown(Keys.O))) _station.Screens.Values.ToList()[1].PageIndex -= 1;
+        if (_timerManager.CheckTimer("Backspace", _deltaTime, KeyboardState.IsKeyDown(Keys.Backspace))) DayMenu.StayBlack = !DayMenu.StayBlack;
+        if (_timerManager.CheckTimer("R", _deltaTime, KeyboardState.IsKeyDown(Keys.R)))
         {
             _mainCamera.Transform.Position = new Vector3(-0.52f, 1.15f, 0f);
             Station.BatteryPercentage = 1f;
-            Settings.ReloadSettings();
+            if (_debugMode) UpgradePage.Money += 10f;
         }
         
-        _mainCamera.UpdateCameraFront();
-        if (_mouse.IsDown) _mouse.PressLenght++;
+        //_lights[LightTypes.Directional][0].Transform.Quaternion = Quaternion.FromEulerAngles(new Vector3(MathHelper.DegreesToRadians(115f), 0f, MathHelper.DegreesToRadians(Random.Shared.NextSingle() * 360f)));
+        
+        if (CursorState == CursorState.Grabbed && !DayMenu.StayBlack) _mainCamera.UpdateCameraFront(_moveEarthMode);
     }
 
     public static float[] ReadPixel(int x, int y)
@@ -633,6 +661,18 @@ public class RenderEngine : GameWindow
         return pixel;
     }
 
+    public void Reset(bool resetMoney = false)
+    {
+        if (resetMoney) UpgradePage.Money = 1.42f;
+        _station.Reset();
+        _earth.SetRandomCoords();
+        ((MapPage)_station.Screens.Values.ToArray()[1].Pages[0]).SetCoords(Earth.QuaternionToGpsCoords(_earth.EarthObject.Transform.Quaternion).Yx * new Vector2(-1f, 1f));
+        
+        _mainCamera.Front = new Vector3(-1f, 0f, 0f);
+        
+        _lights[LightTypes.Directional][0].Transform.Quaternion = Quaternion.FromEulerAngles(new Vector3(MathHelper.DegreesToRadians(90f), 0f, MathHelper.DegreesToRadians(Random.Shared.NextSingle() * 360f)));
+    }
+
     protected override void OnMouseMove(MouseMoveEventArgs e)
     {
         if (!IsFocused) return;
@@ -640,17 +680,9 @@ public class RenderEngine : GameWindow
         _mouse.ScreenPosition.X = (int)e.X;
         _mouse.ScreenPosition.Y = _viewport.Y - (int)e.Y;
 
-        if (!_isMouseGrabbed)
+        if (_pauseMenu.IsVisible || _mainMenu.IsVisible || DayMenu.StayBlack)
         {
             CursorState = CursorState.Normal;
-
-            foreach (var window in _windowManager.Windows)
-            {
-                if (window.MoveWindow(_mouse))
-                {
-                    //Cursor = MouseCursor.PointingHand;
-                }
-            }
         }
         else
         {
@@ -731,10 +763,11 @@ public class RenderEngine : GameWindow
         _viewport.X = viewport[2];
         _viewport.Y = viewport[3];
         
-        Resize(_viewport, _renderScale);
+        ResizeGame(_viewport, _renderScale);
+        _beenResized = true;
     }
 
-    private void Resize(Vector2i resolution, int scale)
+    private void ResizeGame(Vector2i resolution, int scale)
     {
         _mainCamera.UpdateSensitivityByAspect(resolution);
 

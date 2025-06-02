@@ -11,6 +11,7 @@ namespace OpenGl_Game.Game.Gauges.Turn;
 
 public class TurnGauge : ScreenHandler
 {
+    public static float MaxTurn { get; set; }
     public TurnGauge(Vector2i screenResolution) : base(screenResolution)
     {
         EngineObject = new EngineObject(
@@ -38,11 +39,11 @@ public class TurnPage : ScreenPage
     {
         _normRes = screenResolution;
 
-        UiGraphics.Elements.Add("Bg", new UiRectangle(new Vector3(0f), new Vector3(0.95f), 1.80f, 1.80f));
+        UiGraphics.Elements.Add("Bg", new UiRectangle(new Vector3(0f), new Vector4(0.95f, 0.95f, 0.95f, 1f), 1.80f, 1.80f));
         UiGraphics.InitProgram();
     }
 
-    public override void RenderScreen(CollisionShader collision, Mouse mouse, Vector2i viewport, Dictionary<string, FontMap> fonts, float deltaTime)
+    public override void RenderPage(CollisionShader collision, Mouse mouse, Vector2i viewport, Dictionary<string, FontMap> fonts, float deltaTime)
     {
         var bg = 0.1f;
         GL.ClearColor(bg, bg, bg, 1f);

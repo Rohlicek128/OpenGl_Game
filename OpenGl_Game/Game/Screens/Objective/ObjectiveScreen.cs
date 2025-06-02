@@ -3,7 +3,7 @@ using OpenGl_Game.Engine.Graphics.Textures;
 using OpenGl_Game.Engine.Graphics.UI.Text;
 using OpenGl_Game.Engine.Objects;
 using OpenGl_Game.Engine.UI.Elements;
-using OpenGl_Game.Game.Targets;
+using OpenGl_Game.Game.Objectives;
 using OpenTK.Graphics.OpenGLES2;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -12,6 +12,8 @@ namespace OpenGl_Game.Game.Screens.Objective;
 
 public class ObjectiveScreen : ScreenHandler
 {
+    public ObjectiveManager Objectives { get; set; }
+    
     public ObjectiveScreen(Vector2i screenResolution) : base(screenResolution)
     {
         EngineObject = new EngineObject(
@@ -25,13 +27,16 @@ public class ObjectiveScreen : ScreenHandler
                 {TextureTypes.Emissive, new Texture("white1x1.png", 4)}
             })
         );
+        Objectives = new ObjectiveManager();
         
-        Pages.Add(new ObjectivePage(screenResolution, EngineObject.Id));
-        Pages.Add(new LogPage(screenResolution, EngineObject.Id));
+        Pages.Add(new ObjectivePage(screenResolution, EngineObject.Id, Objectives));
+        Pages.Add(new UpgradePage(screenResolution, EngineObject.Id));
+        Pages.Add(new LogPage(screenResolution, EngineObject.Id, Objectives));
+        Pages.Add(new ManualPage(screenResolution, EngineObject.Id));
     }
 
     public void SetCoords(Vector2 coords)
     {
-        ((LogPage)Pages[1]).CurrentCoords = coords;
+        ((LogPage)Pages[2]).CurrentCoords = coords;
     }
 }

@@ -37,13 +37,13 @@ public class BatteryPage : ScreenPage
     {
         _normRes = screenResolution;
         
-        UiGraphics.Elements.Add("Bg", new UiRectangle(new Vector3(0f), new Vector3(0.95f), 1.80f, 1.90f));
-        UiGraphics.Elements.Add("Bar Bg", new UiRectangle(new Vector3(0.4f, 0f ,0f), new Vector3(0.1f, 0.05f, 0.08f), 0.8f, 1.75f));
-        UiGraphics.Elements.Add("Bar", new UiRectangle(new Vector3(0.4f, 0f ,0f), new Vector3(1f, 0.1f, 0.19f), 0.8f, 1.75f));
+        UiGraphics.Elements.Add("Bg", new UiRectangle(new Vector3(0f), new Vector4(0.95f, 0.95f, 0.95f, 1f), 1.80f, 1.90f));
+        UiGraphics.Elements.Add("Bar Bg", new UiRectangle(new Vector3(0.4f, 0f ,0f), new Vector4(0.1f, 0.05f, 0.08f, 1f), 0.8f, 1.75f));
+        UiGraphics.Elements.Add("Bar", new UiRectangle(new Vector3(0.4f, 0f ,0f), new Vector4(1f, 0.1f, 0.19f, 1f), 0.8f, 1.75f));
         UiGraphics.InitProgram();
     }
 
-    public override void RenderScreen(CollisionShader collision, Mouse mouse, Vector2i viewport, Dictionary<string, FontMap> fonts, float deltaTime)
+    public override void RenderPage(CollisionShader collision, Mouse mouse, Vector2i viewport, Dictionary<string, FontMap> fonts, float deltaTime)
     {
         var bg = 0.1f;
         GL.ClearColor(bg, bg, bg, 1f);
@@ -55,8 +55,8 @@ public class BatteryPage : ScreenPage
             
         UiGraphics.GraphicsProgram.Draw(viewport.ToVector2());
         
-        fonts["Pixel"].DrawText("0 W", new Vector2(150f, 100f), 1f, new Vector4(0f, 0f, 0f, 1f), _normRes);
-        fonts["Pixel"].DrawText("1 TWh", new Vector2(70f, _normRes.Y / 2f - 25f), 1f, new Vector4(0f, 0f, 0f, 1f), _normRes);
-        fonts["Pixel"].DrawText("50 TWh", new Vector2(55f, _normRes.Y - 150f), 1f, new Vector4(0f, 0f, 0f, 1f), _normRes);
+        fonts["Pixel"].DrawText("0 W", new Vector2(85f, 100f), 0.7f, new Vector4(0f, 0f, 0f, 1f), _normRes);
+        fonts["Pixel"].DrawText((int)(Station.BatteryMax / 2f) + " TWh", new Vector2(30f, _normRes.Y / 2f - 25f), 0.7f, new Vector4(0f, 0f, 0f, 1f), _normRes);
+        fonts["Pixel"].DrawText((int)Station.BatteryMax + " TWh", new Vector2(30f, _normRes.Y - 150f), 0.7f, new Vector4(0f, 0f, 0f, 1f), _normRes);
     }
 }
