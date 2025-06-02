@@ -59,9 +59,10 @@ public class ObjectivePage : ScreenPage
         if (endSelected)
         {
             end.EngineObject.Material.Color = new Vector4(1f);
-            if (ButtonHandler.TimerManager.CheckTimer("resume", deltaTime, mouse.IsDown && mouse.DownButton == MouseButton.Left && DayMenu.Opacity <= 0f))
+            if (ButtonHandler.TimerManager.CheckTimer("resume", deltaTime, mouse.IsDown && mouse.DownButton == MouseButton.Left && DayMenu.Opacity <= 0f) && Station.BatteryPercentage < 0.35f)
             {
                 Objectives.CurrentDay++;
+                if (Objectives.CurrentDay > 5) DayMenu.IsEnd = true;
                 DayMenu.StayBlack = true;
                 DayMenu.Opacity = 2f;
                 return;
@@ -108,9 +109,10 @@ public class ObjectivePage : ScreenPage
             if (!exists) continue;
             selected = selected || i == _selectedObjective;
             if (selected) button.EngineObject.Material.Color = new Vector4(1f);
-            
-            fonts["Pixel"].DrawText(Objectives.GetObjectives()[i].Header.ToUpper(), 
-                new Vector2((button.EngineObject.Transform.Position.X * 0.5f + 0.5f) * ScreenResolution.X - 90f, (button.EngineObject.Transform.Position.Y * 0.5f + 0.5f) * ScreenResolution.Y + 15f), 0.375f,
+
+            var header = Objectives.GetObjectives()[i].Header; //"EXTRATERRESTRIAL HELP"
+            fonts["Pixel"].DrawText(header, 
+                new Vector2((button.EngineObject.Transform.Position.X * 0.5f + 0.5f) * ScreenResolution.X - 90f, (button.EngineObject.Transform.Position.Y * 0.5f + 0.5f) * ScreenResolution.Y + 15f), MathF.Min(0.425f, 1f / (0.215f * header.Length)),
                 selected ? new Vector4(0f, 0f, 0f, 1f) : new Vector4(completed ? 0.5f : 1f), ScreenResolution);
             fonts["Pixel"].DrawText("> " + Objectives.GetObjectives()[i].Target, 
                 new Vector2((button.EngineObject.Transform.Position.X * 0.5f + 0.5f) * ScreenResolution.X - 85f, (button.EngineObject.Transform.Position.Y * 0.5f + 0.5f) * ScreenResolution.Y - 10f), 0.275f,
@@ -135,7 +137,8 @@ public class ObjectivePage : ScreenPage
             var top = ScreenResolution.Y - 195f;
             var objective = Objectives.GetObjectives()[_selectedObjective];
 
-            fonts["Pixel"].DrawText(objective.Header.ToUpper(), new Vector2(left, top), 0.6f, new Vector4(1f),
+            var header = objective.Header.ToUpper(); //"EXTRATERRESTRIAL HELP"
+            fonts["Pixel"].DrawText(header, new Vector2(left, top), MathF.Min(0.6f, 1f / (0.13f * header.Length)), new Vector4(1f),
                 ScreenResolution);
             top -= 24f;
             fonts["Pixel"].DrawText(objective.Description.Trim(), new Vector2(left, top), 0.25f, new Vector4(1f),

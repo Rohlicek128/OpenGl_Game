@@ -46,12 +46,12 @@
     "Name": "Allocation Speed",
     "Units": "s/TWh",
     "Levels": [
-      {"Level": 0, "Price": 0, "Amount": 3},
+      {"Level": 0, "Price": 0, "Amount": 4},
       {"Level": 1, "Price": 4.5, "Amount": 0.25},
       {"Level": 2, "Price": 6, "Amount": 0.25},
       {"Level": 3, "Price": 8, "Amount": 0.5},
       {"Level": 4, "Price": 10, "Amount": 0.5},
-      {"Level": 5, "Price": 18, "Amount": 0.5}
+      {"Level": 5, "Price": 18, "Amount": 1}
     ],
     "CurrentLevel": 0
   },

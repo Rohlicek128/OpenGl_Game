@@ -53,6 +53,7 @@ public class MapPage : ScreenPage
         
         UiGraphics.Elements.Add("bUp", new UiButton(new Vector3(0.8f, -0.65f, 0f), new Vector4(1f, 0f, 1f, 1f), 0.1f, 0.1f));
         UiGraphics.Elements.Add("bDown", new UiButton(new Vector3(0.8f, -0.8f, 0f), new Vector4(1f, 0f, 1f, 1f), 0.1f, 0.1f));
+        UiGraphics.Elements.Add("Pin", new UiButton(new Vector3(0.8f, -0.45f, 0f), new Vector4(1f, 0f, 0f, 1f), 0.1f, 0.1f));
         
         UiGraphics.Elements.Add("reticuleX", new UiRectangle(new Vector3(0f), new Vector4(1f), 0.1f, 0.0075f));
         UiGraphics.Elements.Add("reticuleY", new UiRectangle(new Vector3(0f), new Vector4(1f), 0.0075f, 0.1f));
@@ -106,6 +107,22 @@ public class MapPage : ScreenPage
             {
                 button.EngineObject.Material.Color.X = 0.15f;
                 button.EngineObject.Material.Color.Z = 0.15f;
+            }
+            
+            button = (UiButton)UiGraphics.Elements["Pin"];
+            if (button.PointCollision(collision.LookingAtUv * 2f - Vector2.One))
+            {
+                button.Activate(mouse.IsDown && mouse.DownButton == MouseButton.Left);
+                button.EngineObject.Material.Color.X = 1f;
+
+                if (mouse.IsDown && mouse.DownButton == MouseButton.Left)
+                {
+                    SetTargetPosition(EarthAngle * 180f / MathF.PI * new Vector2(-1f, 1f), 3);
+                }
+            }
+            else
+            {
+                button.EngineObject.Material.Color.X = 0.15f;
             }
         
         
@@ -170,6 +187,7 @@ public class MapPage : ScreenPage
         
         UiGraphics.GraphicsProgram.Draw(viewport.ToVector2());
         
+        fonts["Pixel"].DrawText("T", (UiGraphics.Elements["Pin"].GetEngineObject().Transform.Position.Xy / 2f + new Vector2(0.5f)) * ScreenResolution - new Vector2(6.5f, 11.5f), 0.5f, new Vector4(0.55f), ScreenResolution);
         fonts["Pixel"].DrawText("+", (UiGraphics.Elements["bUp"].GetEngineObject().Transform.Position.Xy / 2f + new Vector2(0.5f)) * ScreenResolution - new Vector2(9f, 15f), 0.7f, new Vector4(0.55f), ScreenResolution);
         fonts["Pixel"].DrawText("-", (UiGraphics.Elements["bDown"].GetEngineObject().Transform.Position.Xy / 2f + new Vector2(0.5f)) * ScreenResolution - new Vector2(9f, 15f), 0.7f, new Vector4(0.55f), ScreenResolution);
         

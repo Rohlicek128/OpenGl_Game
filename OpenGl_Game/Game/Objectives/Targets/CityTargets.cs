@@ -1,3 +1,4 @@
+using System.Globalization;
 using OpenGl_Game.Engine;
 using OpenGl_Game.Game.Objectives.Targets;
 using OpenTK.Mathematics;
@@ -95,7 +96,7 @@ public class CityTargets
                 int.Parse(elements[10]),
                 elements[1],
                 (int)population,
-                new Vector2(float.Parse(elements[2]), float.Parse(elements[3])),
+                new Vector2(float.Parse(elements[2], CultureInfo.InvariantCulture), float.Parse(elements[3], CultureInfo.InvariantCulture)),
                 country,
                 elements[7],
                 capital

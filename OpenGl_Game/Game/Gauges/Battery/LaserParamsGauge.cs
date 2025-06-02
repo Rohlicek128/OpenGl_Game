@@ -15,7 +15,7 @@ public class LaserParamsGauge : ScreenHandler
     {
         EngineObject = new EngineObject(
             "Laser Params Gauge",
-            new Transform(new Vector3(-1.3824716f, 0.92495096f, 0.07097028f), new Vector3(-MathF.PI/2f, MathHelper.DegreesToRadians(-40f), -MathF.PI/2f),
+            new Transform(new Vector3(-1.2464557f, 0.72199947f, 0.026594466f), new Vector3(-MathF.PI/2f, MathHelper.DegreesToRadians(-40f), -MathF.PI/2f),
                 new Vector3(0.3f, 0.05f, 0.08f)),
             MeshConstructor.CreateCube(),
             new TexturesPbr(new Dictionary<TextureTypes, Texture>

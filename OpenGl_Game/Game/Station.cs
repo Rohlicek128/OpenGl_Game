@@ -42,20 +42,18 @@ public class Station
         
         StationObject = new EngineObject(
             "Station",
-            new Transform(new Vector3(3f), Vector3.Zero, Vector3.One * 1f),
-            MeshConstructor.LoadObjFromFileAssimp(@"station\stationV4_3.obj"),
+            new Transform(new Vector3(-0.21435809f, 0.44321886f, 0f), Vector3.Zero, Vector3.One * 1f),
+            MeshConstructor.LoadObjFromFileAssimp(@"station\stationV4_5.obj"),
             new Material(new Vector3(1f))
         );
         StationObject.Material.Shininess = 1f;
         StationObject.Transform.Quaternion = Quaternion.FromEulerAngles(MathF.PI * Vector3.UnitY) * StationObject.Transform.Quaternion;
-        StationObject.Transform.Position = -StationObject.MeshData.BoundingBox.Origin;
-        StationObject.Transform.Position.Y += 1f;
 
         StationObject.IsSelectable = false;
         
         
         Buttons.Add(EngineObject.ObjectIdCounter + 1, new LaserButton());
-        Buttons.Add(EngineObject.ObjectIdCounter + 1, new SliderButton());
+        //Buttons.Add(EngineObject.ObjectIdCounter + 1, new SliderButton());
         
         Screens.Add(EngineObject.ObjectIdCounter + 1, new ObjectiveScreen(new Vector2i(600, 600)));
         Buttons.Add(EngineObject.ObjectIdCounter + 1, new ScreenPowerButton(Screens.Last().Value, new Transform(
@@ -127,7 +125,7 @@ public class Station
         ), "More Speed"));
         
         Buttons.Add(EngineObject.ObjectIdCounter + 1, new PrimeButton(new Transform(
-            new Vector3(-1.4933579f, 1.0899132f, -0.34127975f),
+            new Vector3(-1.3483471f, 0.88713986f, -0.34387016f),
             new Vector3(-MathF.PI/2f, MathHelper.DegreesToRadians(-40f), -MathF.PI/2f),
             new Vector3(0.05f, 0.025f, 0.03f)
         ), "Prime Laser"));
@@ -138,28 +136,28 @@ public class Station
         
         Screens.Add(EngineObject.ObjectIdCounter + 1, new LaserParamsGauge(new Vector2i(400, 400)));
         Buttons.Add(EngineObject.ObjectIdCounter + 1, new AllocationMaxButton(1f, new Transform(
-            new Vector3(-1.4206636f, 0.984858f, 0.17812955f),
+            new Vector3(-1.2753503f, 0.78408086f, 0.13404255f),
             new Vector3(-MathF.PI/2f, MathHelper.DegreesToRadians(-40f), -MathF.PI/2f),
             new Vector3(0.045f, 0.025f, 0.035f)
         ), timerManager, "More Allocation"));
         Buttons.Add(EngineObject.ObjectIdCounter + 1, new AllocationMaxButton(-1f, new Transform(
-            new Vector3(-1.330731f, 0.87923914f, 0.17812955f),
+            new Vector3(-1.1889415f, 0.6833257f, 0.13404255f),
             new Vector3(-MathF.PI/2f, MathHelper.DegreesToRadians(-40f), -MathF.PI/2f),
             new Vector3(0.045f, 0.025f, 0.035f)
         ), timerManager, "Less Allocation"));
         Buttons.Add(EngineObject.ObjectIdCounter + 1, new RadiusButton(0.5f, new Transform(
-            new Vector3(-1.4206636f, 0.984858f, 0.07812955f),
+            new Vector3(-1.2753503f, 0.78408086f, 0.041058924f),
             new Vector3(-MathF.PI/2f, MathHelper.DegreesToRadians(-40f), -MathF.PI/2f),
             new Vector3(0.045f, 0.025f, 0.035f)
         ), timerManager, "Bigger Diameter"));
         Buttons.Add(EngineObject.ObjectIdCounter + 1, new RadiusButton(-0.5f, new Transform(
-            new Vector3(-1.330731f, 0.87923914f, 0.07812955f),
+            new Vector3(-1.1889415f, 0.6833257f, 0.041058924f),
             new Vector3(-MathF.PI/2f, MathHelper.DegreesToRadians(-40f), -MathF.PI/2f),
             new Vector3(0.045f, 0.025f, 0.035f)
         ), timerManager, "Smaller Diameter"));
         
         Buttons.Add(EngineObject.ObjectIdCounter + 1, new AllocateButton(new Transform(
-            new Vector3(-1.3701513f, 0.9357285f, -0.161136f),
+            new Vector3(-1.2299494f, 0.73570704f, -0.21097611f),
             new Vector3(-MathF.PI/2f, MathHelper.DegreesToRadians(-40f), -MathF.PI/2f),
             new Vector3(0.1f, 0.025f, 0.045f)
         )));

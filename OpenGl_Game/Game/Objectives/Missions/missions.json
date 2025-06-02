@@ -1,0 +1,251 @@
+[
+  {
+    "Day": 0,
+    "Header": "Blacked out",
+    "Description": "The crown sends its regards.",
+    "Type": 0,
+    "Target": "Dublin",
+    "Country": "Ireland",
+    "TargetLongitude": -6.272788155347964,
+    "TargetLatitude": 53.346841948944096,
+    "Size": 1.3,
+    "Pay": 4.1
+  },
+  {
+    "Day": 0,
+    "Header": "Homelander?",
+    "Description": "You aren't on most maps anyway.",
+    "Type": 0,
+    "Target": "Auckland",
+    "Country": "New Zealand",
+    "TargetLongitude": 174.76191676404747,
+    "TargetLatitude": -36.85211113336659,
+    "Size": 1.3,
+    "Pay": 3.7
+  },
+  {
+    "Day": 0,
+    "Header": "No more oil >:(",
+    "Description": "They refused to send more oil.",
+    "Type": 0,
+    "Target": "Kuwait City",
+    "Country": "Kuwait",
+    "TargetLongitude": 47.989925612068234,
+    "TargetLatitude": 29.350165306994533,
+    "Size": 1.7,
+    "Pay": 5.8
+  },
+  {
+    "Day": 0,
+    "Header": "Just to be sure",
+    "Description": "Make sure it doesn't explode again.",
+    "Type": 0,
+    "Target": "Chernobyl",
+    "Country": "Ukraine",
+    "TargetLongitude": 30.099972,
+    "TargetLatitude": 51.389000,
+    "Size": 1.4,
+    "Pay": 4.8
+  },
+
+  {
+    "Day": 1,
+    "Header": "Ellie's Dream",
+    "Description": "Level it to the ground.",
+    "Type": 0,
+    "Target": "Seattle",
+    "Country": "United States",
+    "TargetLongitude": -122.330441,
+    "TargetLatitude": 47.610715,
+    "Size": -1,
+    "Pay": 7.4
+  },
+  {
+    "Day": 1,
+    "Header": "Escobar",
+    "Description": "Ordered by the US army.",
+    "Type": 0,
+    "Target": "Medellin",
+    "Country": "Colombia",
+    "TargetLongitude": -75.57199697071742,
+    "TargetLatitude": 6.248752895142776,
+    "Size": 1.6,
+    "Pay": 6.8
+  },
+  {
+    "Day": 1,
+    "Header": "No More Hope",
+    "Description": "Level it to the ground.",
+    "Type": 0,
+    "Target": "Cape Town",
+    "Country": "South Africa",
+    "TargetLongitude": 18.44926708014567,
+    "TargetLatitude": -33.9254797794521,
+    "Size": 2.1,
+    "Pay": 8.0
+  },
+  {
+    "Day": 1,
+    "Header": "A Gilded Cage",
+    "Description": "There is a hit on Claus Strandberg.",
+    "Type": 0,
+    "Target": "Marrakech",
+    "Country": "Morocco",
+    "TargetLongitude": -7.990224173891988,
+    "TargetLatitude": 31.622723406586207,
+    "Size": 1.2,
+    "Pay": 5.2
+  },
+
+
+  {
+    "Day": 2,
+    "Header": "He messed up",
+    "Description": "Please, get rid of Joe.",
+    "Type": 0,
+    "Target": "Sydney",
+    "Country": "Australia",
+    "TargetLongitude": 151.192250,
+    "TargetLatitude": -33.880528,
+    "Size": -1,
+    "Pay": 7.6
+  },
+  {
+    "Day": 2,
+    "Header": "Extra Terrestrial Help",
+    "Description": "⎔⨅⎓⎓ ⍣⍔⟒⎑",
+    "Type": 0,
+    "Target": "Area 51",
+    "Country": "United States",
+    "TargetLongitude": -115.812806,
+    "TargetLatitude": 37.233444,
+    "Size": 1.3,
+    "Pay": 11.1
+  },
+  {
+    "Day": 2,
+    "Header": "Jesse, Look up",
+    "Description": "What the DEA couldn't",
+    "Type": 0,
+    "Target": "Albuquerque",
+    "Country": "United States",
+    "TargetLongitude": -106.650421,
+    "TargetLatitude": 35.084385,
+    "Size": -1,
+    "Pay": 9.6
+  },
+  
+  
+  {
+    "Day": 3,
+    "Header": "Nuke Silo",
+    "Description": "It's like red barrels.",
+    "Type": 0,
+    "Target": "Nuke Silo #132",
+    "Country": "Russia",
+    "TargetLongitude": 46.1829251,
+    "TargetLatitude": 43.8290294,
+    "Size": 1.8,
+    "Pay": 9.0
+  },
+  {
+    "Day": 3,
+    "Header": "GTA 6",
+    "Description": "It's like red barrels.",
+    "Type": 0,
+    "Target": "Miami",
+    "Country": "United States",
+    "TargetLongitude": 46.1829251,
+    "TargetLatitude": 43.8290294,
+    "Size": 1.8,
+    "Pay": 9.0
+  },
+  {
+    "Day": 3,
+    "Header": "Slay the Beast",
+    "Description": "Eliminate the Lochness monster.",
+    "Type": 0,
+    "Target": "Loch Ness",
+    "Country": "Scotland",
+    "TargetLongitude": -4.447000,
+    "TargetLatitude": 57.332250,
+    "Size": 1.9,
+    "Pay": 10.2
+  },
+  {
+    "Day": 3,
+    "Header": "Base of the Ancients",
+    "Description": "Neutralize what is beneath the ice.",
+    "Type": 0,
+    "Target": "Atlantus outpost",
+    "Country": "Antarctica",
+    "TargetLongitude": 0,
+    "TargetLatitude": 89.999,
+    "Size": 2.7,
+    "Pay": 9.5
+  },
+
+  
+  {
+    "Day": 4,
+    "Header": "In Napoleon's Name",
+    "Description": "Winter won't save you now.",
+    "Type": 0,
+    "Target": "Moscow",
+    "Country": "Russia",
+    "TargetLongitude": 37.615667,
+    "TargetLatitude": 55.749833,
+    "Size": -1,
+    "Pay": 12.2
+  },
+  {
+    "Day": 4,
+    "Header": "New Amsterdam",
+    "Description": "Ah shit, here we go again.",
+    "Type": 0,
+    "Target": "New York",
+    "Country": "United States",
+    "TargetLongitude": -73.9915843757427,
+    "TargetLatitude": 40.73456907382724,
+    "Size": 5.4,
+    "Pay": 13.1
+  },
+  {
+    "Day": 4,
+    "Header": "PR Stunt",
+    "Description": "Everybody liked that.",
+    "Type": 0,
+    "Target": "Paris",
+    "Country": "France",
+    "TargetLongitude": 2.3429614813259825,
+    "TargetLatitude": 48.85424662109861,
+    "Size": -1,
+    "Pay": 10.2
+  },
+  {
+    "Day": 4,
+    "Header": "Hitlers retirement",
+    "Description": "We can't risk Hitler being alive.",
+    "Type": 0,
+    "Target": "Buenos Aires",
+    "Country": "Argentina",
+    "TargetLongitude": -58.446754354016846,
+    "TargetLatitude": -34.60145285987784,
+    "Size": -1,
+    "Pay": 13.1
+  },
+
+  
+  {
+    "Day": 5,
+    "Header": "THE FINALS",
+    "Description": "I'm here for the casualties",
+    "Type": 0,
+    "Target": "Tokyo",
+    "Country": "Japan",
+    "TargetLongitude": 139.691711,
+    "TargetLatitude": 35.689487,
+    "Size": 9.2,
+    "Pay": 37.7
+  }
+]

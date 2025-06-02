@@ -24,17 +24,20 @@ public class BurnEffect
 
         _graphics = new UiGraphics();
         _graphics.Elements.Add("bg", new UiRectangle(Vector3.Zero, colorMap, 2f, 2f));
-        _graphics.Elements.Add("dot", new UiRectangle(new Vector3(0f), new Vector4(0f, 0f, 0f, 1f), 0.01f, 0.01f));
+        _graphics.Elements.Add("dot", new UiRectangle(new Vector3(0f), new Texture("Station\\circle.png", 0, minFilter: TextureMinFilter.Linear, magFilter: TextureMagFilter.Linear), 0.0005f, 0.001f));
         _graphics.InitProgram();
         
         Draw();
         _graphics.Elements["bg"].GetEngineObject().IsVisible = false;
     }
 
-    public void Draw()
+    public void Draw(Vector2? coords = null)
     {
-        _graphics.Elements["dot"].GetEngineObject().Transform.Position.Y = 0.12f;
-        _graphics.Elements["dot"].GetEngineObject().Material.Color.X = 0f;
+        if (coords != null)
+        {
+            _graphics.Elements["dot"].GetEngineObject().Transform.Position.X = coords.Value.X / 180f;
+            _graphics.Elements["dot"].GetEngineObject().Transform.Position.Y = coords.Value.Y / 90;
+        }
         GL.Viewport(0, 0, ImageSize.X, ImageSize.Y);
         
         GL.ClearColor(0f, 0f, 0f, 1f);
@@ -47,17 +50,9 @@ public class BurnEffect
         Framebuffer.Unbind();
     }
 
-    public EngineObject CreateDot()
+    public void SetSize(float sizeKm)
     {
-        return new EngineObject(
-            "Dot",
-            new Transform(Vector3.Zero),
-            new MeshData([0f, 0f, 0f, 0f], [0], PrimitiveType.Points),
-            new TexturesPbr(new Dictionary<TextureTypes, Texture>
-            {
-                {TextureTypes.Diffuse, new Texture("black1x1.png", 0)},
-            }),
-            pointSize: 30f
-        );
+        _graphics.Elements["dot"].GetEngineObject().Transform.Scale.X = MathF.Log(sizeKm * 10f) / 40000f * 10f;
+        _graphics.Elements["dot"].GetEngineObject().Transform.Scale.Y = MathF.Log(sizeKm * 10f) / 20000f * 10f;
     }
 }

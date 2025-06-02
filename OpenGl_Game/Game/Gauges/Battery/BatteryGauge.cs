@@ -15,7 +15,7 @@ public class BatteryGauge : ScreenHandler
     {
         EngineObject = new EngineObject(
             "Battery Gauge",
-            new Transform(new Vector3(-1.4275972f, 0.9852862f, 0.3354881f), new Vector3(-MathF.PI/2f, MathHelper.DegreesToRadians(-40f), -MathF.PI/2f),
+            new Transform(new Vector3(-1.2868996f, 0.77904314f, 0.32686314f), new Vector3(-MathF.PI/2f, MathHelper.DegreesToRadians(-40f), -MathF.PI/2f),
                 new Vector3(0.125f, 0.05f, 0.375f)),
             MeshConstructor.CreateCube(),
             new TexturesPbr(new Dictionary<TextureTypes, Texture>

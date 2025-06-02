@@ -26,7 +26,7 @@ uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedoSpec;
 
-#define NR_POINT_LIGHTS 4
+#define NR_POINT_LIGHTS 5
 
 uniform DirLight dirLight;
 uniform PointLight pointLight[NR_POINT_LIGHTS];

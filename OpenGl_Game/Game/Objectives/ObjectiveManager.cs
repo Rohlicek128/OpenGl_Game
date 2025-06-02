@@ -14,7 +14,7 @@ public class ObjectiveManager
     public ObjectiveManager()
     {
         ObjectivesByOrder = [];
-        LoadObjectives();
+        LoadListObjectives();
     }
 
     public List<Objective> GetObjectives()
@@ -69,6 +69,31 @@ public class ObjectiveManager
             else ObjectivesByOrder.Add(objective.Day, [objective]);
             
             sr.Close();
+        }
+
+        foreach (var orders in ObjectivesByOrder)
+        {
+            orders.Value.Sort((x, y) => y.Pay.CompareTo(x.Pay));
+        }
+    }
+    
+    private void LoadListObjectives()
+    {
+        var files = Directory.GetFiles(RenderEngine.DirectoryPath + @"Game\Objectives\Missions");
+
+        var objectives = new List<Objective>();
+        foreach (var file in files)
+        {
+            using var sr = new StreamReader(file);
+            objectives = objectives.Concat(JsonSerializer.Deserialize<List<Objective>>(sr.ReadToEnd())!).ToList();
+            sr.Close();
+        }
+
+        foreach (var objective in objectives)
+        {
+            ObjectivesByOrder.TryGetValue(objective.Day, out var objs);
+            if (objs != null) objs.Add(objective);
+            else ObjectivesByOrder.Add(objective.Day, [objective]);
         }
 
         foreach (var orders in ObjectivesByOrder)

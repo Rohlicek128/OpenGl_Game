@@ -186,16 +186,35 @@ public class RenderEngine : GameWindow
         _earth.CollisionSphere.Transform.Position = _earth.EarthObject.Transform.Position;
         
         _station = new Station();
+        var stationLaser = new EngineObject(
+            "Orbital Laser",
+            new Transform(new Vector3(-33.343655f, 0f, 0f), new Vector3(0f, 0f, MathF.PI / 2f), new Vector3(100f, 8f, 8f)),
+            MeshConstructor.LoadObjFromFileAssimp(@"Station\laserCylinder.obj"),
+            new Material(new Vector3(10f, 1f, 1f))
+        );
+        stationLaser.IsSelectable = false;
+        stationLaser.IsShadowVisible = false;
+        var stationLaserLight = new Light(
+            "Station Laser Light", 
+            new Transform(new Vector3(-1.3831162f, 1.4071068f, 0f)), 
+            MeshConstructor.CreateCube(),
+            new Material(new Vector3(20f, 0f, 0f)),
+            new Vector3(0.5f, 1f, 1f),
+            new Vector3(1.0f, 0.00045f, 0.0000075f),
+            LightTypes.Point
+        );
+        stationLaserLight.IsVisible = false;
+        
         
         _dayMenu = new DayMenu(this, ((ObjectivePage)_station.Screens.Values.ToArray()[0].Pages[0]).Objectives);
         
         var laser = new EngineObject(
             "Laser",
-            new Transform(Vector3.Zero, new Vector3(0f, MathF.PI / 2f, 0f), new Vector3(1f, 1f, 1f)),
+            new Transform(Vector3.Zero, new Vector3(0f, 0f, MathF.PI / 2f), new Vector3(1f, 1f, 1f)),
             MeshConstructor.LoadObjFromFileAssimp(@"Station\laserCylinder.obj"),
             new Material(new Vector3(40f, 1f, 1f))
         );
-        laser.Transform.Scale[Earth.EarthAxis] = 200f;
+        laser.Transform.Scale[0] = 200f;
         laser.Transform.Position[Earth.EarthAxis] = -100;
         //laser.Transform.Quaternion = Quaternion.FromEulerAngles(12f, 0f, 0f) * laser.Transform.Quaternion;
         
@@ -237,13 +256,14 @@ public class RenderEngine : GameWindow
         _objects = [
             _earth.EarthObject, _station.StationObject,
             .._station.Buttons.Values.Select(b => b.EngineObject),
-            .._station.Screens.Values.Select(b => b.EngineObject)
+            .._station.Screens.Values.Select(b => b.EngineObject),
+            stationLaser
         ];
         
         _lights = new Dictionary<LightTypes, List<Light>>
         {
             { LightTypes.Directional, [sun] },
-            { LightTypes.Point, [pointLight, laserLight, ..((WarningPage)_station.Screens.Values.ToArray()[5].Pages[0])._warningLights] }
+            { LightTypes.Point, [pointLight, laserLight, stationLaserLight, ..((WarningPage)_station.Screens.Values.ToArray()[5].Pages[0])._warningLights] }
         };
         
         //Geometry Shader
@@ -402,7 +422,7 @@ public class RenderEngine : GameWindow
         {
             _fonts["Pixel"].DrawText(_collisionShader.LookingAtObject.Name, new Vector2(_viewport.X / 2f + 10f, _viewport.Y / 2f + 10f), 0.4f, new Vector4(1f), _viewport);
         }
-        _fonts["Pixel"].DrawText("FROM ORBIT v0.3.6", new Vector2(_viewport.X - 255f, _viewport.Y - 30f), 0.35f, new Vector4(1f, 1f, 1f, 0.2f), _viewport);
+        _fonts["Pixel"].DrawText("FROM ORBIT v1.0.0", new Vector2(_viewport.X - 255f, _viewport.Y - 30f), 0.35f, new Vector4(1f, 1f, 1f, 0.2f), _viewport);
         
         GL.DepthFunc(DepthFunction.Less);
         
@@ -467,12 +487,11 @@ public class RenderEngine : GameWindow
 
             if (LaserButton.IsShooting)
             {
-                _earth.BurnEffect.Draw();
+                _earth.BurnEffect.SetSize(Station.LaserRadius);
+                _earth.BurnEffect.Draw(_station.Coordrinates.Yx);
                 GL.Viewport(0, 0, resolution.X / scale, resolution.Y / scale);
             }
         }
-        _earth.BurnEffect.Draw();
-        GL.Viewport(0, 0, resolution.X / scale, resolution.Y / scale);
         
         //Lighting Pass
         framebuffer.Bind();
@@ -579,8 +598,8 @@ public class RenderEngine : GameWindow
             _debugMode = !_debugMode;
         }
         
-        var eo = _lights[LightTypes.Directional][0]; //_lights[LightTypes.Directional][0] : _station.Screens.Values.ToArray()[1].EngineObject
-        var sens = (float)args.Time * 0.5f;
+        var eo = _station.Buttons[88].EngineObject; //_lights[LightTypes.Directional][0] : _station.Screens.Values.ToArray()[1].EngineObject
+        var sens = (float)args.Time * 0.05f;
         if (KeyboardState.IsKeyDown(Keys.Insert)) eo.Transform.Quaternion = Quaternion.FromEulerAngles(sens, 0f, 0f) * eo.Transform.Quaternion;
         if (KeyboardState.IsKeyDown(Keys.Delete)) eo.Transform.Quaternion = Quaternion.FromEulerAngles(-sens, 0f, 0f) * eo.Transform.Quaternion;
         if (KeyboardState.IsKeyDown(Keys.Home)) eo.Transform.Quaternion = Quaternion.FromEulerAngles(0f, sens, 0f) * eo.Transform.Quaternion;
@@ -629,12 +648,20 @@ public class RenderEngine : GameWindow
             Station.AllocationPercentage -= _deltaTime * (Station.BatteryMax / Station.AllocatedMax) * MathF.Pow(Station.LaserRadius, 0.5f) / 3f;
             _station.Buttons.Values.ToArray()[13].EngineObject.Material.Color = Vector4.Zero;
             _station.Buttons.Values.ToArray()[13].ButtonValue = 0f;
+
+            _lights[LightTypes.Point][2].IsLighting = true;
+            _geometryShader.Objects.Last().IsVisible = true;
+        }
+        else
+        {
+            _lights[LightTypes.Point][2].IsLighting = false;
+            _geometryShader.Objects.Last().IsVisible = false;
         }
         if (PrimeButton.IsPrimed)
         {
             Station.AllocationPercentage -= _deltaTime * (Station.BatteryMax / Station.AllocatedMax) / 750f;
         }
-        if (AllocateButton.IsAllocating) AllocationGauge.AllocateBattery(_deltaTime, button: (AllocateButton)_station.Buttons.Values.ToArray()[19]);
+        if (AllocateButton.IsAllocating) AllocationGauge.AllocateBattery(_deltaTime, button: (AllocateButton)_station.Buttons.Values.ToArray()[18]);
 
         //_laserShader.Objects[0].Transform.Position[Earth.EarthAxis] = -100f / Station.LaserRadius * 5f;
         ((LogPage)_station.Screens.Values.ToArray()[0].Pages[2]).LogHits(LaserButton.IsShooting);

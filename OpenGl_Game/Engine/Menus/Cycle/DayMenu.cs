@@ -13,6 +13,7 @@ public class DayMenu : Menu
 {
     public static float Opacity { get; set; }
     public static bool StayBlack { get; set; }
+    public static bool IsEnd { get; set; }
     
     public ObjectiveManager Objectives { get; set; }
     
@@ -47,6 +48,7 @@ public class DayPage : MenuPage
         
         //Next day
         var button = (UiButton)UiGraphics.Elements["next"];
+        button.EngineObject.IsVisible = DayMenu.IsEnd;
         button.EngineObject.IsVisible = DayMenu.StayBlack && Math.Abs(DayMenu.Opacity - 1f) <= 0.01f;
         var selected = button.PointCollision(screenPosNorm);
         if (selected)
@@ -71,12 +73,18 @@ public class DayPage : MenuPage
             DayMenu.Opacity -= deltaTime / 2f;
             return;
         }
+
+        if (!DayMenu.IsEnd)
+        {
+            fonts["Pixel"].DrawText("DAY #" + _menu.Objectives.CurrentDay, new Vector2(viewport.X / 5f, viewport.Y / 2f - 45f), 1.5f, new Vector4(1f), viewport);
         
-        
-        fonts["Pixel"].DrawText("DAY #" + _menu.Objectives.CurrentDay, new Vector2(viewport.X / 5f, viewport.Y / 2f - 45f), 1.5f, new Vector4(1f), viewport);
-        
-        fonts["Pixel"].DrawText("->", 
-            ((button.UiShape.EngineObject.Transform.Position.Xy - button.UiShape.EngineObject.Transform.Scale.Xy / 2f) * 0.5f + new Vector2(0.5f)) * viewport + new Vector2(75f, 32f),
-            0.85f, selected ? new Vector4(0f, 0f, 0f, 1f): new Vector4(1f), viewport);
+            fonts["Pixel"].DrawText("->", 
+                ((button.UiShape.EngineObject.Transform.Position.Xy - button.UiShape.EngineObject.Transform.Scale.Xy / 2f) * 0.5f + new Vector2(0.5f)) * viewport + new Vector2(75f, 32f),
+                0.85f, selected ? new Vector4(0f, 0f, 0f, 1f): new Vector4(1f), viewport);
+        }
+        else
+        {
+            fonts["Pixel"].DrawText("THE END", new Vector2(viewport.X / 5f, viewport.Y / 2f - 45f), 1.5f, new Vector4(1f), viewport);
+        }
     }
 }

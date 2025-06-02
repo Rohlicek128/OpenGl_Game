@@ -19,7 +19,7 @@ public class WarningGauge : ScreenHandler
     {
         EngineObject = new EngineObject(
             "Warning Gauge",
-            new Transform(new Vector3(-1.1236829f, 0.60921943f, -0.13007098f), new Vector3(-MathF.PI/2f, MathHelper.DegreesToRadians(-40f), -MathF.PI/2f),
+            new Transform(new Vector3(-1.1236829f, 0.60921943f, 0f), new Vector3(-MathF.PI/2f, MathHelper.DegreesToRadians(-40f), -MathF.PI/2f),
                 new Vector3(0.23f, 0.05f, 0.04f)),
             MeshConstructor.CreateCube(),
             new TexturesPbr(new Dictionary<TextureTypes, Texture>
