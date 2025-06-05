@@ -3,6 +3,6 @@
   "PlayerFov": 80.0,
   "PlayerSensitivity": 7.0,
   "EarthResolution": 400,
-  "TextureQuality": 1,
+  "TextureQuality": 0,
   "MapCitiesMinPop": 280000
 }
