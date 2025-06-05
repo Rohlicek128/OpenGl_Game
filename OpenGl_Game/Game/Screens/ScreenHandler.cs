@@ -69,6 +69,14 @@ public abstract class ScreenHandler
         _framebuffer.AttachTexture(new Texture(0, _screenResolution, null, minFilter:(TextureMinFilter)OpenTK.Graphics.OpenGL.Compatibility.TextureMinFilter.Nearest, magFilter:(TextureMagFilter)OpenTK.Graphics.OpenGL.Compatibility.TextureMagFilter.Nearest), FramebufferAttachment.ColorAttachment0, TextureTarget.Texture2d);
     }
 
+    /// <summary>
+    /// If the screen is turned on, renders currently selected page
+    /// </summary>
+    /// <param name="collision"></param>
+    /// <param name="mouse"></param>
+    /// <param name="viewport"></param>
+    /// <param name="fonts"></param>
+    /// <param name="deltaTime"></param>
     public void RenderScreen(CollisionShader collision, Mouse mouse, Vector2i viewport, Dictionary<string, FontMap> fonts, float deltaTime)
     {
         GL.Viewport(0, 0, ScreenResolution.X, ScreenResolution.Y);

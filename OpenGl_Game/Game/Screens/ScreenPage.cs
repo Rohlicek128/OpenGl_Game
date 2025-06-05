@@ -36,6 +36,14 @@ public abstract class ScreenPage
         _uiGraphics = new UiGraphics();
     }
 
+    /// <summary>
+    /// Renders and updates the page
+    /// </summary>
+    /// <param name="collision"></param>
+    /// <param name="mouse"></param>
+    /// <param name="viewport"></param>
+    /// <param name="fonts"></param>
+    /// <param name="deltaTime"></param>
     public virtual void RenderPage(CollisionShader collision, Mouse mouse, Vector2i viewport, Dictionary<string, FontMap> fonts, float deltaTime)
     {
         

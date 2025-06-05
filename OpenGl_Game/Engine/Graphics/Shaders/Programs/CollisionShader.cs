@@ -30,7 +30,7 @@ public class CollisionShader : ShaderProgram
         SetUniform("world", (Matrix4)param[0]);
         SetUniform("view", (Matrix4)param[1]);
     }
-
+    
     public override void Draw(params object[] param)
     {
         GL.ClearColor(0f, 0f, 0f, 1f);

@@ -74,6 +74,14 @@ public class Earth
         EarthObject.Textures.DeleteAll();
     }
 
+    /// <summary>
+    /// Rotates the earth forward with any attached objects
+    /// </summary>
+    /// <param name="keyboard"></param>
+    /// <param name="deltaTime"></param>
+    /// <param name="boost"></param>
+    /// <param name="engineObjects"></param>
+    /// <param name="debug">Allows additional controls</param>
     public void MoveEarth(KeyboardState keyboard, float deltaTime, float boost, List<EngineObject> engineObjects, bool debug = false)
     {
         engineObjects.Add(EarthObject);
@@ -96,7 +104,7 @@ public class Earth
         
         CollisionSphere.Transform.Position = EarthObject.Transform.Position;
     }
-
+    
     public void RotateEarth(float deltaTime, float amount, List<EngineObject> engineObjects)
     {
         if (amount == 0f) return;
@@ -105,6 +113,11 @@ public class Earth
         foreach (var o in engineObjects) o.Transform.Quaternion = Quaternion.FromEulerAngles(Vector3.UnitY * deltaTime * amount) * o.Transform.Quaternion;
     }
 
+    /// <summary>
+    /// Constructs each face of a cube and inflates them to a sphere and then applies a Cosine distribution
+    /// </summary>
+    /// <param name="resolution"></param>
+    /// <returns></returns>
     public MeshData GenerateFaces(int resolution)
     {
         Vector3[] faceNormals =
@@ -226,7 +239,7 @@ public class Earth
     }
 
     /// <summary>
-    /// ChatGPT
+    /// From quaternion rotation gets GPS coordinates (1/2 instance of AI use)
     /// </summary>
     /// <param name="q"></param>
     /// <returns></returns>
@@ -241,7 +254,7 @@ public class Earth
     }
     
     /// <summary>
-    /// ChatGPT
+    /// From GPS coordinates creates quaternion rotation (2/2 instance of AI use)
     /// </summary>
     /// <param name="gps"></param>
     /// <param name="rotationDeg"></param>
@@ -267,21 +280,6 @@ public class Earth
         var angle = MathF.Acos(Vector3.Dot(Vector3.UnitY, dir));
 
         return Quaternion.FromEulerAngles(Vector3.UnitY * MathHelper.DegreesToRadians(rotationDeg)) * Quaternion.FromAxisAngle(axis, angle);
-    }
-    
-    public static Quaternion LookRotation(Vector3 forward, Vector3 up)
-    {
-        forward = Vector3.Normalize(forward);
-        var right = Vector3.Normalize(Vector3.Cross(up, forward));
-        var newUp = Vector3.Cross(forward, right);
-        
-        var rotationMatrix = new Matrix3(
-            right.X, newUp.X, forward.X,
-            right.Y, newUp.Y, forward.Y,
-            right.Z, newUp.Z, forward.Z
-        );
-
-        return Quaternion.FromMatrix(rotationMatrix);
     }
     
 }

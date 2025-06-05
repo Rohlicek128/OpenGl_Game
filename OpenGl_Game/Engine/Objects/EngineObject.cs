@@ -90,6 +90,10 @@ public class EngineObject
         );
     }
 
+    /// <summary>
+    /// Creates the Model matrix for the object (Scale -> Origin -> Rotation -> Translation/Position)
+    /// </summary>
+    /// <returns>Model Matrix</returns>
     public Matrix4 GetModelMatrix()
     {
         //var model = Matrix4.CreateRotationX(Transform.Rotation.X) * Matrix4.CreateRotationY(Transform.Rotation.Y) * Matrix4.CreateRotationZ(Transform.Rotation.Z);
@@ -101,6 +105,12 @@ public class EngineObject
         return model;
     }
 
+    /// <summary>
+    /// Draws the object to the screen (uses 1 draw call)
+    /// </summary>
+    /// <param name="program"></param>
+    /// <param name="offset"></param>
+    /// <param name="view"></param>
     public void DrawObject(ShaderProgram program, int offset, Matrix4 view)
     {
         if (IsInverted) GL.CullFace(TriangleFace.Front);

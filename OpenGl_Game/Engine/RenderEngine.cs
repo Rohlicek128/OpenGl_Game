@@ -15,7 +15,6 @@ using OpenGl_Game.Engine.Menus.Pause;
 using OpenGl_Game.Engine.Objects;
 using OpenGl_Game.Engine.Objects.Collisions;
 using OpenGl_Game.Engine.UI;
-using OpenGl_Game.Engine.UI.Obsolete;
 using OpenGl_Game.Game;
 using OpenGl_Game.Game.Buttons;
 using OpenGl_Game.Game.Buttons.LaserParams;
@@ -148,6 +147,9 @@ public class RenderEngine : GameWindow
         return new WindowIcon(new OpenTK.Windowing.Common.Input.Image(image.Width, image.Height, image.Data));
     }
 
+    /// <summary>
+    /// Initializes the Game and OpenGL elements
+    /// </summary>
     protected override void OnLoad()
     {
         VertexAttribute[] verticesAttribs = [
@@ -167,18 +169,6 @@ public class RenderEngine : GameWindow
         _fonts.Add("ATName", new FontMap("ATNameSansTextTrial-ExtraBold.otf", _fontShader));
         _fonts.Add("Pixel", new FontMap("04B_03_.TTF", _fontShader));
         _fonts.Add("Brigends", new FontMap("brigends.ttf", _fontShader, 100));
-        
-        //Objects
-        /*var floor = new EngineObject(
-            "Floor", 
-            new Transform(new Vector3(0f, -0.501f, 0f)), 
-            MeshConstructor.CreatePlane(),
-            new Material(new Vector4(1f))
-        );
-        floor.Material.Shininess = 32f;
-        floor.Material.Specular = new Vector3(0.5f);
-        floor.Transform.Scale *= 20f;
-        floor.Textures.Scaling = 0.5f;*/
         
         
         _earth = new Earth(new Transform(new Vector3(0f), new Vector3(0f, MathF.PI, 0f), new Vector3(6378 / 2f)), _settings.EarthResolution, 0.025f);
@@ -330,6 +320,9 @@ public class RenderEngine : GameWindow
         IsVisible = true;
     }
 
+    /// <summary>
+    /// Unloads/frees used memory
+    /// </summary>
     protected override void OnUnload()
     {
         _geometryShader.DeleteAll();
@@ -348,6 +341,10 @@ public class RenderEngine : GameWindow
         Console.WriteLine("end");
     }
     
+    /// <summary>
+    /// What is to be rendered when the window calls it
+    /// </summary>
+    /// <param name="args"></param>
     protected override void OnRenderFrame(FrameEventArgs args)
     {
         var nav = (NavigationScreen)_station.Screens.Values.ToArray()[1];
@@ -447,6 +444,14 @@ public class RenderEngine : GameWindow
         }
     }
     
+    /// <summary>
+    /// Draws the scene from the cameras POV.
+    /// </summary>
+    /// <param name="camera"></param>
+    /// <param name="resolution"></param>
+    /// <param name="scale"></param>
+    /// <param name="framebuffer"></param>
+    /// <param name="visibleForId"></param>
     public void DrawScene(Camera camera, Vector2i resolution, int scale, Framebuffer framebuffer, int visibleForId = 0)
     {
         if (_wireframeMode) GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Line);
@@ -509,6 +514,10 @@ public class RenderEngine : GameWindow
         GL.Viewport(0, 0, resolution.X, resolution.Y);
     }
 
+    /// <summary>
+    /// Updates the game controls
+    /// </summary>
+    /// <param name="args"></param>
     protected override void OnUpdateFrame(FrameEventArgs args)
     {
         if (!IsFocused) return;
@@ -687,7 +696,7 @@ public class RenderEngine : GameWindow
         GL.ReadPixels(x, y, 1, 1, PixelFormat.Rgba, PixelType.Float, pixel);
         return pixel;
     }
-
+    
     public void Reset(bool resetMoney = false)
     {
         if (resetMoney) UpgradePage.Money = 1.42f;

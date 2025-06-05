@@ -17,7 +17,7 @@ public class AllocationGauge : ScreenHandler
     {
         EngineObject = new EngineObject(
             "Allocation Gauge",
-            new Transform(new Vector3(-1.5095744f, 1.0695179f, -0.03465618f), new Vector3(-MathF.PI/2f, MathHelper.DegreesToRadians(-40f), -MathF.PI/2f),
+            new Transform(new Vector3(-1.3613125f, 0.86269534f, -0.03134322f), new Vector3(-MathF.PI/2f, MathHelper.DegreesToRadians(-40f), -MathF.PI/2f),
                 new Vector3(0.525f, 0.05f, 0.15f)),
             MeshConstructor.CreateCube(),
             new TexturesPbr(new Dictionary<TextureTypes, Texture>

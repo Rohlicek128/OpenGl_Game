@@ -135,6 +135,11 @@ public abstract class ShaderProgram
         
     }
 
+    /// <summary>
+    /// Draw each object in the Element Array Buffer
+    /// </summary>
+    /// <param name="view"></param>
+    /// <param name="visibleForId"></param>
     protected void DrawEachObject(Matrix4 view, int visibleForId = 0)
     {
         var offset = 0;

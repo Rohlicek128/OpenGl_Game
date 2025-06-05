@@ -15,6 +15,9 @@ public class UiGraphics
         Elements = [];
     }
 
+    /// <summary>
+    /// After all elements have been added, it creates a buffer on the GPU for them to be stored in
+    /// </summary>
     public void InitProgram()
     {
         var objects = Elements.Values.Select(e => e.GetEngineObject()).ToList();

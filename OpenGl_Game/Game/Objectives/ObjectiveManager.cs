@@ -28,6 +28,12 @@ public class ObjectiveManager
         return list;
     }
 
+    /// <summary>
+    /// Based on inputted coords in check whether the objective is completed based on the distance
+    /// </summary>
+    /// <param name="coords"></param>
+    /// <param name="citySize"></param>
+    /// <returns></returns>
     public bool CheckCompletion(Vector2 coords, float citySize)
     {
         if (!LaserButton.IsShooting || CurrentObjective == null) return false;
@@ -54,29 +60,10 @@ public class ObjectiveManager
         }
         return CurrentObjective != null;
     }
-
-    private void LoadObjectives()
-    {
-        var files = Directory.GetFiles(RenderEngine.DirectoryPath + @"Game\Objectives\Missions");
-
-        foreach (var file in files)
-        {
-            using var sr = new StreamReader(file);
-            var objective = JsonSerializer.Deserialize<Objective>(sr.ReadToEnd())!;
-
-            ObjectivesByOrder.TryGetValue(objective.Day, out var objectives);
-            if (objectives != null) objectives.Add(objective);
-            else ObjectivesByOrder.Add(objective.Day, [objective]);
-            
-            sr.Close();
-        }
-
-        foreach (var orders in ObjectivesByOrder)
-        {
-            orders.Value.Sort((x, y) => y.Pay.CompareTo(x.Pay));
-        }
-    }
     
+    /// <summary>
+    /// Loads all objectives form a JSON Array and loads them into the game (\Game\Objectives\Missions\...)
+    /// </summary>
     private void LoadListObjectives()
     {
         var files = Directory.GetFiles(RenderEngine.DirectoryPath + @"Game\Objectives\Missions");
